@@ -250,11 +250,6 @@ async def log_chat_and_get_history(ctx, logfile, channel_vars):
         for line in (f.readlines() [-int(channel_vars["chat_history_len"]):]):
             chat_history += line
     return chat_history
-    
-@bot.command()
-async def honda_civic(ctx):
-    for _ in range(10):
-        await ctx.send("2006 Honda Civic")
 
         
 async def chat_response(ctx, channel_vars, chat_history_string): 
@@ -837,25 +832,6 @@ async def highscores_server(ctx, limit=0):
         f = discord.File(fh, filename=str(ctx.channel.id) + '_hiscores.png')
     await ctx.send(file=f)
     
-
-
-@bot.command()        
-async def website_experimental(ctx):
-    def website_gen(topic):
-        response = subprocess.run(["python", "Web_Gen/website_gen.py", topic], capture_output=True, check=True)
-    try:
-        if ctx.author.id == 242018983241318410 or ctx.author.id == 179064694844293120:
-            await ctx.send("Please wait, this will take a long time! (Potentially hours) You will be able to view the website here: https://phixxy.com/ai-website/")
-            topic = ctx.message.content.split(" ", maxsplit=1)[1]
-            website_gen_thread = threading.Thread(target=website_gen, args=[topic], daemon=True)
-            website_gen_thread.start()
-        else:
-            await ctx.send("Ask for permission if you want to use this command.")
-    except:
-        await ctx.send("Something went wrong, try again.")
-
-       
-            
 @bot.command()        
 async def website(ctx):
     async def delete_local_pngs(local_folder):
