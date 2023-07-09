@@ -49,9 +49,6 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 #discord stuff END
 
-#remove this once its safe
-discord_ids = {"<@242018983241318410>":"@Soulless", "<@142420997360975872>":"@Dpaz", "<@276197608735637505>":"@Cress", "<@179064694844293120>":"@tsuk", "<@1097302679836971038>":"@Sparkytron 3000", "<@347598986380705804>":"@linku", "<@184524949648572416>":"@pud"}
-
 async def upload_ftp(local_filename, server_folder, server_filename):
     with FTP(ftp_server) as ftp:
         ftp.login(ftp_username, ftp_password)
