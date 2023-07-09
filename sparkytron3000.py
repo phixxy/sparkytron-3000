@@ -298,15 +298,18 @@ async def make_json_file(filename):
         fileobj.write("{}")
         fileobj.close()
     
+async def folder_setup():
+    folder_names = ["logs", "config", "webpage"]
+    for folder_name in folder_names:
+        if not os.path.exists(folder_name):
+            os.mkdir(folder_name)
+    
 @bot.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(bot))
     #stuff to do if first run
     await make_json_file("currency_db.json")
-    if not os.path.exists("logs/"):
-        os.mkdir("logs")
-    if not os.path.exists("config/"):
-        os.mkdir("config")
+    await folder_setup()
         
 @bot.command()        
 async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
@@ -513,7 +516,7 @@ async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
                 
 @bot.command()        
 async def meme(ctx):
-    async def upload_ftp_ai_memes(filename):
+    async def update_meme_webpage(filename):
         output_file = "index.html"
         html = '''<!DOCTYPE html>
 <html>
@@ -646,7 +649,7 @@ async def meme(ctx):
         channel_vars = await get_channel_config(ctx.channel.id)
         try:
             if channel_vars["ftp_enabled"]:
-                await upload_ftp_ai_memes(filepath)
+                await update_meme_webpage(filepath)
         except Exception as error:
             print("COULDN'T UPLOAD TO FTP!")
         await ctx.send(link)
