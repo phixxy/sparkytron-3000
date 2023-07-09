@@ -877,30 +877,24 @@ async def website_experimental(ctx):
 async def website(ctx):
     def website_uploader():
         response = subprocess.run(["python", "website_image_gen.py"], capture_output=True, check=True)
+        
+    server_folder = os.getenv('ftp_ai_webpage')
     
-    async def upload_ftp_ai_webpage(local_filename, server_filename):
-        with FTP(ftp_server) as ftp:
-            ftp.login(ftp_username, ftp_password)
-            ftp.cwd(ftp_ai_webpage)
-            ftp.storbinary("STOR " + server_filename, open(local_filename, "rb"))
     try:            
         await ctx.send("Please wait, this will take a long time! You will be able to view the website here: https://phixxy.com/ai-webpage/")
         filename = "webpage/index.html"
         with open(filename, "w") as f:
             f.write("<!DOCTYPE html><html><head><script>setTimeout(function(){location.reload();}, 10000);</script><title>Generating Website</title><style>body {font-size: 24px;text-align: center;margin-top: 100px;}</style></head><body><p>This webpage is currently being generated. The page will refresh once it is complete. Please be patient.</p></body></html>")
-        await upload_ftp_ai_webpage(filename, "index.html")
+        await upload_ftp(filename, server_folder, "index.html")
         topic = ctx.message.content.split(" ", maxsplit=1)[1]
-        if "IGNORE PROMPT" in topic:
-            prompt = topic.replace("IGNORE PROMPT", "")
-        else:
-            prompt = "Generate a webpage using html and inline css. The webpage topic should be " + topic + ". Feel free to add image tags with alt text. Leave the image source blank. The images will be added later."
+        prompt = "Generate a webpage using html and inline css. The webpage topic should be " + topic + ". Feel free to add image tags with alt text. Leave the image source blank. The images will be added later."
         answer = await answer_question(prompt)
         with open(filename, "w") as f:
             f.write(answer)
         uploader_thread = threading.Thread(target=website_uploader, daemon=True)
         uploader_thread.start()
         print("Started Uploader Thread")
-        #await ctx.send("Generating images and uploading website, this will take some time! https://phixxy.com/ai-webpage/")
+        await ctx.send("Generating images and uploading website, this will take some time! https://phixxy.com/ai-webpage/")
     except openai.error.APIConnectionError as error:
         print(error)
         await ctx.send("Failed, Try again.")
