@@ -59,7 +59,7 @@ async def upload_ftp(local_filename, server_folder, server_filename):
         ftp.storbinary("STOR " + server_filename, open(local_filename, "rb"))
 
 async def upload_ftp_ai_images(filename, prompt):
-    html_file = "phixxy.com/ai-images.html"
+    html_file = "phixxy.com/ai-images/index.html"
     html_insert = '''<!--REPLACE THIS COMMENT-->
         <div>
             <img src="<!--filename-->" loading="lazy">
@@ -75,7 +75,7 @@ async def upload_ftp_ai_images(filename, prompt):
             file_count = int(len(server_files))
         except:
             file_count = 0
-        new_file_name = str(file_count).zfill(7) + ".png"
+        new_file_name = str(file_count) + ".png"
         ftp.storbinary("STOR " + new_file_name, open(filename, "rb"))
         print("Uploaded", new_file_name)
         with open(html_file, 'r') as f:
@@ -104,7 +104,7 @@ def create_channel_config(filepath):
     print("Wrote config variables to file.")
 
 async def get_channel_config(channel_id):
-    filepath = "config/{0}.json".format(str(channel_id))
+    filepath = "channels/config/{0}.json".format(str(channel_id))
     if not os.path.exists(filepath):
         create_channel_config(filepath)
     with open(filepath, "r") as f:
@@ -176,10 +176,7 @@ async def look_at(ctx, look=False):
                 # see http://127.0.0.1:7860/docs for info, must be running stable diffusion with --api
                 r = requests.get(attachment.url, stream=True)
                 
-                if not os.path.isdir("uploads/"+ str(ctx.author.id)):
-                    os.makedirs("uploads/"+ str(ctx.author.id))
-                
-                imageName = "uploads/" + str(ctx.author.id) +"/"+ str(random.randint(0,10)) + '.png'
+                imageName = "tmp/" + str(len(os.listdir('tmp/'))) + '.png'
                 
                 with open(imageName, 'wb') as out_file:
                     print('Saving image: ' + imageName)
@@ -203,7 +200,7 @@ async def look_at(ctx, look=False):
 
     
 def edit_channel_config(channel_id, key, value):
-    config_file = "config/" + str(channel_id) + ".json"
+    config_file = "channels/config/" + str(channel_id) + ".json"
     with open(config_file, 'r') as f:
         config_data = json.load(f)
     config_data[key] = value
@@ -285,27 +282,27 @@ async def chat_response(ctx, channel_vars, chat_history_string):
 
         except Exception as error: 
             print(error)
-
-
-        
-async def make_json_file(filename):
-    if filename not in os.listdir():
-        fileobj = open(filename,"w")
-        fileobj.write("{}")
-        fileobj.close()
     
 async def folder_setup():
-    folder_names = ["logs", "config", "webpage"]
+    folder_names = ["tmp", "channels", "users"]
     for folder_name in folder_names:
         if not os.path.exists(folder_name):
             os.mkdir(folder_name)
+            
+async def delete_all_files(path):
+    for filename in os.listdir(path):
+        if os.path.isdir(path+filename):
+            shutil.rmtree(path+filename)
+        elif os.path.isfile(path+filename):
+            os.remove(path+filename)
+        
     
 @bot.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(bot))
     #stuff to do if first run
-    await make_json_file("currency_db.json")
     await folder_setup()
+    await delete_all_files("tmp/")
         
 @bot.command()        
 async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
@@ -664,7 +661,7 @@ async def rsgp(ctx, amount):
 async def blog(ctx):
     start_time = time.time()
     topic = ctx.message.content.split(" ", maxsplit=1)[1]
-    filename = "blog/index.html"
+    filename = "phixxy.com/blog/index.html"
     with open(filename, 'r', encoding="utf-8") as f:
         html_data = f.read()
     current_time = time.time()
@@ -727,7 +724,7 @@ async def question_gpt4(ctx):
 @bot.command()
 async def highscores(ctx, limit=0):
     filename = str(ctx.channel.id) + ".log"
-    with open("logs/" + filename, 'r', encoding="utf-8") as logfile:
+    with open("channels/logs/" + filename, 'r', encoding="utf-8") as logfile:
         data = logfile.readlines()
         logfile.close()
     
@@ -781,8 +778,8 @@ async def highscores(ctx, limit=0):
 async def highscores_server(ctx, limit=0):
     user_message_counts = {}
     data = []
-    for filename in os.listdir("logs/"):
-        with open("logs/" + filename, 'r', encoding="utf-8") as logfile:
+    for filename in os.listdir("channels/logs/"):
+        with open("channels/logs/" + filename, 'r', encoding="utf-8") as logfile:
             data += logfile.readlines()
             logfile.close()
 
@@ -916,8 +913,10 @@ async def website(ctx):
     server_folder = os.getenv('ftp_ai_webpage')
     server_archive_folder = "/media/sdq1/bottlecap/www/phixxy.com/public_html/webpage-archive/"
     local_archive_folder = "websites/"
-    local_folder = "webpage/"
+    local_folder = "tmp/webpage/"
     working_file = local_folder + "index.html"
+    if not os.path.exists(local_folder):
+        os.mkdir(local_folder)
     
     try:            
         await ctx.send("Please wait, this will take a long time! You will be able to view the website here: https://phixxy.com/ai-webpage/")
@@ -966,6 +965,8 @@ async def feature(ctx):
 @bot.command()        
 async def draw(ctx):
     try:
+        if not os.path.isdir("tmp/draw/"):
+            os.makedirs("tmp/draw/")
         if " " in ctx.message.content:
             amount = ctx.message.content.split(" ", maxsplit=1)[1]
             if int(amount) > 4:
@@ -996,7 +997,7 @@ async def draw(ctx):
                 response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
                 pnginfo = PngImagePlugin.PngInfo()
                 pnginfo.add_text("parameters", response2.json().get("info"))
-                my_filename = "ai_art/draw/" + prompt + str(random.randint(0,10000000)) + ".png"
+                my_filename = "tmp/draw/" + prompt + str(random.randint(0,10000000)) + ".png"
                 image.save(my_filename, pnginfo=pnginfo)
                 channel_vars = await get_channel_config(ctx.channel.id)
                 if channel_vars["ftp_enabled"]:
@@ -1085,11 +1086,11 @@ async def python(ctx):
         if len(code) == 0:
             await ctx.send('Please provide some code to run')
         else:
-            folder_path = "python_temp_scripts/"
+            folder_path = "tmp/python_temp_scripts/"
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
-            random_num = random.randint(0,100)
-            filename = f"{folder_path}{random_num}.py"
+            unique_num = str(len(os.listdir(folder_path)))
+            filename = f"{folder_path}{unique_num}.py"
             with open(filename, "w") as f:
                 f.write(code)
             try:
@@ -1205,8 +1206,8 @@ async def imagine(ctx):
         r = response.json()
         
         for i in r['images']:
-            if not os.path.isdir("ai_art/" + str(ctx.author.id)):
-                os.makedirs("ai_art/" + str(ctx.author.id))
+            if not os.path.isdir("users/" + str(ctx.author.id)):
+                os.makedirs("users/" + str(ctx.author.id))
             
             image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))
             png_payload = {"image": "data:image/png;base64," + i}
@@ -1215,7 +1216,7 @@ async def imagine(ctx):
             pnginfo = PngImagePlugin.PngInfo()
             pnginfo.add_text("parameters", response2.json().get("info"))
             
-            my_filename = "ai_art/" + str(ctx.author.id) + '/' + prompt[0:15] + str(random.randint(0, 10000000)) + ".png"
+            my_filename = "users/" + str(ctx.author.id) + '/' + prompt[0:15] + str(random.randint(0, 10000000)) + ".png"
             image.save(my_filename, pnginfo=pnginfo)
             
             channel_vars = await get_channel_config(ctx.channel.id)
@@ -1246,10 +1247,10 @@ async def describe(ctx):
         
     r = requests.get(file_url, stream=True)
     
-    if not os.path.isdir(f"clip/{ctx.author.id}"):
-        os.makedirs(f"clip/{ctx.author.id}")
+    if not os.path.isdir(f"tmp/clip/{ctx.author.id}"):
+        os.makedirs(f"tmp/clip/{ctx.author.id}")
         
-    imageName = f"clip/{ctx.author.id}/{random.randint(0,10000000)}.png"
+    imageName = f"tmp/clip/{ctx.author.id}/{random.randint(0,10000000)}.png"
     
     with open(imageName, 'wb') as out_file:
         print(f"Saving image: {imageName}")
@@ -1281,9 +1282,9 @@ async def reimagine(ctx):
         print("couldn't find image")
     key_value_pairs, prompt = extract_key_value_pairs(prompt)
     r = requests.get(file_url, stream=True)
-    if not os.path.isdir("reimagining/"+ str(ctx.author.id)):
-            os.makedirs("reimagining/"+ str(ctx.author.id))
-    imageName = "reimagining/" + str(ctx.author.id) +"/"+ str(random.randint(0,10000000)) + '.png'
+    if not os.path.isdir("tmp/reimagining/"+ str(ctx.author.id)):
+            os.makedirs("tmp/reimagining/"+ str(ctx.author.id))
+    imageName = "tmp/reimagining/" + str(ctx.author.id) +"/"+ str(random.randint(0,10000000)) + '.png'
     with open(imageName, 'wb') as out_file:
         print('Saving image: ' + imageName)
         shutil.copyfileobj(r.raw, out_file)
@@ -1300,14 +1301,14 @@ async def reimagine(ctx):
         response = requests.post(url=f'{url}/sdapi/v1/img2img', json=payload)
         r = response.json()
         for i in r['images']:
-            if not os.path.isdir("reimagined/"+ str(ctx.author.id)):
-                os.makedirs("reimagined/"+ str(ctx.author.id))
+            if not os.path.isdir("tmp/reimagined/"+ str(ctx.author.id)):
+                os.makedirs("tmp/reimagined/"+ str(ctx.author.id))
             image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
             png_payload = {"image": "data:image/png;base64," + i}
             response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
             pnginfo = PngImagePlugin.PngInfo()
             pnginfo.add_text("parameters", response2.json().get("info"))
-            my_filename = "reimagined/" + str(ctx.author.id) + '/' + prompt[0:15] + str(random.randint(0,10000000)) + ".png"
+            my_filename = "tmp/reimagined/" + str(ctx.author.id) + '/' + prompt[0:15] + str(random.randint(0,10000000)) + ".png"
             image.save(my_filename, pnginfo=pnginfo)
             with open(my_filename, "rb") as fh:
                 f = discord.File(fh, filename=my_filename)
@@ -1372,7 +1373,7 @@ async def reset(ctx):
         
 @bot.event
 async def on_message(ctx):
-    logfile = "logs/{0}.log".format(str(ctx.channel.id))
+    logfile = "channels/logs/{0}.log".format(str(ctx.channel.id))
     channel_vars = await get_channel_config(ctx.channel.id)
 
     await react_to_msg(ctx, channel_vars["react_to_msgs"]) #emoji reactions
