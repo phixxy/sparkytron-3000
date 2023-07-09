@@ -62,7 +62,7 @@ async def upload_ftp_ai_images(filename, prompt):
     html_file = "phixxy.com/ai-images.html"
     html_insert = '''<!--REPLACE THIS COMMENT-->
         <div>
-            <img src="<!--filename-->" />
+            <img src="<!--filename-->" loading="lazy">
             <p class="image-description"><!--description--></p>
         </div>'''
     img_list = []
