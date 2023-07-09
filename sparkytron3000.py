@@ -21,6 +21,7 @@ from ftplib import FTP
 import threading
 import matplotlib.pyplot as plt
 import aiohttp
+import aioftp
 
 #config
 STABLE_DIFFUSION_URL = "http://127.0.0.1:7861"
@@ -728,24 +729,6 @@ async def question_gpt4(ctx):
     for chunk in chunks:
         await ctx.send(chunk)
 
-
-@bot.command()        
-async def save_website(ctx):
-    try:
-        folder_name = ctx.message.content.split(" ", maxsplit=1)[1]
-        try:
-            os.makedirs("websites/" + folder_name)
-        except FileExistsError:
-            await ctx.send(folder_name + " already exists. Choose a new name.")
-            return 0
-        for filename in os.listdir("webpage/"):
-            if ".png" in filename or ".html" in filename:
-                shutil.copyfile("webpage/" + filename, "websites/"+folder_name+"/"+filename)
-        await ctx.send("Website Archived!")
-    except Exception as error:
-        print(error)
-        await ctx.send("Usage !save_website (filename)")
-
 @bot.command()
 async def highscores(ctx, limit=0):
     filename = str(ctx.channel.id) + ".log"
@@ -881,15 +864,16 @@ async def website(ctx):
                 os.remove(local_folder + filename)
                 
     async def delete_ftp_pngs(server_folder):
-        with FTP(ftp_server) as ftp:
-            ftp.login(ftp_username, ftp_password)
-            ftp.cwd(server_folder)
-            file_list = ftp.nlst()
-            for filename in file_list:
-                if ".png" in filename:
-                    print("Deleting", filename)
-                    ftp.delete(filename)
-                    
+        client = aioftp.Client()
+        await client.connect(ftp_server)
+        await client.login(ftp_username, ftp_password)
+        await client.change_directory(server_folder)
+        for path, info in (await client.list()):
+            if ".png" in path.name:
+                print("Deleting", path.name)
+                await client.remove(path.name)
+        await client.quit()
+                        
     async def extract_image_tags(code):
         count = code.count("<img")
         tags = []
@@ -912,20 +896,22 @@ async def website(ctx):
         
     async def generate_images(local_folder, image_list):
         file_list = []
-        for image in image_list:
-            filename = image.replace(" ", "").lower() + ".png"
-            url = STABLE_DIFFUSION_URL
-            payload = {"prompt": image,"steps": 25}
-            response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
-            r = response.json()
-            for i in r['images']:
-                image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
-                png_payload = {"image": "data:image/png;base64," + i}
-                response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
-                pnginfo = PngImagePlugin.PngInfo()
-                pnginfo.add_text("parameters", response2.json().get("info"))
-                image.save(local_folder + filename, pnginfo=pnginfo)
-                file_list.append(filename)
+        async with aiohttp.ClientSession() as session:
+            for image in image_list:
+                filename = image.replace(" ", "").lower() + ".png"
+                url = STABLE_DIFFUSION_URL
+                payload = {"prompt": image, "steps": 25}
+                response = await session.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
+                r = await response.json()
+                for i in r['images']:
+                    image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))
+                    png_payload = {"image": "data:image/png;base64," + i}
+                    response2 = await session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
+                    pnginfo = PngImagePlugin.PngInfo()
+                    json_response = await response2.json()
+                    pnginfo.add_text("parameters", json_response.get("info"))
+                    image.save(local_folder + filename, pnginfo=pnginfo)
+                    file_list.append(filename)
         return file_list
     
     async def add_image_filenames(code, file_list):
@@ -933,124 +919,23 @@ async def website(ctx):
             code = code.replace("src=\"\"", "src=\""+ filename + "\"", 1)
         return code
         
+
+
+
     async def upload_html_and_imgs(local_folder, server_folder):
-        with FTP(ftp_server) as ftp:
-            ftp.login(ftp_username, ftp_password)
-            ftp.cwd(server_folder)
-            for filename in os.listdir(local_folder):
-                if ".png" in filename:
-                    ftp.storbinary("STOR " + filename, open(local_folder + filename, "rb"))
-            #explicitly upload html files last!
-            for filename in os.listdir(local_folder):
-                if ".html" in filename:
-                    ftp.storbinary("STOR " + filename, open(local_folder + filename, "rb"))
+        client = aioftp.Client()
+        await client.connect(ftp_server)
+        await client.login(ftp_username, ftp_password)
+        await client.change_directory(server_folder)
+        
+        for filename in os.listdir(local_folder):
+            if ".png" in filename:
+                await client.upload(local_folder + filename, filename, write_into=True)
+        #explicitly upload html files last!
+        for filename in os.listdir(local_folder):
+            if ".html" in filename:
+                await client.upload(local_folder + filename, filename, write_into=True)
                     
-    async def upload_archived_website(server_archive_folder, local_archive_folder):
-        with FTP(ftp_server) as ftp:
-            ftp.login(ftp_username, ftp_password)
-            for foldername in os.listdir(local_archive_folder):
-                ftp.cwd(server_archive_folder)
-                if "archived.txt" not in os.listdir(local_archive_folder +foldername):
-                    ftp.mkd(foldername)
-                    ftp.cwd(server_archive_folder + foldername)
-                    for filename in os.listdir(local_archive_folder +foldername):
-                        if ".png" in filename:
-                            ftp.storbinary("STOR " + filename, open(local_archive_folder + foldername + "/" + filename, "rb"))
-                            print("Uploaded " + local_archive_folder + foldername + "/" + filename)
-                    #explicitly upload html files last!
-                    for filename in os.listdir(local_archive_folder +foldername):
-                        if ".html" in filename:
-                            ftp.storbinary("STOR " + filename, open(local_archive_folder + foldername + "/" + filename, "rb"))
-                            print("Uploaded " + local_archive_folder + foldername + "/" + filename)
-                    with open(local_archive_folder + foldername + "/" + "archived.txt","w") as f:
-                        f.write("True")
-                        f.close()
-                    
-    async def generate_website_archive_html(server_archive_folder):
-        html1 = '''<!DOCTYPE html>
-<html>
-
-<head>
-	<title>webpage-archive</title>
-	<style>
-		body {
-			background-color: #222;
-			color: #fff;
-			font-family: sans-serif;
-			line-height: 1.6;
-		}
-
-		h1 {
-			font-size: 4em;
-			text-align: center;
-			margin-top: 0;
-		}
-
-		p {
-			font-size: 1.2em;
-			text-align: justify;
-			max-width: 800px;
-			margin: 0 auto;
-			padding: 20px;
-			background: rgba(255, 255, 255, 0.1);
-			border-radius: 8px;
-			box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-		}
-
-		ul {
-			list-style: none;
-			padding: 0;
-			margin: 0;
-			max-width: 800px;
-			margin: 20px auto;
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-			grid-gap: 20px;
-		}
-
-		li {
-			background: #444;
-			padding: 10px;
-			border-radius: 5px;
-			box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-			transition: all 0.3s ease;
-		}
-
-		li:hover {
-			transform: scale(1.1);
-			box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-		}
-
-		a {
-			color: #fff;
-			text-decoration: none;
-		}
-	</style>
-</head>
-
-<body>
-	<h1>webpage-archive</h1>
-	<p>This is a list of saved websites that AI generated.</p>
-	<ul>\n'''
-        html2 = '''	</ul>
-</body>
-
-</html>'''
-        with FTP(ftp_server) as ftp:
-            ftp.login(ftp_username, ftp_password)
-            ftp.cwd(server_archive_folder)
-            file_list = ftp.nlst()
-            dir_list = ""
-            for folder in file_list:
-                if folder != "index.html":
-                    dir_list += "<a href=\"" + folder + "\"><li>" + folder + "</li></a>\n"
-            html = html1 + dir_list + html2
-            with open("index.html","w") as f:
-                f.write(html)
-                f.close()
-            ftp.storbinary("STOR " + "index.html", open("index.html", "rb"))
-                    
-
         
     server_folder = os.getenv('ftp_ai_webpage')
     server_archive_folder = "/media/sdq1/bottlecap/www/phixxy.com/public_html/webpage-archive/"
@@ -1080,11 +965,7 @@ async def website(ctx):
             f.write(code)
             f.close()
         
-        await upload_html_and_imgs(local_folder, server_folder)
-        await upload_archived_website(server_archive_folder, local_archive_folder)
-        await generate_website_archive_html(server_archive_folder)
-
-        
+        await upload_html_and_imgs(local_folder, server_folder)        
         
         await ctx.send("Finished https://phixxy.com/ai-webpage/")
     except openai.error.APIConnectionError as error:
