@@ -72,7 +72,7 @@ async def upload_ftp_ai_images(filename, prompt):
         server_files = ftp.nlst(ftp_ai_images)
         server_files.sort()
         try:
-            file_count = int(server_files[-2][-11:-4])+1
+            file_count = int(len(server_files))
         except:
             file_count = 0
         new_file_name = str(file_count).zfill(7) + ".png"
