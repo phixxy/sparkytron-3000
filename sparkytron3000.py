@@ -661,7 +661,7 @@ async def rsgp(ctx, amount):
 async def blog(ctx):
     start_time = time.time()
     topic = ctx.message.content.split(" ", maxsplit=1)[1]
-    filename = "phixxy.com/blog/index.html"
+    filename = "phixxy.com/ai-blog/index.html"
     with open(filename, 'r', encoding="utf-8") as f:
         html_data = f.read()
     current_time = time.time()
@@ -1056,15 +1056,13 @@ async def viewimages(ctx, message):
         await ctx.send("Usage: !viewimages (enable|disable)")
         
 @bot.command()        
-async def commandz(ctx, message):
-    if "enable" in message:
-        edit_channel_config(ctx.channel.id, "commands_enabled", True)
-        await ctx.send("Commands Enabled")
-    elif "disable" in message:
+async def enable_commands(ctx, message):
+    if "disable" in message or "false" in message:
         edit_channel_config(ctx.channel.id, "commands_enabled", False)
         await ctx.send("Commands Disabled")
     else:
-        await ctx.send("Usage: !commandz (enable|disable)")
+        edit_channel_config(ctx.channel.id, "commands_enabled", True)
+        await ctx.send("Commands Enabled")
 
 @bot.command()        
 async def topic(ctx, channel_topic):
@@ -1126,26 +1124,7 @@ async def personality(ctx):
     personality_type = ctx.message.content.split(" ", maxsplit=1)[1]
     edit_channel_config(ctx.channel.id, "personality", personality_type)
     await ctx.send("Personality changed to " + personality_type)
-        
-@bot.command(pass_context=True)
-async def disconnect(ctx):
-    voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-    await voice_client.disconnect()
 
-    
-@bot.command(pass_context=True)
-async def xplore_audio(ctx, arg):
-    voice_channel = get(ctx.guild.voice_channels, name=arg)
-    directory = "C:/Users/bottl/Music/xploreaudio/Recordings/"
-    filename = random.choice(os.listdir(directory))
-    print(filename)
-    voice_client = await voice_channel.connect()
-    audio_source = discord.FFmpegPCMAudio(directory+filename)
-    await ctx.send("Playing: " + filename)
-    voice_client.play(audio_source)
-    while voice_client.is_playing():
-        await asyncio.sleep(1)
-    await voice_client.disconnect()
 
 @bot.command()
 async def change_model(ctx, model_choice='0'):
