@@ -17,7 +17,6 @@ import subprocess
 import math
 from PIL import Image, PngImagePlugin
 from dotenv import load_dotenv
-from ftplib import FTP
 import threading
 import matplotlib.pyplot as plt
 import aiohttp
@@ -50,13 +49,15 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 #discord stuff END
 
+        
 async def upload_ftp(local_filename, server_folder, server_filename):
-    with FTP(ftp_server) as ftp:
-        ftp.login(ftp_username, ftp_password)
-        ftp.cwd(ftp_public_html)
-        ftp.cwd(server_folder)
-        server_filename = server_filename
-        ftp.storbinary("STOR " + server_filename, open(local_filename, "rb"))
+    client = aioftp.Client()
+    await client.connect(ftp_server)
+    await client.login(ftp_username, ftp_password)
+    await client.change_directory(server_folder)
+    await client.upload(local_filename, server_folder+server_filename, write_into=True)
+    await client.quit()
+    
 
 async def upload_ftp_ai_images(filename, prompt):
     html_file = "phixxy.com/ai-images/index.html"
@@ -66,26 +67,28 @@ async def upload_ftp_ai_images(filename, prompt):
             <p class="image-description"><!--description--></p>
         </div>'''
     img_list = []
-    with FTP(ftp_server) as ftp:
-        ftp.login(ftp_username, ftp_password)
-        ftp.cwd(ftp_ai_images)
-        server_files = ftp.nlst(ftp_ai_images)
-        server_files.sort()
-        try:
-            file_count = int(len(server_files))
-        except:
-            file_count = 0
-        new_file_name = str(file_count) + ".png"
-        ftp.storbinary("STOR " + new_file_name, open(filename, "rb"))
-        print("Uploaded", new_file_name)
-        with open(html_file, 'r') as f:
-            html_data = f.read()
-        html_insert = html_insert.replace("<!--filename-->", new_file_name)
-        html_insert = html_insert.replace("<!--description-->", prompt)
-        html_data = html_data.replace("<!--REPLACE THIS COMMENT-->", html_insert)
-        with open(html_file, "w") as f:
-            f.writelines(html_data)
-        ftp.storbinary("STOR " + "index.html", open(html_file, "rb"))
+    server_folder = os.getenv('ftp_ai_images')
+    client = aioftp.Client()
+    await client.connect(ftp_server)
+    await client.login(ftp_username, ftp_password)
+    await client.change_directory(server_folder)
+    server_files = await client.list()
+    try:
+        file_count = int(len(server_files))
+    except:
+        file_count = 0
+    new_file_name = str(file_count) + ".png"
+    await client.upload(filename, new_file_name, write_into=True)
+    print("Uploaded", new_file_name)
+    with open(html_file, 'r') as f:
+        html_data = f.read()
+    html_insert = html_insert.replace("<!--filename-->", new_file_name)
+    html_insert = html_insert.replace("<!--description-->", prompt)
+    html_data = html_data.replace("<!--REPLACE THIS COMMENT-->", html_insert)
+    with open(html_file, "w") as f:
+        f.writelines(html_data)
+    await client.upload(html_file, "index.html", write_into=True)
+    await client.quit()
 
 def create_channel_config(filepath):
     config_dict = {
@@ -510,70 +513,28 @@ async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
 @bot.command()        
 async def meme(ctx):
     async def update_meme_webpage(filename):
-        output_file = "index.html"
-        html = '''<!DOCTYPE html>
-<html>
-<head>
-    <title>ai-memes</title>
-    <style type="text/css">
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #242424; /* dark gray */
-            color: #fff; /* white */
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            text-align: center;
-            margin-top: 50px;
-        }
-        p {
-            text-align: center;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 50px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            grid-gap: 20px;
-        }
-        img {
-            width: 100%;
-            height: auto;
-            border-radius: 10px;
-        }
-    </style>
-</head>
-<body>
-    <h1>ai-memes</h1>
-    <p>AI generated memes using chatgpt and imgflip</p>
-    <div class="container">
-    '''
-        html_end = '''	</div>
-</body>
-</html>'''
-        img_list = []
-        with FTP(ftp_server) as ftp:
-            ftp.login(ftp_username, ftp_password)
-            ftp.cwd(ftp_ai_memes)
-            server_files = ftp.nlst(ftp_ai_memes)
-            server_files.sort()
-            try:
-                file_count = int(server_files[-2][-11:-4])+1
-            except:
-                file_count = 0
-            new_file_name = str(file_count).zfill(7) + ".png"
-            ftp.storbinary("STOR " + new_file_name, open(filename, "rb"))
-            print("Uploaded", new_file_name)
-            for x in range(0,file_count+1):
-                img_list.append("<img src=\"" + str(x).zfill(7) + ".png\">\n")
-            for line in reversed(img_list):
-                html += line
-            html += html_end
-            with open(output_file, "w") as f:
-                f.writelines(html)
-            ftp.storbinary("STOR " + output_file, open(output_file, "rb"))
+        server_folder = os.getenv('ftp_ai_memes')
+        client = aioftp.Client()
+        await client.connect(ftp_server)
+        await client.login(ftp_username, ftp_password)
+        await client.change_directory(server_folder)
+        server_files = await client.list()
+        try:
+            file_count = len(server_files)
+        except:
+            file_count = 0
+        new_file_name = str(file_count) + ".png"
+        await client.upload(filename, new_file_name, write_into=True)
+        print("Uploaded", new_file_name)
+        with open("phixxy.com/ai-memes/index.html", 'r') as f:
+            html_data = f.read()
+        html_insert = '<!--ADD IMG HERE-->\n        <img src="' + new_file_name + '" loading="lazy">'
+        html_data = html_data.replace('<!--ADD IMG HERE-->',html_insert)
+        with open("phixxy.com/ai-memes/index.html", "w") as f:
+            f.writelines(html_data)
+        await client.upload("phixxy.com/ai-memes/index.html", "index.html", write_into=True)
+        #ftp.storbinary("STOR " + "index.html", open("phixxy.com/ai-memes/index.html", "rb"))
+        await client.quit()
     
     async def generate_random_meme(topic):
         userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
@@ -908,6 +869,7 @@ async def website(ctx):
         for filename in os.listdir(local_folder):
             if ".html" in filename:
                 await client.upload(local_folder + filename, filename, write_into=True)
+        await client.quit()
                     
         
     server_folder = os.getenv('ftp_ai_webpage')
@@ -1236,12 +1198,14 @@ async def describe(ctx):
         shutil.copyfileobj(r.raw, out_file)
 
     img_link = my_open_img_file(imageName)
-    
-    url = STABLE_DIFFUSION_URL
-    payload = {"image": img_link}
-    response = requests.post(url=f"{url}/sdapi/v1/interrogate", json=payload)
-    r = response.json()
-    await ctx.send(r.get("caption"))
+    try:
+        url = STABLE_DIFFUSION_URL
+        payload = {"image": img_link}
+        response = requests.post(url=f"{url}/sdapi/v1/interrogate", json=payload)
+        r = response.json()
+        await ctx.send(r.get("caption"))
+    except:
+        await ctx.send("My image generation service may not be running.")
         
 @bot.command()        
 async def reimagine(ctx):
