@@ -300,30 +300,28 @@ async def delete_all_files(path):
         elif os.path.isfile(path+filename):
             os.remove(path+filename)
             
-@tasks.loop(seconds=30)  # Run the task every 5 seconds
+@tasks.loop(seconds=1)  # Run the task every 5 seconds
 async def task_loop():
     current_time = time.localtime()
     bot_stuff = bot.get_channel(544408659174883328)
     last_daily_run = 0
     
     #Run daily task
-    if current_time.tm_hour == 17 and current_time.tm_min == 0 and last_daily_run != current_time.tim_yday:
+    if current_time.tm_hour == 12 and current_time.tm_min == 0 and last_daily_run != current_time.tm_yday:
         failed_tasks = []
         last_daily_run = current_time.tm_yday #Don't accidently run the task twice in a day.
         await bot_stuff.send("<@242018983241318410> The current time is 5pm. Running daily tasks!")
-        await bot_stuff.send("<@142420997360975872> I love you!")
         try:
             await blog(bot_stuff)
         except Exception as error:
             failed_tasks.append("Blogpost failed!")
-            await bot_stuff.send(output)
         try:
             await delete_all_files("tmp/")
         except Exception as error:
             failed_tasks.append("Delete tmp/ failed!")
         if failed_tasks != []:
             for failed_task in failed_tasks:
-                bot_stuff.send(failed_task)
+                await bot_stuff.send(failed_task)
         else:
             await bot_stuff.send("All daily tasks successfully ran!")
         
