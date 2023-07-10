@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.utils import get
 import shutil
 import json
@@ -21,6 +21,7 @@ import threading
 import matplotlib.pyplot as plt
 import aiohttp
 import aioftp
+import sched
 
 #config
 STABLE_DIFFUSION_URL = "http://127.0.0.1:7861"
@@ -298,7 +299,26 @@ async def delete_all_files(path):
             shutil.rmtree(path+filename)
         elif os.path.isfile(path+filename):
             os.remove(path+filename)
+            
+@tasks.loop(seconds=30)  # Run the task every 5 seconds
+async def task_loop():
+    current_time = time.localtime()
+    bot_stuff = bot.get_channel(544408659174883328)
+    last_daily_run = 0
+    if current_time.tm_hour == 17 and current_time.tm_min == 0 and last_daily_run != current_time.tim_yday:
+        output = "<@242018983241318410> The current time is 5pm. Running daily tasks!"
+        last_daily_run = current_time.tm_yday #Don't accidently run the task twice in a day.
+        await bot_stuff.send(output)
+        await bot_stuff.send("<@142420997360975872> I love you!")
+        try:
+            await blog(bot_stuff)
+        except Exception as error:
+            output = "blogpost task failed somehow: " + str(error)
+            await bot_stuff.send(output)
+        await bot_stuff.send("All daily tasks ran!")
         
+    
+
     
 @bot.event
 async def on_ready():
@@ -306,6 +326,7 @@ async def on_ready():
     #stuff to do if first run
     await folder_setup()
     await delete_all_files("tmp/")
+    task_loop.start()
         
 @bot.command()        
 async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
@@ -621,7 +642,13 @@ async def rsgp(ctx, amount):
 @bot.command()        
 async def blog(ctx):
     start_time = time.time()
-    topic = ctx.message.content.split(" ", maxsplit=1)[1]
+    # Check if a topic was provided
+    if len(ctx.message.content.split(" ")) > 1:
+        topic = ctx.message.content.split(" ", maxsplit=1)[1]
+        await ctx.send("Writing blogpost")
+    else:
+        await ctx.send("No topic given for blogpost, generating one.")
+        topic = answer_question("Give me one topic for an absurd blogpost.")
     filename = "phixxy.com/ai-blog/index.html"
     with open(filename, 'r', encoding="utf-8") as f:
         html_data = f.read()
@@ -660,10 +687,11 @@ async def blog(ctx):
         f.write(html_data)
     
     
-    await upload_ftp(filename, "ai-blog", "index.html")
+    await upload_ftp(filename, "/media/sdq1/bottlecap/www/phixxy.com/public_html/ai-blog/", "index.html")
     run_time = time.time() - start_time
     print("It took " + str(run_time) + " seconds to generate the blog post!")
-    await ctx.send("Blog Updated! https://phixxy.com/ai-blog")
+    output = "Blog Updated! (" + str(run_time) + " seconds) https://phixxy.com/ai-blog"
+    await ctx.send(output)
         
 
 @bot.command()        
