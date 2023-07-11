@@ -646,6 +646,17 @@ async def rsgp(ctx, amount):
     cost = (int(amount) * cost_per_bil / 1000000000)
     output = str(amount) + ' rsgp would cost: $' + str(cost)
     await ctx.send(output)
+    
+@bot.command()
+async def suggest_blog(ctx, *args):
+    message = ' '.join(args)
+    if '\n' in message:
+        await ctx.send("Send only one topic at a time.")
+        return
+    else:
+        blogpost_file = "databases/blog_topics.txt"
+        with open(blogpost_file, 'a') as f:
+            f.writelines(message)
 
 @bot.command()        
 async def blog(ctx):
