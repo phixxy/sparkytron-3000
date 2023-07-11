@@ -300,13 +300,16 @@ async def delete_all_files(path):
             shutil.rmtree(path+filename)
         elif os.path.isfile(path+filename):
             os.remove(path+filename)
+
+
             
-@tasks.loop(seconds=1)  # Run the task every 5 seconds
+@tasks.loop(seconds=1)  # Run the task every second
 async def task_loop():
     current_time = time.localtime()
-    bot_stuff = bot.get_channel(544408659174883328)
-    #Run daily task
-    if current_time.tm_hour == 17 and current_time.tm_min == 7 and current_time.tm_sec == 0:
+    
+    #Run daily tasks
+    if current_time.tm_hour == 17 and current_time.tm_min == 0 and current_time.tm_sec == 0:
+        bot_stuff = bot.get_channel(544408659174883328)
         output = 'The following tasks failed:\n```'
         failed_tasks = []
         await bot_stuff.send("<@242018983241318410> The current time is 5pm. Running daily tasks!")
@@ -335,6 +338,14 @@ async def on_ready():
     await folder_setup()
     await delete_all_files("tmp/")
     task_loop.start()
+    
+@bot.command()            
+async def update(ctx):
+    if ctx.author.id == 242018983241318410:
+        subprocess.run(["git","pull"])
+        await ctx.send("Git pull success")
+    else:
+        await ctx.send("You don't have permission to do this.")
         
 @bot.command()        
 async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
