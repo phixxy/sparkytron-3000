@@ -308,7 +308,7 @@ async def task_loop():
     current_time = time.localtime()
     
     #Run daily tasks
-    if current_time.tm_hour == 0 and current_time.tm_min == 0 and current_time.tm_sec == 0:
+    if current_time.tm_hour == 17 and current_time.tm_min == 0 and current_time.tm_sec == 0:
         bot_stuff = bot.get_channel(544408659174883328)
         output = 'The following tasks failed:\n```'
         failed_tasks = []
@@ -690,7 +690,8 @@ async def blog(ctx):
     if os.path.isfile(blogpost_file):
         with open(blogpost_file, 'r') as f:
             blogpost_topics = f.read()
-            topic = f.seek(0).readline()
+            f.seek(0)
+            topic = f.readline()
     blogpost_topics = blogpost_topics.replace(topic, '')
     with open(blogpost_file, 'w') as f:
             f.write(blogpost_topics)
