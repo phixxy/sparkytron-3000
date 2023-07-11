@@ -329,6 +329,9 @@ async def task_loop():
             await bot_stuff.send(output)
         else:
             await bot_stuff.send("All daily tasks successfully ran!")
+            
+def new_function:
+    pass
         
     
 @bot.event
