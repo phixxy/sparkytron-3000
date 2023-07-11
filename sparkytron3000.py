@@ -289,7 +289,7 @@ async def chat_response(ctx, channel_vars, chat_history_string):
             print(error)
     
 async def folder_setup():
-    folder_names = ["tmp", "channels", "users", "channels/config", "channels/logs", "databases"]
+    folder_names = ["tmp", "channels", "users", "channels/config", "channels/logs", "databases", "databases/currency", "databases/currency/players"]
     for folder_name in folder_names:
         if not os.path.exists(folder_name):
             os.mkdir(folder_name)
@@ -308,7 +308,7 @@ async def task_loop():
     current_time = time.localtime()
     
     #Run daily tasks
-    if current_time.tm_hour == 17 and current_time.tm_min == 0 and current_time.tm_sec == 0:
+    if current_time.tm_hour == 0 and current_time.tm_min == 0 and current_time.tm_sec == 0:
         bot_stuff = bot.get_channel(544408659174883328)
         output = 'The following tasks failed:\n```'
         failed_tasks = []
@@ -521,7 +521,7 @@ async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
     async def gamble(filepath, player_db):
         pass
     
-    working_dir = "currency/"
+    working_dir = "databases/currency/"
     players_dir = "players/"
     sender_id = str(ctx.author.id)
     default_db = read_db("{0}{1}default.json".format(working_dir, players_dir))
@@ -672,6 +672,7 @@ async def suggest_blog(ctx, *args):
         blogpost_file = "databases/blog_topics.txt"
         with open(blogpost_file, 'a') as f:
             f.writelines(message)
+        await ctx.send("Saved suggestion!")
 
 @bot.command()        
 async def blog(ctx):
