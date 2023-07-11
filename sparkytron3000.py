@@ -342,8 +342,12 @@ async def on_ready():
 @bot.command()            
 async def update(ctx):
     if ctx.author.id == 242018983241318410:
-        subprocess.run(["git","pull"])
-        await ctx.send("Git pull success")
+        output = subprocess.run(["git","pull"],capture_output=True)
+        if output.stderr:
+            await ctx.send("Update Failed")
+            await ctx.send(output.stderr.decode('utf-8'))
+        else:
+            await ctx.send(output.stdout.decode('utf-8'))
     else:
         await ctx.send("You don't have permission to do this.")
         
