@@ -224,8 +224,8 @@ def edit_channel_config(channel_id, key, value):
 async def react_to_msg(ctx, react):
     if True:
         if not random.randint(0,10) and ctx.author.id != 1097302679836971038:
-            prompt = "Send only an emoji as a discord reaction to the following chat message sent to you:\n"
-            message = prompt + ctx.content[0] + '\n'
+            system_msg = "Send only an emoji as a discord reaction to the following chat message"
+            message = ctx.content[0]
             headers = { 
                 'Content-Type': 'application/json', 
                 'Authorization': f'Bearer {os.getenv("openai.api_key")}',
@@ -233,7 +233,7 @@ async def react_to_msg(ctx, react):
             
             data = { 
                 "model": "gpt-3.5-turbo", 
-                "messages": [{"role": "user", "content": message}]
+                "messages": [{"role": "system", "content": system_msg}, {"role": "user", "content": message}]
             }
 
             url = "https://api.openai.com/v1/chat/completions"
