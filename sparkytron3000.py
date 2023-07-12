@@ -69,6 +69,10 @@ async def save_image(ctx):
         
     imageName = "blank_image.png"
     
+    with open(imageName, 'wb') as out_file:
+        print(f"Saving image: {imageName}")
+        shutil.copyfileobj(r.raw, out_file)
+    
     if os.path.exists(imageName):
         await ctx.send("Saved Image!")
     else:
