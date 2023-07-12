@@ -58,6 +58,14 @@ async def upload_ftp(local_filename, server_folder, server_filename):
     await client.upload(local_filename, server_folder+server_filename, write_into=True)
     await client.quit()
     
+async def handle_error(error):
+    print(error)
+    current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    log_line = current_time + ': ' + error
+    with open("databases/error_log.txt", 'a') as f:
+        f.write(log_line)
+    return error
+    
 
 async def upload_ftp_ai_images(filename, prompt):
     html_file = "phixxy.com/ai-images/index.html"
@@ -135,7 +143,7 @@ async def answer_question(topic, model="gpt-3.5-turbo"):
                 return response
 
     except Exception as error:
-        return error
+        return await handle_error(error)
     
 def extract_key_value_pairs(input_str):
     output_str = input_str
@@ -195,7 +203,8 @@ async def look_at(ctx, look=False):
                     description = r.get("caption")
                     description = description.split(',')[0]
                     metadata += f"<image:{description}>\n"
-                except:
+                except Exception as error:
+                    await handle_error(error)
                     return "ERROR: CLIP may not be running. Could not look at image."
     
     return metadata
@@ -237,7 +246,7 @@ async def react_to_msg(ctx, react):
                 await ctx.add_reaction(reaction.strip())
             except Exception as error:
                 print("Some error happened while trying to react to a message")
-                print(str(error))
+                await handle_error(error)
             
 async def log_chat_and_get_history(ctx, logfile, channel_vars):
     metadata = await look_at(ctx, channel_vars["look_at_images"])
@@ -286,7 +295,7 @@ async def chat_response(ctx, channel_vars, chat_history_string):
                         await ctx.channel.send(message)
 
         except Exception as error: 
-            print(error)
+            await handle_error(error)
     
 async def folder_setup():
     folder_names = ["tmp", "channels", "users", "channels/config", "channels/logs", "databases", "databases/currency", "databases/currency/players"]
@@ -316,11 +325,12 @@ async def task_loop():
         try:
             await blog(bot_stuff)
         except Exception as error:
-            print(error)
+            await handle_error(error)
             failed_tasks.append("Blogpost")
         try:
             await delete_all_files("tmp/")
         except Exception as error:
+            await handle_error(error)
             failed_tasks.append("Delete tmp/")
         if failed_tasks != []:
             for failed_task in failed_tasks:
@@ -623,8 +633,9 @@ async def meme(ctx):
             #Printing Whether Creating A meme was A success
             print(f"Generated Meme = {response['success']}\nImage Link = {response['data']['url']}\nPage Link = {response['data']['page_url']}")
             image_link = response['data']['url']
-        except:
+        except Exception as error:
             print("\nAaaaah An error occured when requesting Data..")
+            await handle_error(error)
         try:
     #------------------------------------Saving Image Using Requests---------------------------------#
             filename = memepics[id-1]['name']
@@ -636,7 +647,8 @@ async def meme(ctx):
             file.write(response.content)
             file.close()
             print("Meme was Saved Successfuly")
-        except:
+        except Exception as error:
+            await handle_error(error)
             print("Something's Wrong with the urllib So try again")
         return image_link, filename
     
@@ -649,9 +661,10 @@ async def meme(ctx):
                 await update_meme_webpage(filepath)
         except Exception as error:
             print("COULDN'T UPLOAD TO FTP!")
+            await handle_error(error)
         await ctx.send(link)
     except Exception as error:
-        print(error)
+        await handle_error(error)
         await ctx.send('Something went wrong try again. Usage: !meme (topic)')
         
 @bot.command()        
@@ -777,8 +790,8 @@ async def highscores(ctx, limit=0):
                     user_message_counts[user] = 1
                 else:
                     user_message_counts[user] += 1
-        except:
-            pass
+        except Exception as error:
+            await handle_error(error)
     
     def remove_dict_keys_if_less_than_x(dictionary,x):
         for key in dictionary:
@@ -833,8 +846,8 @@ async def highscores_server(ctx, limit=0):
                     user_message_counts[user] = 1
                 else:
                     user_message_counts[user] += 1
-        except:
-            pass
+        except Exception as error:
+            await handle_error(error)
             
     def remove_dict_keys_if_less_than_x(dictionary,x):
         for key in dictionary:
@@ -976,7 +989,7 @@ async def website(ctx):
         
         await ctx.send("Finished https://phixxy.com/ai-webpage/")
     except openai.error.APIConnectionError as error:
-        print(error)
+        await handle_error(error)
         await ctx.send("Failed, Try again.")
         
 @bot.command()        
@@ -987,7 +1000,7 @@ async def feature(ctx):
             f.writelines('\n' + feature)
         await ctx.send("Added " + feature)
     except Exception as error:
-        print(error)
+        await handle_error(error)
 
     with open("features.txt",'r') as f:
         features = f.read()
@@ -1039,10 +1052,10 @@ async def draw(ctx):
                 await ctx.send(file=f)
                 await ctx.send(prompt)
         except Exception as error:
-            print(error)
+            await handle_error(error)
             await ctx.send("My image generation service may not be running.")
     except Exception as error:
-        print(error)
+        await handle_error(error)
         await ctx.send('Did you mean to use !imagine?. Usage: !draw (number)')
 
 @bot.command()        
@@ -1137,6 +1150,7 @@ async def python(ctx):
             except subprocess.CalledProcessError as error:
                 await ctx.send(error.stderr.decode('utf-8'))
     except Exception as error:
+        await handle_error(error)
         await ctx.send("Usage: !python (codeblock)")
     
     
@@ -1239,7 +1253,8 @@ async def imagine(ctx):
                 f = discord.File(fh, filename=my_filename)
             
             await ctx.send(file=f)
-    except:
+    except Exception as error:
+        await handle_error(error)
         await ctx.send("My image generation service may not be running.")
     
 @bot.command()        
@@ -1252,7 +1267,8 @@ async def describe(ctx):
         else:
             print("No image linked or attached.")
             return
-    except:
+    except Exception as error:
+        await handle_error(error)
         print("Couldn't find image.")
         return
         
@@ -1274,7 +1290,8 @@ async def describe(ctx):
         response = requests.post(url=f"{url}/sdapi/v1/interrogate", json=payload)
         r = response.json()
         await ctx.send(r.get("caption"))
-    except:
+    except Exception as error:
+        await handle_error(error)
         await ctx.send("My image generation service may not be running.")
         
 @bot.command()        
@@ -1284,14 +1301,17 @@ async def reimagine(ctx):
         try:
             file_url = ctx.message.content.split(" ", maxsplit=2)[1]
             prompt = ctx.message.content.split(" ", maxsplit=2)[2]
-        except:
+        except Exception as error:
+            await handle_error(error)
             print("no linked image")
         try:
             file_url = ctx.message.attachments[0].url
             prompt = ctx.message.content.split(" ", maxsplit=1)[1]
-        except:
+        except Exception as error:
+            await handle_error(error)
             print("no attached image")
-    except:
+    except Exception as error:
+        await handle_error(error)
         print("couldn't find image")
     key_value_pairs, prompt = extract_key_value_pairs(prompt)
     r = requests.get(file_url, stream=True)
@@ -1326,7 +1346,8 @@ async def reimagine(ctx):
             with open(my_filename, "rb") as fh:
                 f = discord.File(fh, filename=my_filename)
             await ctx.send(file=f)
-    except:
+    except Exception as error:
+        await handle_error(error)
         await ctx.send("My image generation service may not be running.")
 
 
