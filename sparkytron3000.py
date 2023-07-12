@@ -745,7 +745,7 @@ async def blog(ctx):
         await ctx.send("Writing blogpost")
     else:
         await ctx.send("No topic given for blogpost, generating one.")
-        topic = answer_question("Give me one topic for an absurd blogpost.")
+        topic = await answer_question("Give me one topic for an absurd blogpost.")
         
     
     post_div = '''<!--replace this with a post-->
