@@ -49,7 +49,37 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 #discord stuff END
 
+#delete save_image function once it has been used. this is temporary
+@bot.command()        
+async def save_image(ctx):
+    try:
+        if ctx.message.content.startswith("!describe "):
+            file_url = ctx.message.content.split(" ", maxsplit=1)[1]
+        elif ctx.message.attachments:
+            file_url = ctx.message.attachments[0].url
+        else:
+            print("No image linked or attached.")
+            return
+    except Exception as error:
+        await handle_error(error)
+        print("Couldn't find image.")
+        return
         
+    r = requests.get(file_url, stream=True)
+        
+    imageName = "blank_image.png"
+    
+    if os.path.exists(imageName):
+        await ctx.send("Saved Image!")
+    else:
+        await ctx.send("Something went wrong.")
+
+@bot.command()
+async def moderate(ctx, filename):
+    await ctx.send("Reminder, this currently tool works by replacing the filename on the ftp server with a black image. The description will remain the same and may need to be altered.")
+    await upload_ftp("blank_image.png", os.getenv('ftp_ai_webpage'), filename)
+    await ctx.send("Image replaced")
+    
 async def upload_ftp(local_filename, server_folder, server_filename):
     client = aioftp.Client()
     await client.connect(ftp_server)
