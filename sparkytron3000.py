@@ -98,6 +98,9 @@ async def upload_ftp_ai_images(filename, prompt):
     await client.upload(html_file, "index.html", write_into=True)
     await client.quit()
 
+def banana(orange):
+    print("Orange you glad I didn't say banana?")
+
 def create_channel_config(filepath):
     config_dict = {
         "personality":"average",
