@@ -652,9 +652,8 @@ async def meme(ctx):
     #------------------------------------Saving Image Using Requests---------------------------------#
             filename = memepics[id-1]['name']
             response = requests.get(f"{response['data']['url']}")
-            folder = "memes/"
-            uniqueness = random.randint(0,100000000)
-            filename = folder + topic + str(uniqueness) + ".jpg"
+            folder = "tmp/"
+            filename = folder + topic + str(len(os.listdir(folder))) + ".jpg"
             file = open(filename, "wb")
             file.write(response.content)
             file.close()
