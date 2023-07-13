@@ -53,7 +53,8 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 async def moderate(ctx, filename):
     await ctx.send("Reminder, this currently tool works by replacing the filename on the ftp server with a black image. The description will remain the same and may need to be altered.")
     await upload_ftp("blank_image.png", os.getenv('ftp_ai_webpage'), filename)
-    await ctx.send("Image replaced")
+    output = "Image " + filename + " replaced"
+    await ctx.send(output)
     
 async def upload_ftp(local_filename, server_folder, server_filename):
     client = aioftp.Client()
@@ -230,7 +231,7 @@ def edit_channel_config(channel_id, key, value):
         json.dump(config_data, f)
         
 async def react_to_msg(ctx, react):
-    if True:
+    if True: #this should say if react: but I am leaving it because people are enjoying it for now
         if not random.randint(0,10) and ctx.author.id != 1097302679836971038:
             system_msg = "Send only an emoji as a discord reaction to the following chat message"
             message = ctx.content[0]
