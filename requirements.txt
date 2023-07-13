@@ -4,5 +4,5 @@ openai
 pynacl
 python-dotenv
 pillow
-duckduckgo-search
-tts
+matplotlib
+aioftp
