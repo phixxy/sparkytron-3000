@@ -191,8 +191,8 @@ async def look_at(ctx, look=False):
     metadata = ""
     if look:
         url = os.getenv('stablediffusion_url')
-            if url == "disabled":
-                return
+        if url == "disabled":
+            return
         for attachment in ctx.attachments:
             if attachment.url.endswith(('.jpg', '.png')):
                 print("image seen")
@@ -924,8 +924,8 @@ async def website(ctx):
         
     async def generate_images(local_folder, image_list):
         url = os.getenv('stablediffusion_url')
-            if url == "disabled":
-                return
+        if url == "disabled":
+            return
         file_list = []
         async with aiohttp.ClientSession() as session:
             for image in image_list:
@@ -1023,8 +1023,8 @@ async def feature(ctx):
 @bot.command()        
 async def draw(ctx):
     url = os.getenv('stablediffusion_url')
-        if url == "disabled":
-            return
+    if url == "disabled":
+        return
     try:
         if " " in ctx.message.content:
             amount = ctx.message.content.split(" ", maxsplit=1)[1]
@@ -1188,8 +1188,8 @@ async def personality(ctx):
 @bot.command()
 async def change_model(ctx, model_choice='0'):
     url = os.getenv('stablediffusion_url')
-        if url == "disabled":
-            return
+    if url == "disabled":
+        return
     response = requests.get(url=f'{url}/sdapi/v1/options')
     config_json = response.json()
     current_model = config_json["sd_model_checkpoint"]
@@ -1226,9 +1226,9 @@ async def change_model(ctx, model_choice='0'):
 @bot.command()
 async def imagine(ctx):
     url = os.getenv('stablediffusion_url')
-        if url == "disabled":
-            await ctx.send("Command is currently disabled.")
-            return
+    if url == "disabled":
+        await ctx.send("Command is currently disabled.")
+        return
     prompt = ctx.message.content.split(" ", maxsplit=1)[1]
     key_value_pairs, prompt = extract_key_value_pairs(prompt)
     #negative_prompt = ""
@@ -1278,9 +1278,9 @@ async def imagine(ctx):
 @bot.command()        
 async def describe(ctx):
     url = os.getenv('stablediffusion_url')
-        if url == "disabled":
-            await ctx.send("Command is currently disabled")
-            return
+    if url == "disabled":
+        await ctx.send("Command is currently disabled")
+        return
     try:
         if ctx.message.content.startswith("!describe "):
             file_url = ctx.message.content.split(" ", maxsplit=1)[1]
@@ -1316,9 +1316,9 @@ async def describe(ctx):
 async def reimagine(ctx):
     #see http://127.0.0.1:7860/docs for info, must be running stable diffusion with --api
     url = os.getenv('stablediffusion_url')
-        if url == "disabled":
-            await ctx.send("Command is currently disabled")
-            return
+    if url == "disabled":
+        await ctx.send("Command is currently disabled")
+        return
     try:
         try:
             file_url = ctx.message.content.split(" ", maxsplit=2)[1]
