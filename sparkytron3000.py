@@ -1220,6 +1220,29 @@ async def change_model(ctx, model_choice='0'):
     output = "Changed model to: " + model_name
     await ctx.send(output)
 
+async def answer_question(topic, model="gpt-3.5-turbo"):
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {os.getenv("openai.api_key")}',
+    }
+
+    data = {
+        "model": model,
+        "messages": [{"role": "user", "content": topic}]
+    }
+
+    url = "https://api.openai.com/v1/chat/completions"
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, headers=headers, json=data) as resp:
+                response_data = await resp.json()
+                response = response_data['choices'][0]['message']['content']
+                return response
+
+    except Exception as error:
+        return await handle_error(error)
+
 @bot.command()
 async def imagine(ctx):
     url = os.getenv('stablediffusion_url')
@@ -1242,35 +1265,49 @@ async def imagine(ctx):
     payload = combine_dicts(payload, key_value_pairs)
     
     try:
-        response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
-        r = response.json()
-        
-        for i in r['images']:
-            if not os.path.isdir("users/" + str(ctx.author.id)):
-                os.makedirs("users/" + str(ctx.author.id))
-            
-            image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))
-            png_payload = {"image": "data:image/png;base64," + i}
-            
-            response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
-            pnginfo = PngImagePlugin.PngInfo()
-            pnginfo.add_text("parameters", response2.json().get("info"))
-            
-            my_filename = "users/" + str(ctx.author.id) + '/' + str(len(os.listdir("users/" + str(ctx.author.id) + '/'))) + ".png"
-            image.save(my_filename, pnginfo=pnginfo)
-            
-            channel_vars = await get_channel_config(ctx.channel.id)
-            
-            if channel_vars["ftp_enabled"]:
-                await upload_ftp_ai_images(my_filename, prompt)
-            
-            with open(my_filename, "rb") as fh:
-                f = discord.File(fh, filename=my_filename)
-            
-            await ctx.send(file=f)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload) as resp:
+                r = await resp.json()
     except Exception as error:
         await handle_error(error)
-        await ctx.send("My image generation service may not be running.")
+
+    
+    #try:
+    #    response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
+    #    r = response.json()
+        
+    for i in r['images']:
+        if not os.path.isdir("users/" + str(ctx.author.id)):
+            os.makedirs("users/" + str(ctx.author.id))
+        
+        image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))
+        png_payload = {"image": "data:image/png;base64," + i}
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, headers=headers, json=data) as resp:
+                    response2 = await resp.json()
+        except Exception as error:
+            await handle_error(error)
+        #response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
+        pnginfo = PngImagePlugin.PngInfo()
+        pnginfo.add_text("parameters", response2.json().get("info"))
+        
+        my_filename = "users/" + str(ctx.author.id) + '/' + str(len(os.listdir("users/" + str(ctx.author.id) + '/'))) + ".png"
+        image.save(my_filename, pnginfo=pnginfo)
+        
+        channel_vars = await get_channel_config(ctx.channel.id)
+        
+        if channel_vars["ftp_enabled"]:
+            await upload_ftp_ai_images(my_filename, prompt)
+        
+        with open(my_filename, "rb") as fh:
+            f = discord.File(fh, filename=my_filename)
+        
+        await ctx.send(file=f)
+    #except Exception as error:
+    #    await handle_error(error)
+    #    await ctx.send("My image generation service may not be running.")
     
 @bot.command()        
 async def describe(ctx):
