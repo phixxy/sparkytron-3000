@@ -68,7 +68,7 @@ async def upload_ftp(local_filename, server_folder, server_filename):
 async def handle_error(error):
     print(error)
     current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    log_line = current_time + ': ' + error
+    log_line = current_time + ': ' + str(error)
     with open("databases/error_log.txt", 'a') as f:
         f.write(log_line)
     return error
