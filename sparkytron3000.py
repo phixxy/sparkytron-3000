@@ -22,8 +22,9 @@ import matplotlib.pyplot as plt
 import aiohttp
 import aioftp
 
-#config
-STABLE_DIFFUSION_URL = "http://127.0.0.1:7861"
+#Stable Diffusion
+#Set this env variable to host:port or "disabled"
+#os.getenv('stablediffusion_url')
 
 #env vars START
 load_dotenv()
@@ -189,6 +190,9 @@ def my_open_img_file(path):
 async def look_at(ctx, look=False):
     metadata = ""
     if look:
+        url = os.getenv('stablediffusion_url')
+            if url == "disabled":
+                return
         for attachment in ctx.attachments:
             if attachment.url.endswith(('.jpg', '.png')):
                 print("image seen")
@@ -205,7 +209,6 @@ async def look_at(ctx, look=False):
                 img_link = my_open_img_file(imageName)
                 
                 try:
-                    url = STABLE_DIFFUSION_URL
                     payload = {"image": img_link}
                     response = requests.post(url=f'{url}/sdapi/v1/interrogate', json=payload)
                     r = response.json()
@@ -921,11 +924,13 @@ async def website(ctx):
         return alt_texts
         
     async def generate_images(local_folder, image_list):
+        url = os.getenv('stablediffusion_url')
+            if url == "disabled":
+                return
         file_list = []
         async with aiohttp.ClientSession() as session:
             for image in image_list:
                 filename = image.replace(" ", "").lower() + ".png"
-                url = STABLE_DIFFUSION_URL
                 payload = {"prompt": image, "steps": 25}
                 response = await session.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
                 r = await response.json()
@@ -1018,6 +1023,9 @@ async def feature(ctx):
 
 @bot.command()        
 async def draw(ctx):
+    url = os.getenv('stablediffusion_url')
+        if url == "disabled":
+            return
     try:
         if not os.path.isdir("tmp/draw/"):
             os.makedirs("tmp/draw/")
@@ -1040,7 +1048,6 @@ async def draw(ctx):
         else:
             prompt = prompt + ", masterpiece, studio quality"
         negative_prompt = ""
-        url = STABLE_DIFFUSION_URL
         payload = {"prompt": prompt,"steps": 25, "negative_prompt": negative_prompt,"batch_size": amount}
         try:
             response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
@@ -1183,7 +1190,9 @@ async def personality(ctx):
 
 @bot.command()
 async def change_model(ctx, model_choice='0'):
-    url = STABLE_DIFFUSION_URL
+    url = os.getenv('stablediffusion_url')
+        if url == "disabled":
+            return
     response = requests.get(url=f'{url}/sdapi/v1/options')
     config_json = response.json()
     current_model = config_json["sd_model_checkpoint"]
@@ -1219,6 +1228,10 @@ async def change_model(ctx, model_choice='0'):
 
 @bot.command()
 async def imagine(ctx):
+    url = os.getenv('stablediffusion_url')
+        if url == "disabled":
+            await ctx.send("Command is currently disabled.")
+            return
     prompt = ctx.message.content.split(" ", maxsplit=1)[1]
     key_value_pairs, prompt = extract_key_value_pairs(prompt)
     #negative_prompt = ""
@@ -1226,7 +1239,6 @@ async def imagine(ctx):
 
     await ctx.send("Please be patient this may take some time! Generating: " + prompt + ".")
     
-    url = STABLE_DIFFUSION_URL
     payload = {
         "prompt": prompt,
         "steps": 25,
@@ -1268,6 +1280,10 @@ async def imagine(ctx):
     
 @bot.command()        
 async def describe(ctx):
+    url = os.getenv('stablediffusion_url')
+        if url == "disabled":
+            await ctx.send("Command is currently disabled")
+            return
     try:
         if ctx.message.content.startswith("!describe "):
             file_url = ctx.message.content.split(" ", maxsplit=1)[1]
@@ -1294,7 +1310,6 @@ async def describe(ctx):
 
     img_link = my_open_img_file(imageName)
     try:
-        url = STABLE_DIFFUSION_URL
         payload = {"image": img_link}
         response = requests.post(url=f"{url}/sdapi/v1/interrogate", json=payload)
         r = response.json()
@@ -1306,6 +1321,10 @@ async def describe(ctx):
 @bot.command()        
 async def reimagine(ctx):
     #see http://127.0.0.1:7860/docs for info, must be running stable diffusion with --api
+    url = os.getenv('stablediffusion_url')
+        if url == "disabled":
+            await ctx.send("Command is currently disabled")
+            return
     try:
         try:
             file_url = ctx.message.content.split(" ", maxsplit=2)[1]
@@ -1337,7 +1356,6 @@ async def reimagine(ctx):
     #negative_prompt = ""
     await ctx.send("Please be patient this may take some time! Generating: " + prompt + ".")
     try:
-        url = STABLE_DIFFUSION_URL
         payload = {"init_images": [img_link], "prompt": prompt,"steps": 40, "negative_prompt": negative_prompt, "denoising_strength": 0.5}
         payload = combine_dicts(payload, key_value_pairs)
         response = requests.post(url=f'{url}/sdapi/v1/img2img', json=payload)
