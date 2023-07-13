@@ -1026,8 +1026,6 @@ async def draw(ctx):
         if url == "disabled":
             return
     try:
-        if not os.path.isdir("tmp/draw/"):
-            os.makedirs("tmp/draw/")
         if " " in ctx.message.content:
             amount = ctx.message.content.split(" ", maxsplit=1)[1]
             if int(amount) > 4:
@@ -1057,7 +1055,7 @@ async def draw(ctx):
                 response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
                 pnginfo = PngImagePlugin.PngInfo()
                 pnginfo.add_text("parameters", response2.json().get("info"))
-                my_filename = "tmp/draw/" + prompt + str(random.randint(0,10000000)) + ".png"
+                my_filename = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
                 image.save(my_filename, pnginfo=pnginfo)
                 channel_vars = await get_channel_config(ctx.channel.id)
                 if channel_vars["ftp_enabled"]:
@@ -1261,7 +1259,7 @@ async def imagine(ctx):
             pnginfo = PngImagePlugin.PngInfo()
             pnginfo.add_text("parameters", response2.json().get("info"))
             
-            my_filename = "users/" + str(ctx.author.id) + '/' + prompt[0:15] + str(random.randint(0, 10000000)) + ".png"
+            my_filename = "users/" + str(ctx.author.id) + '/' + str(len(os.listdir("users/" + str(ctx.author.id) + '/'))) + ".png"
             image.save(my_filename, pnginfo=pnginfo)
             
             channel_vars = await get_channel_config(ctx.channel.id)
@@ -1297,11 +1295,8 @@ async def describe(ctx):
         return
         
     r = requests.get(file_url, stream=True)
-    
-    if not os.path.isdir(f"tmp/clip/{ctx.author.id}"):
-        os.makedirs(f"tmp/clip/{ctx.author.id}")
         
-    imageName = f"tmp/clip/{ctx.author.id}/{random.randint(0,10000000)}.png"
+    imageName = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
     
     with open(imageName, 'wb') as out_file:
         print(f"Saving image: {imageName}")
@@ -1342,9 +1337,7 @@ async def reimagine(ctx):
         print("couldn't find image")
     key_value_pairs, prompt = extract_key_value_pairs(prompt)
     r = requests.get(file_url, stream=True)
-    if not os.path.isdir("tmp/reimagining/"+ str(ctx.author.id)):
-            os.makedirs("tmp/reimagining/"+ str(ctx.author.id))
-    imageName = "tmp/reimagining/" + str(ctx.author.id) +"/"+ str(random.randint(0,10000000)) + '.png'
+    imageName = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
     with open(imageName, 'wb') as out_file:
         print('Saving image: ' + imageName)
         shutil.copyfileobj(r.raw, out_file)
@@ -1367,7 +1360,7 @@ async def reimagine(ctx):
             response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
             pnginfo = PngImagePlugin.PngInfo()
             pnginfo.add_text("parameters", response2.json().get("info"))
-            my_filename = "tmp/reimagined/" + str(ctx.author.id) + '/' + prompt[0:15] + str(random.randint(0,10000000)) + ".png"
+            my_filename = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
             image.save(my_filename, pnginfo=pnginfo)
             with open(my_filename, "rb") as fh:
                 f = discord.File(fh, filename=my_filename)
