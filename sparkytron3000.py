@@ -1226,6 +1226,8 @@ async def imagine(ctx):
     if url == "disabled":
         await ctx.send("Command is currently disabled.")
         return
+    else:
+        url=f"{url}/sdapi/v1/txt2img"
     prompt = ctx.message.content.split(" ", maxsplit=1)[1]
     key_value_pairs, prompt = extract_key_value_pairs(prompt)
     #negative_prompt = ""
@@ -1238,12 +1240,14 @@ async def imagine(ctx):
         "steps": 25,
         "negative_prompt": negative_prompt
     }
-    
+    headers = {
+        'Content-Type': 'application/json'
+    }
     payload = combine_dicts(payload, key_value_pairs)
     
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=payload) as resp:
+            async with session.post(url, headers=headers, json=payload) as resp:
                 r = await resp.json()
     except Exception as error:
         await handle_error(error)
@@ -1263,7 +1267,7 @@ async def imagine(ctx):
             await handle_error(error)
 
         pnginfo = PngImagePlugin.PngInfo()
-        pnginfo.add_text("parameters", response2.json().get("info"))
+        pnginfo.add_text("parameters", response2.get("info"))
         
         my_filename = "users/" + str(ctx.author.id) + '/' + str(len(os.listdir("users/" + str(ctx.author.id) + '/'))) + ".png"
         image.save(my_filename, pnginfo=pnginfo)
@@ -1284,6 +1288,8 @@ async def describe(ctx):
     if url == "disabled":
         await ctx.send("Command is currently disabled")
         return
+    else:
+        url=f"{url}/sdapi/v1/interrogate"
     try:
         if ctx.message.content.startswith("!describe "):
             file_url = ctx.message.content.split(" ", maxsplit=1)[1]
@@ -1311,9 +1317,11 @@ async def describe(ctx):
     img_link = my_open_img_file(imageName)
     try:
         payload = {"image": img_link}
-        async with session.post(url=f"{url}/sdapi/v1/interrogate", json=payload) as response:
-            r = await response.json()
-            await ctx.send(r.get("caption"))
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload) as response:
+                r = await response.json()
+        print(r)
+        await ctx.send(r.get("caption"))
     except Exception as error:
         await handle_error(error)
         await ctx.send("My image generation service may not be running.")
@@ -1324,22 +1332,28 @@ async def reimagine(ctx):
     if url == "disabled":
         await ctx.send("Command is currently disabled")
         return
-
-    file_url = ctx.message.content.split(" ", maxsplit=2)[1]
-    prompt = ctx.message.content.split(" ", maxsplit=2)[2]
-
-    await handle_error(error)
-    print("no linked image")
-    file_url = ctx.message.attachments[0].url
-    prompt = ctx.message.content.split(" ", maxsplit=1)[1]
+    try:
+        if ctx.message.attachments:
+            file_url = ctx.message.attachments[0].url
+            prompt = ctx.message.content.split(" ", maxsplit=1)[1]
+        elif ctx.message.content.startswith("!reimagine "):
+            file_url = ctx.message.content.split(" ", maxsplit=2)[1]
+            prompt = ctx.message.content.split(" ", maxsplit=2)[2]
+        else:
+            print("No image linked or attached.")
+            return
+    except Exception as error:
+        await handle_error(error)
+        print("Couldn't find image.")
+        return
 
     key_value_pairs, prompt = extract_key_value_pairs(prompt)
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(file_url, stream=True) as response:
+        async with session.get(file_url) as response:
             imageName = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
             with open(imageName, 'wb') as out_file:
-                print('Saving image: ' + imageName)
+                print(f"Saving image: {imageName}")
                 while True:
                     chunk = await response.content.read(1024)
                     if not chunk:
@@ -1364,9 +1378,10 @@ async def reimagine(ctx):
                     os.makedirs("tmp/reimagined/"+ str(ctx.author.id))
                 image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
                 png_payload = {"image": "data:image/png;base64," + i}
-                async with session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload) as response2:
+                async with session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload) as resp2:
+                    response2 = await resp2.json()
                     pnginfo = PngImagePlugin.PngInfo()
-                    pnginfo.add_text("parameters", response2.json().get("info"))
+                    pnginfo.add_text("parameters", response2.get("info"))
                     my_filename = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
                     image.save(my_filename, pnginfo=pnginfo)
                     with open(my_filename, "rb") as fh:
