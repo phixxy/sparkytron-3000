@@ -1184,64 +1184,38 @@ async def personality(ctx):
 
 @bot.command()
 async def change_model(ctx, model_choice='0'):
+    model_choices = {
+        '1': ("deliberate_v2.safetensors [9aba26abdf]", "DeliberateV2"),
+        '2': ("AnythingV5_v5PrtRE.safetensors [7f96a1a9ca]", "AnythingV5"),
+        '3': ("Anything-V3.0.ckpt [8712e20a5d]", "AnythingV3")
+    }
     url = os.getenv('stablediffusion_url')
     if url == "disabled":
+        await ctx.send("This command is currently disabled")
         return
-    response = requests.get(url=f'{url}/sdapi/v1/options')
-    config_json = response.json()
-    current_model = config_json["sd_model_checkpoint"]
-    output = 'Current Model: ' + current_model +'\n'
 
-    if model_choice == '1':
-        if current_model != "deliberate_v2.safetensors [9aba26abdf]":
-            model_name = "deliberate_v2.safetensors [9aba26abdf]"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url=f'{url}/sdapi/v1/options') as response:
+            config_json = await response.json()
+
+    current_model = config_json["sd_model_checkpoint"]
+    output = 'Current Model: ' + current_model + '\n'
+
+    if model_choice in model_choices:
+        model_id, model_name = model_choices[model_choice]
+        if current_model != model_id:
+            payload = {"sd_model_checkpoint": model_id}
+            async with session.post(url=f'{url}/sdapi/v1/options', json=payload) as response:
+                output = "Changed model to: " + model_name
+                await ctx.send(output)
+                return
         else:
-            await ctx.send("Already set to use DeliberateV2")
-            return
-    elif model_choice == '2':
-        if current_model != "AnythingV5_v5PrtRE.safetensors [7f96a1a9ca]":
-            model_name = "AnythingV5_v5PrtRE.safetensors [7f96a1a9ca]"
-        else:
-            await ctx.send("Already set to use AnythingV5")
-            return
-    elif model_choice == '3':
-        if current_model != "Anything-V3.0.ckpt [8712e20a5d]":
-            model_name = "Anything-V3.0.ckpt [8712e20a5d]"
-        else:
-            await ctx.send("Already set to use AnythingV3")
+            await ctx.send(f"Already set to use {model_name}")
             return
     else:
-        output += "1: DeliberateV2\n2: AnythingV5\n3: AnythingV3"
+        modeloptions = '\n'.join([f"{choice}: {name}" for choice, (, name) in model_choices.items()])
+        output += model_options
         await ctx.send(output)
-        return
-
-    payload = {"sd_model_checkpoint": model_name}
-    response = requests.post(url=f'{url}/sdapi/v1/options', json=payload)
-    output = "Changed model to: " + model_name
-    await ctx.send(output)
-
-async def answer_question(topic, model="gpt-3.5-turbo"):
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': f'Bearer {os.getenv("openai.api_key")}',
-    }
-
-    data = {
-        "model": model,
-        "messages": [{"role": "user", "content": topic}]
-    }
-
-    url = "https://api.openai.com/v1/chat/completions"
-
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, headers=headers, json=data) as resp:
-                response_data = await resp.json()
-                response = response_data['choices'][0]['message']['content']
-                return response
-
-    except Exception as error:
-        return await handle_error(error)
 
 @bot.command()
 async def imagine(ctx):
@@ -1270,11 +1244,6 @@ async def imagine(ctx):
                 r = await resp.json()
     except Exception as error:
         await handle_error(error)
-
-    
-    #try:
-    #    response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
-    #    r = response.json()
         
     for i in r['images']:
         if not os.path.isdir("users/" + str(ctx.author.id)):
@@ -1285,11 +1254,11 @@ async def imagine(ctx):
         
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.post(url, headers=headers, json=data) as resp:
+                async with session.post(url, json=png_payload) as resp:
                     response2 = await resp.json()
         except Exception as error:
             await handle_error(error)
-        #response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
+
         pnginfo = PngImagePlugin.PngInfo()
         pnginfo.add_text("parameters", response2.json().get("info"))
         
@@ -1305,9 +1274,6 @@ async def imagine(ctx):
             f = discord.File(fh, filename=my_filename)
         
         await ctx.send(file=f)
-    #except Exception as error:
-    #    await handle_error(error)
-    #    await ctx.send("My image generation service may not be running.")
     
 @bot.command()        
 async def describe(ctx):
@@ -1328,80 +1294,81 @@ async def describe(ctx):
         print("Couldn't find image.")
         return
         
-    r = requests.get(file_url, stream=True)
-        
-    imageName = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
-    
-    with open(imageName, 'wb') as out_file:
-        print(f"Saving image: {imageName}")
-        shutil.copyfileobj(r.raw, out_file)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(file_url) as response:
+            imageName = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
+            with open(imageName, 'wb') as out_file:
+                print(f"Saving image: {imageName}")
+                while True:
+                    chunk = await response.content.read(1024)
+                    if not chunk:
+                        break
+                    out_file.write(chunk)
 
     img_link = my_open_img_file(imageName)
     try:
         payload = {"image": img_link}
-        response = requests.post(url=f"{url}/sdapi/v1/interrogate", json=payload)
-        r = response.json()
-        await ctx.send(r.get("caption"))
+        async with session.post(url=f"{url}/sdapi/v1/interrogate", json=payload) as response:
+            r = await response.json()
+            await ctx.send(r.get("caption"))
     except Exception as error:
         await handle_error(error)
         await ctx.send("My image generation service may not be running.")
         
-@bot.command()        
+@bot.command()
 async def reimagine(ctx):
-    #see http://127.0.0.1:7860/docs for info, must be running stable diffusion with --api
     url = os.getenv('stablediffusion_url')
     if url == "disabled":
         await ctx.send("Command is currently disabled")
         return
-    try:
-        try:
-            file_url = ctx.message.content.split(" ", maxsplit=2)[1]
-            prompt = ctx.message.content.split(" ", maxsplit=2)[2]
-        except Exception as error:
-            await handle_error(error)
-            print("no linked image")
-        try:
-            file_url = ctx.message.attachments[0].url
-            prompt = ctx.message.content.split(" ", maxsplit=1)[1]
-        except Exception as error:
-            await handle_error(error)
-            print("no attached image")
-    except Exception as error:
-        await handle_error(error)
-        print("couldn't find image")
+
+    file_url = ctx.message.content.split(" ", maxsplit=2)[1]
+    prompt = ctx.message.content.split(" ", maxsplit=2)[2]
+
+    await handle_error(error)
+    print("no linked image")
+    file_url = ctx.message.attachments[0].url
+    prompt = ctx.message.content.split(" ", maxsplit=1)[1]
+
     key_value_pairs, prompt = extract_key_value_pairs(prompt)
-    r = requests.get(file_url, stream=True)
-    imageName = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
-    with open(imageName, 'wb') as out_file:
-        print('Saving image: ' + imageName)
-        shutil.copyfileobj(r.raw, out_file)
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(file_url, stream=True) as response:
+            imageName = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
+            with open(imageName, 'wb') as out_file:
+                print('Saving image: ' + imageName)
+                while True:
+                    chunk = await response.content.read(1024)
+                    if not chunk:
+                        break
+                    out_file.write(chunk)
 
     img_link = my_open_img_file(imageName)
-    
-    negative_prompt = "badhandsv4, worst quality, lowres, EasyNegative, hermaphrodite, cropped, not in the frame, additional faces, jpeg large artifacts, jpeg small artifacts, ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, not finished drawing, unfinished image, bad eyes, doll, 3d, cartoon, (bad eyes:1.2), (worst quality:1.2), (low quality:1.2), bad-image-v2-39000, (bad_prompt_version2:0.8), nude, badhandv4 By bad artist -neg easynegative ng_deepnegative_v1_75t verybadimagenegative_v1.3, (Worst Quality, Low Quality:1.4), Poorly Made Bad 3D, Lousy Bad Realistic, nsfw,(worst quality, low quality:1.4), (lip, nose, tooth, rouge, lipstick, eyeshadow:1.4), ( jpeg artifacts:1.4), (depth of field, bokeh, blurry, film grain, chromatic aberration, lens flare:1.0), (1boy, abs, muscular, rib:1.0), greyscale, monochrome, dusty sunbeams, trembling, motion lines, motion blur, emphasis lines, text, title, logo, signature, child, childlike, young, easynegative, (bad-hands-5:0.8), plain background, monochrome, poorly drawn face, poorly drawn hands, watermark, censored, (mutated hands and fingers), ugly, worst quality, low quality,, nsfw,(worst quality, low quality:1.4), (lip, nose, tooth, rouge, lipstick, eyeshadow:1.4), ( jpeg artifacts:1.4), (depth of field, bokeh, blurry, film grain, chromatic aberration, lens flare:1.0), (1boy, abs, muscular, rib:1.0), greyscale, monochrome, dusty sunbeams, trembling, motion lines, motion blur, emphasis lines, text, title, logo, signature, child, childlike, young"
+
     #negative_prompt = ""
+    negative_prompt = "badhandsv4, worst quality, lowres, EasyNegative, hermaphrodite, cropped, not in the frame, additional faces, jpeg large artifacts, jpeg small artifacts, ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, not finished drawing, unfinished image, bad eyes, doll, 3d, cartoon, (bad eyes:1.2), (worst quality:1.2), (low quality:1.2), bad-image-v2-39000, (bad_prompt_version2:0.8), nude, badhandv4 By bad artist -neg easynegative ng_deepnegative_v1_75t verybadimagenegative_v1.3, (Worst Quality, Low Quality:1.4), Poorly Made Bad 3D, Lousy Bad Realistic, nsfw,(worst quality, low quality:1.4), (lip, nose, tooth, rouge, lipstick, eyeshadow:1.4), ( jpeg artifacts:1.4), (depth of field, bokeh, blurry, film grain, chromatic aberration, lens flare:1.0), (1boy, abs, muscular, rib:1.0), greyscale, monochrome, dusty sunbeams, trembling, motion lines, motion blur, emphasis lines, text, title, logo, signature, child, childlike, young, easynegative, (bad-hands-5:0.8), plain background, monochrome, poorly drawn face, poorly drawn hands, watermark, censored, (mutated hands and fingers), ugly, worst quality, low quality,, nsfw,(worst quality, low quality:1.4), (lip, nose, tooth, rouge, lipstick, eyeshadow:1.4), ( jpeg artifacts:1.4), (depth of field, bokeh, blurry, film grain, chromatic aberration, lens flare:1.0), (1boy, abs, muscular, rib:1.0), greyscale, monochrome, dusty sunbeams, trembling, motion lines, motion blur, emphasis lines, text, title, logo, signature, child, childlike, young"
+
     await ctx.send("Please be patient this may take some time! Generating: " + prompt + ".")
-    try:
-        payload = {"init_images": [img_link], "prompt": prompt,"steps": 40, "negative_prompt": negative_prompt, "denoising_strength": 0.5}
-        payload = combine_dicts(payload, key_value_pairs)
-        response = requests.post(url=f'{url}/sdapi/v1/img2img', json=payload)
-        r = response.json()
-        for i in r['images']:
-            if not os.path.isdir("tmp/reimagined/"+ str(ctx.author.id)):
-                os.makedirs("tmp/reimagined/"+ str(ctx.author.id))
-            image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
-            png_payload = {"image": "data:image/png;base64," + i}
-            response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
-            pnginfo = PngImagePlugin.PngInfo()
-            pnginfo.add_text("parameters", response2.json().get("info"))
-            my_filename = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
-            image.save(my_filename, pnginfo=pnginfo)
-            with open(my_filename, "rb") as fh:
-                f = discord.File(fh, filename=my_filename)
-            await ctx.send(file=f)
-    except Exception as error:
-        await handle_error(error)
-        await ctx.send("My image generation service may not be running.")
+
+    payload = {"init_images": [img_link], "prompt": prompt, "steps": 40, "negative_prompt": negative_prompt, "denoising_strength": 0.5}
+    payload = combine_dicts(payload, key_value_pairs)
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url=f'{url}/sdapi/v1/img2img', json=payload) as response:
+            data = await response.json()
+            for i in data['images']:
+                if not os.path.isdir("tmp/reimagined/"+ str(ctx.author.id)):
+                    os.makedirs("tmp/reimagined/"+ str(ctx.author.id))
+                image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
+                png_payload = {"image": "data:image/png;base64," + i}
+                async with session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload) as response2:
+                    pnginfo = PngImagePlugin.PngInfo()
+                    pnginfo.add_text("parameters", response2.json().get("info"))
+                    my_filename = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
+                    image.save(my_filename, pnginfo=pnginfo)
+                    with open(my_filename, "rb") as fh:
+                        f = discord.File(fh, filename=my_filename)
+                    await ctx.send(file=f)
 
 
 @bot.command()
