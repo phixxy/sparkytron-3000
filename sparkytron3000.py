@@ -1216,7 +1216,7 @@ async def change_model(ctx, model_choice='0'):
             await ctx.send(f"Already set to use {model_name}")
             return
     else:
-        modeloptions = '\n'.join([f"{choice}: {name}" for choice, (, name) in model_choices.items()])
+        model_options = '\n'.join([f"{choice}: {name}" for choice, name in model_choices.items()])
         output += model_options
         await ctx.send(output)
 
