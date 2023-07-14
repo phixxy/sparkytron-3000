@@ -716,8 +716,8 @@ async def blog(ctx):
             blogpost_topics = f.read()
             f.seek(0)
             topic = f.readline()
-    blogpost_topics = blogpost_topics.replace(topic, '')
-    with open(blogpost_file, 'w') as f:
+            blogpost_topics = blogpost_topics.replace(topic, '')
+        with open(blogpost_file, 'w') as f:
             f.write(blogpost_topics)
     if topic != '':
         await ctx.send("Writing blogpost")
