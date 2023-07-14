@@ -619,8 +619,7 @@ async def meme(ctx):
                 choosing_meme = False
             print("Trying to find a meme!")
 
-        completion = openai.ChatCompletion.create(model="gpt-3.5-turbo",messages=[{"role": "user", "content": "Create text for a meme. The meme is " + meme_name + ". Only create one meme. Do not use emojis or hashtags! Use the topic: " + topic + ". Use the output format (DO NOT USE EXTRA NEWLINES AND DO NOT DESCRIBE THE PICTURE IN YOUR OUTPUT): \n1: [panel 1 text]\n2: [panel 2 text]"}])
-        response = completion.choices[0].message.content
+        response = await answer_question("Create text for a meme. The meme is " + meme_name + ". Only create one meme. Do not use emojis or hashtags! Use the topic: " + topic + ". Use the output format (DO NOT USE EXTRA NEWLINES AND DO NOT DESCRIBE THE PICTURE IN YOUR OUTPUT): \n1: [panel 1 text]\n2: [panel 2 text]")
         
         text = response.split('\n')
         text_boxes = []
@@ -1034,10 +1033,8 @@ async def draw(ctx):
         else:
             amount = 1
         await ctx.send("Please be patient this may take some time!")
-        prompt =  "Give me 11 keywords i can use to generate art using AI. They should all be related to one piece of art. Please only respond with the keywords and no other text. Be sure to use keywords that really describe what the art portrays. Keywords should be comma separated with no other text!"
-        completion = openai.ChatCompletion.create(model="gpt-3.5-turbo",messages=[{"role": "user", "content": prompt}])
-        prompt = completion.choices[0].message.content
-        prompt = prompt.split('\n', maxsplit=1)[0]
+        prompt = "Give me 11 keywords I can use to generate art using AI. They should all be related to one piece of art. Please only respond with the keywords and no other text. Be sure to use keywords that really describe what the art portrays. Keywords should be comma separated with no other text!"
+        prompt = await answer_question(prompt)
         prompt = prompt.replace("AI, ", "")
         if "." in prompt:
             prompt = prompt.replace(".",",")
