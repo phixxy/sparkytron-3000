@@ -710,6 +710,7 @@ async def blog(ctx):
         await ctx.send("I already wrote a blog post today!")
         return
     blogpost_file = "databases/blog_topics.txt"
+    blog_subscribers = ["276197608735637505","242018983241318410"]
     if os.path.isfile(blogpost_file):
         with open(blogpost_file, 'r') as f:
             blogpost_topics = f.read()
@@ -756,6 +757,9 @@ async def blog(ctx):
     run_time = time.time() - start_time
     print("It took " + str(run_time) + " seconds to generate the blog post!")
     output = "Blog Updated! (" + str(run_time) + " seconds) https://phixxy.com/ai-blog"
+    output += '\nNotifying subscribers: '
+    for subscriber in blog_subscribers:
+        output += '<@' + subscriber + '> '
     await ctx.send(output)
         
 
