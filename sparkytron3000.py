@@ -1208,10 +1208,11 @@ async def change_model(ctx, model_choice='0'):
         model_id, model_name = model_choices[model_choice]
         if current_model != model_id:
             payload = {"sd_model_checkpoint": model_id}
-            async with session.post(url=f'{url}/sdapi/v1/options', json=payload) as response:
-                output = "Changed model to: " + model_name
-                await ctx.send(output)
-                return
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url=f'{url}/sdapi/v1/options', json=payload) as response:
+                    output = "Changed model to: " + model_name
+                    await ctx.send(output)
+                    return
         else:
             await ctx.send(f"Already set to use {model_name}")
             return
