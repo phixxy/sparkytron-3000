@@ -1047,14 +1047,17 @@ async def draw(ctx):
         negative_prompt = ""
         payload = {"prompt": prompt,"steps": 25, "negative_prompt": negative_prompt,"batch_size": amount}
         try:
-            response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
-            r = response.json()
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url=f'{url}/sdapi/v1/txt2img', json=payload) as resp:
+                    r = await resp.json()
             for i in r['images']:
                 image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
                 png_payload = {"image": "data:image/png;base64," + i}
-                response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload) as resp2:
+                        response2 = await resp2.json()
                 pnginfo = PngImagePlugin.PngInfo()
-                pnginfo.add_text("parameters", response2.json().get("info"))
+                pnginfo.add_text("parameters", response2.get("info"))
                 my_filename = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
                 image.save(my_filename, pnginfo=pnginfo)
                 channel_vars = await get_channel_config(ctx.channel.id)
