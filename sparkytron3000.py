@@ -190,31 +190,34 @@ async def look_at(ctx, look=False):
         url = os.getenv('stablediffusion_url')
         if url == "disabled":
             return
-        for attachment in ctx.attachments:
-            if attachment.url.endswith(('.jpg', '.png')):
-                print("image seen")
-                
-                # see http://127.0.0.1:7860/docs for info, must be running stable diffusion with --api
-                r = requests.get(attachment.url, stream=True)
-                
-                imageName = "tmp/" + str(len(os.listdir('tmp/'))) + '.png'
-                
-                with open(imageName, 'wb') as out_file:
-                    print('Saving image: ' + imageName)
-                    shutil.copyfileobj(r.raw, out_file)
+        async with aiohttp.ClientSession() as session:
+            for attachment in ctx.attachments:
+                if attachment.url.endswith(('.jpg', '.png')):
+                    print("image seen")
+                    
+                    async with session.get(attachment.url) as response:
+                        imageName = "tmp/" + str(len(os.listdir('tmp/'))) + '.png'
+                        
+                        with open(imageName, 'wb') as out_file:
+                            print('Saving image: ' + imageName)
+                            while True:
+                                chunk = await response.content.read(1024)
+                                if not chunk:
+                                    break
+                                out_file.write(chunk)
 
-                img_link = my_open_img_file(imageName)
-                
-                try:
-                    payload = {"image": img_link}
-                    response = requests.post(url=f'{url}/sdapi/v1/interrogate', json=payload)
-                    r = response.json()
-                    description = r.get("caption")
-                    description = description.split(',')[0]
-                    metadata += f"<image:{description}>\n"
-                except Exception as error:
-                    await handle_error(error)
-                    return "ERROR: CLIP may not be running. Could not look at image."
+                        img_link = my_open_img_file(imageName)
+                        
+                        try:
+                            payload = {"image": img_link}
+                            async with session.post(f'{url}/sdapi/v1/interrogate', json=payload) as response:
+                                data = await response.json()
+                                description = data.get("caption")
+                                description = description.split(',')[0]
+                                metadata += f"<image:{description}>\n"
+                        except aiohttp.ClientError as error:
+                            await handle_error(error)
+                            return "ERROR: CLIP may not be running. Could not look at image."
     
     return metadata
 
