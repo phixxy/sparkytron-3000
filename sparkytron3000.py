@@ -1255,6 +1255,7 @@ async def imagine(ctx):
             async with session.post(url, headers=headers, json=payload) as resp:
                 r = await resp.json()
     except Exception as error:
+        await ctx.send("My image generation service may not be running.")
         await handle_error(error)
         
     for i in r['images']:
@@ -1269,6 +1270,7 @@ async def imagine(ctx):
                 async with session.post(url, json=png_payload) as resp:
                     response2 = await resp.json()
         except Exception as error:
+            await ctx.send("My image generation service may not be running.")
             await handle_error(error)
 
         pnginfo = PngImagePlugin.PngInfo()
@@ -1354,16 +1356,21 @@ async def reimagine(ctx):
 
     key_value_pairs, prompt = extract_key_value_pairs(prompt)
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(file_url) as response:
-            imageName = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
-            with open(imageName, 'wb') as out_file:
-                print(f"Saving image: {imageName}")
-                while True:
-                    chunk = await response.content.read(1024)
-                    if not chunk:
-                        break
-                    out_file.write(chunk)
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(file_url) as response:
+                imageName = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
+                with open(imageName, 'wb') as out_file:
+                    print(f"Saving image: {imageName}")
+                    while True:
+                        chunk = await response.content.read(1024)
+                        if not chunk:
+                            break
+                        out_file.write(chunk)
+                        
+    except Exception as error:
+        await ctx.send("My image generation service may not be running.")
+        await handle_error(error)
 
     img_link = my_open_img_file(imageName)
 
@@ -1375,23 +1382,27 @@ async def reimagine(ctx):
     payload = {"init_images": [img_link], "prompt": prompt, "steps": 40, "negative_prompt": negative_prompt, "denoising_strength": 0.5}
     payload = combine_dicts(payload, key_value_pairs)
 
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url=f'{url}/sdapi/v1/img2img', json=payload) as response:
-            data = await response.json()
-            for i in data['images']:
-                if not os.path.isdir("tmp/reimagined/"+ str(ctx.author.id)):
-                    os.makedirs("tmp/reimagined/"+ str(ctx.author.id))
-                image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
-                png_payload = {"image": "data:image/png;base64," + i}
-                async with session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload) as resp2:
-                    response2 = await resp2.json()
-                    pnginfo = PngImagePlugin.PngInfo()
-                    pnginfo.add_text("parameters", response2.get("info"))
-                    my_filename = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
-                    image.save(my_filename, pnginfo=pnginfo)
-                    with open(my_filename, "rb") as fh:
-                        f = discord.File(fh, filename=my_filename)
-                    await ctx.send(file=f)
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url=f'{url}/sdapi/v1/img2img', json=payload) as response:
+                data = await response.json()
+                for i in data['images']:
+                    if not os.path.isdir("tmp/reimagined/"+ str(ctx.author.id)):
+                        os.makedirs("tmp/reimagined/"+ str(ctx.author.id))
+                    image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
+                    png_payload = {"image": "data:image/png;base64," + i}
+                    async with session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload) as resp2:
+                        response2 = await resp2.json()
+                        pnginfo = PngImagePlugin.PngInfo()
+                        pnginfo.add_text("parameters", response2.get("info"))
+                        my_filename = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
+                        image.save(my_filename, pnginfo=pnginfo)
+                        with open(my_filename, "rb") as fh:
+                            f = discord.File(fh, filename=my_filename)
+                        await ctx.send(file=f)
+    except Exception as error:
+        await ctx.send("My image generation service may not be running.")
+        await handle_error(error)
 
 
 @bot.command()
