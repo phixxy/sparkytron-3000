@@ -362,7 +362,8 @@ async def on_ready():
 @bot.command(
     description="Update", 
     help="This will update sparkytron to the most recent version on github. Only privileged users can run this command! Usage: !update", 
-    brief="Runs git pull"
+    brief="Runs git pull",
+    hidden=True
     )           
 async def update(ctx):
     if ctx.author.id == 242018983241318410:
@@ -1538,7 +1539,8 @@ async def roll(ctx, dice_string):
 @bot.command(
     description="Kill", 
     help="Kills the bot in event of an emergency. Only special users can do this! Usage: !kill", 
-    brief="Kill the bot"
+    brief="Kill the bot",
+    hidden=True
     )      
 async def kill(ctx):
     "Kills the bot"
@@ -1550,7 +1552,8 @@ async def kill(ctx):
 @bot.command(
     description="Reset", 
     help="Resets the bot in event of an emergency. Only special users can do this! Usage: !reset", 
-    brief="Reset the bot"
+    brief="Reset the bot",
+    hidden=True
     )  
 async def reset(ctx):
     if ctx.author.id == 242018983241318410:
