@@ -1,7 +1,5 @@
 discord
 requests
-openai
-pynacl
 python-dotenv
 pillow
 matplotlib
