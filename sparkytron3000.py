@@ -23,7 +23,7 @@ import aiohttp
 import aioftp
 
 #Stable Diffusion
-#Set this env variable to host:port or "disabled"
+#Set this env variable to http://host:port or "disabled"
 #os.getenv('stablediffusion_url')
 
 #env vars START
@@ -31,7 +31,6 @@ load_dotenv()
 
 imgflip_username = os.getenv('imgflip_username')
 imgflip_password = os.getenv('imgflip_password')
-openai.api_key   = os.getenv('openai.api_key')
 discord_token    = os.getenv('discord_token')
 eleven_labs_api_key = os.getenv('eleven_labs_api_key')
 ftp_server = os.getenv('ftp_server')
@@ -50,9 +49,12 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 #discord stuff END
 
-@bot.command()
+@bot.command(
+    description="Moderate", 
+    help="This currently tool works by replacing the filename on the ftp server with a black image. The description will remain the same and may need to be altered.", 
+    brief="Moderation Tools"
+    )
 async def moderate(ctx, filename):
-    await ctx.send("Reminder, this currently tool works by replacing the filename on the ftp server with a black image. The description will remain the same and may need to be altered.")
     await upload_ftp("blank_image.png", os.getenv('ftp_ai_webpage'), filename)
     output = "Image " + filename + " replaced"
     await ctx.send(output)
@@ -335,7 +337,7 @@ async def task_loop():
         failed_tasks = []
         await bot_stuff.send("<@242018983241318410> The current time is 5pm. Running daily tasks!")
         try:
-            await blog(bot_stuff)
+            await generate_blog(bot_stuff)
         except Exception as error:
             await handle_error(error)
             failed_tasks.append("Blogpost")
@@ -360,7 +362,11 @@ async def on_ready():
     await delete_all_files("tmp/")
     task_loop.start()
     
-@bot.command()            
+@bot.command(
+    description="Update", 
+    help="This will update sparkytron to the most recent version on github. Only privileged users can run this command! Usage: !update", 
+    brief="Runs git pull"
+    )           
 async def update(ctx):
     if ctx.author.id == 242018983241318410:
         output = subprocess.run(["git","pull"],capture_output=True)
@@ -372,7 +378,11 @@ async def update(ctx):
     else:
         await ctx.send("You don't have permission to do this.")
         
-@bot.command()        
+@bot.command(
+    description="Currency", 
+    help="Server currency. You can run !currency claim to get started!", #This needs an overhaul
+    brief="Server currency tools"
+    )        
 async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
     
     def read_db(filepath):
@@ -575,7 +585,11 @@ async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
 
                 
                 
-@bot.command()        
+@bot.command(
+    description="Meme", 
+    help="Generates a meme based on input. Usage: !meme (topic)", 
+    brief="Generate a meme"
+    )       
 async def meme(ctx):
     async def update_meme_webpage(filename):
         server_folder = os.getenv('ftp_ai_memes')
@@ -677,15 +691,23 @@ async def meme(ctx):
         await handle_error(error)
         await ctx.send('Something went wrong try again. Usage: !meme (topic)')
         
-@bot.command()        
+@bot.command(
+    description="RSGP", 
+    help="Uses probably outdated information to calculate how much rsgp is worth in usd. Usage: !rsgp (amount)", 
+    brief="Runescape gold to usd"
+    )       
 async def rsgp(ctx, amount):
     cost_per_bil = 27 #1b rsgp to usd
     cost = (int(amount) * cost_per_bil / 1000000000)
     output = str(amount) + ' rsgp would cost: $' + str(cost)
     await ctx.send(output)
     
-@bot.command()
-async def suggest_blog(ctx, *args):
+@bot.command(
+    description="Blog", 
+    help="Adds your topic to the list of possible future blog topics. Usage: !suggest_blog (topic)", 
+    brief="Suggest a blog topic"
+    )
+async def blog(ctx, *args):
     message = ' '.join(args)
     if '\n' in message:
         await ctx.send("Send only one topic at a time.")
@@ -696,8 +718,7 @@ async def suggest_blog(ctx, *args):
             f.writelines(message)
         await ctx.send("Saved suggestion!")
 
-@bot.command()        
-async def blog(ctx):
+async def generate_blog(ctx):
     start_time = time.time()
     topic = ''
     filename = "phixxy.com/ai-blog/index.html"
@@ -763,7 +784,11 @@ async def blog(ctx):
     await ctx.send(output)
         
 
-@bot.command()        
+@bot.command(
+    description="Question", 
+    help="Ask a raw chatgpt question. Usage: !question (question)", 
+    brief="Get an answer"
+    )        
 async def question(ctx):
     question = ctx.message.content.split(" ", maxsplit=1)[1]
     answer = await answer_question(question)
@@ -771,7 +796,11 @@ async def question(ctx):
     for chunk in chunks:
         await ctx.send(chunk)
         
-@bot.command()        
+@bot.command(
+    description="Question GPT4", 
+    help="Ask GPT4 a question. Usage: !question_gpt4 (question)", 
+    brief="Get an answer"
+    )         
 async def question_gpt4(ctx):
     question = ctx.message.content.split(" ", maxsplit=1)[1]
     answer = await answer_question(question, "gpt-4")
@@ -779,7 +808,11 @@ async def question_gpt4(ctx):
     for chunk in chunks:
         await ctx.send(chunk)
 
-@bot.command()
+@bot.command(
+    description="Highscores", 
+    help="Shows a bar graph of users in this channel and how many messages they have sent.", 
+    brief="Display chat highscores"
+    ) 
 async def highscores(ctx, limit=0):
     filename = str(ctx.channel.id) + ".log"
     with open("channels/logs/" + filename, 'r', encoding="utf-8") as logfile:
@@ -832,7 +865,11 @@ async def highscores(ctx, limit=0):
         f = discord.File(fh, filename=str(ctx.channel.id) + '_hiscores.png')
     await ctx.send(file=f)
     
-@bot.command()
+@bot.command(
+    description="Highscores Server", 
+    help="Shows a bar graph of users across all servers I am in and how many messages they have sent.", 
+    brief="Display chat highscores"
+    ) 
 async def highscores_server(ctx, limit=0):
     user_message_counts = {}
     data = []
@@ -887,7 +924,11 @@ async def highscores_server(ctx, limit=0):
         f = discord.File(fh, filename=str(ctx.channel.id) + '_hiscores.png')
     await ctx.send(file=f)
     
-@bot.command()        
+@bot.command(
+    description="Website", 
+    help="Generates a website using gpt 3.5. Usage: !website (topic)", 
+    brief="Generate a website"
+    )         
 async def website(ctx):
     async def delete_local_pngs(local_folder):
         for filename in os.listdir(local_folder):
@@ -1008,7 +1049,11 @@ async def website(ctx):
         await handle_error(error)
         await ctx.send("Failed, Try again.")
         
-@bot.command()        
+@bot.command(
+    description="Feature", 
+    help="Suggest a feature. Usage: !feature (feature)", 
+    brief="Suggest a feature"
+    )         
 async def feature(ctx):
     try:
         feature = ctx.message.content.split(" ", maxsplit=1)[1]
@@ -1023,7 +1068,11 @@ async def feature(ctx):
     await ctx.send(features)
 
 
-@bot.command()        
+@bot.command(
+    description="Draw", 
+    help="Generates a picture using stable diffusion and gpt 3.5. It generates a list of 10 random artistic words and feeds them into stable diffusion. Usage: !draw (amount of pictures)", 
+    brief="Generate a random image"
+    )         
 async def draw(ctx):
     url = os.getenv('stablediffusion_url')
     if url == "disabled":
@@ -1075,7 +1124,11 @@ async def draw(ctx):
         await handle_error(error)
         await ctx.send('Did you mean to use !imagine?. Usage: !draw (number)')
 
-@bot.command()        
+@bot.command(
+    description="Chat", 
+    help="Enable or disable bot chat in this channel. Usage !chat (enable|disable)", 
+    brief="Enable or disable bot chat"
+    )         
 async def chat(ctx, message):
     if "enable" in message:
         edit_channel_config(ctx.channel.id, "chat_enabled", True)
@@ -1086,7 +1139,11 @@ async def chat(ctx, message):
     else:
         await ctx.send("Usage: !chat (enable|disable)")
         
-@bot.command()
+@bot.command(
+    description="Reactions", 
+    help="Enable or disable bot reactions in this channel. Usage !reactions (enable|disable)", 
+    brief="Enable or disable bot reactions"
+    ) 
 async def reactions(ctx, message):
     if "enable" in message:
         edit_channel_config(ctx.channel.id, "react_to_msgs", True)
@@ -1097,16 +1154,11 @@ async def reactions(ctx, message):
     else:
         await ctx.send("Usage: !reactions (enable|disable)")       
 
-        
-@bot.command()        
-async def memorylength(ctx, chat_history_len):
-    if chat_history_len.isdigit():
-        edit_channel_config(ctx.channel.id, "chat_history_len", chat_history_len)
-        await ctx.send("Memory changed to " + chat_history_len)
-    else:
-        await ctx.send("Memory unchanged, must be int.")
-
-@bot.command()        
+@bot.command(
+    description="View Images", 
+    help="Enable or disable bot viewing images in this channel. Usage !viewimages (enable|disable)", 
+    brief="Enable or disable bot viewing images"
+    )         
 async def viewimages(ctx, message):
     if "enable" in message:
         edit_channel_config(ctx.channel.id, "look_at_images", True)
@@ -1117,7 +1169,11 @@ async def viewimages(ctx, message):
     else:
         await ctx.send("Usage: !viewimages (enable|disable)")
         
-@bot.command()        
+@bot.command(
+    description="Commands", 
+    help="Enable or disable bot commands in this channel. Usage !enable_commands (enable|disable)", 
+    brief="Enable or disable bot commands"
+    )         
 async def enable_commands(ctx, message):
     if "disable" in message or "false" in message:
         edit_channel_config(ctx.channel.id, "commands_enabled", False)
@@ -1126,12 +1182,20 @@ async def enable_commands(ctx, message):
         edit_channel_config(ctx.channel.id, "commands_enabled", True)
         await ctx.send("Commands Enabled")
 
-@bot.command()        
+@bot.command(
+    description="Topic", 
+    help="Set the channel topic for the bot. Usage: !topic (topic)", 
+    brief="Set channel topic"
+    )         
 async def topic(ctx, channel_topic):
     edit_channel_config(ctx.channel.id, "channel_topic", channel_topic)
     await ctx.send("Topic changed to " + channel_topic)
     
-@bot.command()
+@bot.command(
+    description="Python", 
+    help="Run some python code. Imports are disabled but random is imported for you. Usage !python (codeblock)", 
+    brief="Run some python code"
+    ) 
 async def python(ctx):
     try:
         code = ctx.message.content
@@ -1171,7 +1235,11 @@ async def python(ctx):
         await ctx.send("Usage: !python (codeblock)")
     
     
-@bot.command()        
+@bot.command(
+    description="FTP", 
+    help="Enable or disable bot FTP to phixxy.com in this channel. Usage !ftp (enable|disable)", 
+    brief="Enable or disable uploading to web"
+    )         
 async def ftp(ctx, message):
     if "enable" in message:
         edit_channel_config(ctx.channel.id, "ftp_enabled", True)
@@ -1182,14 +1250,22 @@ async def ftp(ctx, message):
     else:
         await ctx.send("Usage: !ftp (enable|disable)")
     
-@bot.command()        
+@bot.command(
+    description="Personality", 
+    help="Set the personality of the bot. Usage: !personality (personality)", 
+    brief="Set the personality"
+    )         
 async def personality(ctx):
     personality_type = ctx.message.content.split(" ", maxsplit=1)[1]
     edit_channel_config(ctx.channel.id, "personality", personality_type)
     await ctx.send("Personality changed to " + personality_type)
 
 
-@bot.command()
+@bot.command(
+    description="Change Model", 
+    help="Choose from a list of stable diffusion models.", 
+    brief="Change stable diffusion model"
+    ) 
 async def change_model(ctx, model_choice='0'):
     model_choices = {
         '1': ("deliberate_v2.safetensors [9aba26abdf]", "DeliberateV2"),
@@ -1225,7 +1301,11 @@ async def change_model(ctx, model_choice='0'):
         output += model_options
         await ctx.send(output)
 
-@bot.command()
+@bot.command(
+    description="Imagine", 
+    help="Generate an image using stable diffusion. You can add keyword arguments to your prompt and they will be treated as stable diffusion options. Usage !imagine (topic)", 
+    brief="Generate an image"
+    ) 
 async def imagine(ctx):
     url = os.getenv('stablediffusion_url')
     if url == "disabled":
@@ -1289,7 +1369,11 @@ async def imagine(ctx):
         
         await ctx.send(file=f)
     
-@bot.command()        
+@bot.command(
+    description="Describe", 
+    help="Get better understanding of what the bot \"sees\" when you post an image! (Runs it through CLIP) Usage !describe (image link)", 
+    brief="Describe image"
+    )         
 async def describe(ctx):
     url = os.getenv('stablediffusion_url')
     if url == "disabled":
@@ -1333,7 +1417,11 @@ async def describe(ctx):
         await handle_error(error)
         await ctx.send("My image generation service may not be running.")
         
-@bot.command()
+@bot.command(
+    description="Reimagine", 
+    help="Reimagine an image as something else. One example is reimagining a picture as anime. This command can be hard to use. \nUsage: !reimagine (image link) (topic)\nExample: !reimagine (image link) anime", 
+    brief="Reimagine an image"
+    ) 
 async def reimagine(ctx):
     url = os.getenv('stablediffusion_url')
     if url == "disabled":
@@ -1405,7 +1493,11 @@ async def reimagine(ctx):
         await handle_error(error)
 
 
-@bot.command()
+@bot.command(
+    description="Poll", 
+    help='Create a poll with up to 9 options. Usage: !poll "Put question here" "option 1" "option 2"', 
+    brief="Enable or disable bot reactions"
+    ) 
 async def poll(ctx, question, *options: str):
     if len(options) > 9:
         await ctx.send("Error: You cannot have more than 9 options")
@@ -1420,7 +1512,11 @@ async def poll(ctx, question, *options: str):
     for i in range(len(options)):
         await message.add_reaction(numbers.get(i+1))
         
-@bot.command()
+@bot.command(
+    description="Roll", 
+    help="Rolls dice mostly for Dungeons and Dragons type games. Usage: !roll 3d6+2", 
+    brief="Simulate rolling dice"
+    ) 
 async def roll(ctx, dice_string):
     dice_parts = dice_string.split('d')
     num_dice = int(dice_parts[0])
@@ -1442,14 +1538,23 @@ async def roll(ctx, dice_string):
 
     await ctx.send(f'{dice_str} + {modifier} = {total}' if modifier != 0 else f'{dice_str} = {total}')
     
-@bot.command()     
-async def kill(ctx, help="Kills the bot"):
+@bot.command(
+    description="Kill", 
+    help="Kills the bot in event of an emergency. Only special users can do this! Usage: !kill", 
+    brief="Kill the bot"
+    )      
+async def kill(ctx):
+    "Kills the bot"
     if ctx.author.id == 242018983241318410:
         exit()
     else:
         await ctx.channel.send("You don't have permission to do that.")
         
-@bot.command()     
+@bot.command(
+    description="Reset", 
+    help="Resets the bot in event of an emergency. Only special users can do this! Usage: !reset", 
+    brief="Reset the bot"
+    )  
 async def reset(ctx):
     if ctx.author.id == 242018983241318410:
         python = sys.executable
