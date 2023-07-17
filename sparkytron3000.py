@@ -4,14 +4,14 @@ from discord.utils import get
 import shutil
 import json
 import requests
-import openai
+#import openai #This is being phased out and may no longer be needed.
 import random
 import time
 import os
 import io
 import base64
 import asyncio
-import nacl
+#import nacl #I believe this is no longer used since the removal of voice commands
 import sys
 import subprocess
 import math
@@ -351,7 +351,7 @@ async def task_loop():
             await bot_stuff.send(output)
         else:
             await bot_stuff.send("All daily tasks successfully ran!")
-    
+            
 @bot.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(bot))
@@ -1004,7 +1004,7 @@ async def website(ctx):
         await upload_html_and_imgs(local_folder, server_folder)        
         
         await ctx.send("Finished https://phixxy.com/ai-webpage/")
-    except openai.error.APIConnectionError as error:
+    except Exception as error:
         await handle_error(error)
         await ctx.send("Failed, Try again.")
         
@@ -1443,7 +1443,7 @@ async def roll(ctx, dice_string):
     await ctx.send(f'{dice_str} + {modifier} = {total}' if modifier != 0 else f'{dice_str} = {total}')
     
 @bot.command()     
-async def kill(ctx):
+async def kill(ctx, help="Kills the bot"):
     if ctx.author.id == 242018983241318410:
         exit()
     else:
