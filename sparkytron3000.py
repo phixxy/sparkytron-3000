@@ -55,7 +55,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
     brief="Moderation Tools"
     )
 async def moderate(ctx, filename):
-    await upload_ftp("blank_image.png", os.getenv('ftp_ai_webpage'), filename)
+    await upload_ftp("blank_image.png", os.getenv('ftp_ai_images'), filename)
     output = "Image " + filename + " replaced"
     await ctx.send(output)
     
