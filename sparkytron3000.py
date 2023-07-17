@@ -592,72 +592,80 @@ async def meme(ctx):
     async def update_meme_webpage(filename):
         server_folder = os.getenv('ftp_ai_memes')
         client = aioftp.Client()
-        await client.connect(ftp_server)
-        await client.login(ftp_username, ftp_password)
-        await client.change_directory(server_folder)
-        server_files = await client.list()
+
         try:
-            file_count = len(server_files)
-        except:
-            file_count = 0
-        new_file_name = str(file_count) + ".png"
-        await client.upload(filename, new_file_name, write_into=True)
-        print("Uploaded", new_file_name)
-        with open("phixxy.com/ai-memes/index.html", 'r') as f:
-            html_data = f.read()
-        html_insert = '<!--ADD IMG HERE-->\n        <img src="' + new_file_name + '" loading="lazy">'
-        html_data = html_data.replace('<!--ADD IMG HERE-->',html_insert)
-        with open("phixxy.com/ai-memes/index.html", "w") as f:
-            f.writelines(html_data)
-        await client.upload("phixxy.com/ai-memes/index.html", "index.html", write_into=True)
-        #ftp.storbinary("STOR " + "index.html", open("phixxy.com/ai-memes/index.html", "rb"))
+            await client.connect(ftp_server)
+            await client.login(ftp_username, ftp_password)
+            await client.change_directory(server_folder)
+
+            async with client:
+                server_files = await client.list()
+
+                file_count = len(server_files) if server_files else 0
+                new_file_name = str(file_count) + ".png"
+                await client.upload(filename, new_file_name, write_into=True)
+                print("Uploaded", new_file_name)
+
+                async with aiofiles.open("phixxy.com/ai-memes/index.html", 'r') as f:
+                    html_data = await f.read()
+
+                html_insert = '<!--ADD IMG HERE-->\n        <img src="' + new_file_name + '" loading="lazy">'
+                html_data = html_data.replace('<!--ADD IMG HERE-->', html_insert)
+
+                async with aiofiles.open("phixxy.com/ai-memes/index.html", "w") as f:
+                    await f.write(html_data)
+
+                await client.upload("phixxy.com/ai-memes/index.html", "index.html", write_into=True)
+        except Exception as error:
+            print("An error occurred:", error)
+            await handle_error(error)
+
         await client.quit()
     
     async def generate_random_meme(topic):
-        userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
-        AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 \
-        Safari/537.36'
-        damn_data = requests.get('https://api.imgflip.com/get_memes').json()['data']['memes']
-        memepics = [{'name':image['name'],'url':image['url'],'id':image['id']} for image in damn_data]
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://api.imgflip.com/get_memes') as resp:
+                response_data = await resp.json()
+                response = response_data['data']['memes']
+        memepics = [{'name':image['name'],'url':image['url'],'id':image['id']} for image in response]
         
-        #Pick a meme format with 2 panels
-        choosing_meme = True
-        while choosing_meme:
-            memenumber = random.randint(1,99)
-            meme_name = damn_data[memenumber-1]['name']
-            panel_count = damn_data[memenumber-1]['box_count']
-            if panel_count == 2:
-                print("Success")
-                choosing_meme = False
-            print("Trying to find a meme!")
-
-        response = await answer_question("Create text for a meme. The meme is " + meme_name + ". Only create one meme. Do not use emojis or hashtags! Use the topic: " + topic + ". Use the output format (DO NOT USE EXTRA NEWLINES AND DO NOT DESCRIBE THE PICTURE IN YOUR OUTPUT): \n1: [panel 1 text]\n2: [panel 2 text]")
+        #Pick a meme format
+        memenumber = random.randint(1,99)
+        meme_name = response[memenumber-1]['name']
+        panel_count = response[memenumber-1]['box_count']
+        print("panel_count ",panel_count)
+        panel_text = await answer_question("Create text for a meme. The meme is " + meme_name + ". It has " + str(panel_count) + " panels. Only create one meme. Do not use emojis or hashtags! Use the topic: " + topic + ". Use the output format (DO NOT USE EXTRA NEWLINES AND DO NOT DESCRIBE THE PICTURE IN YOUR OUTPUT): \n1: [panel 1 text]\n2: [panel 2 text]")
         
-        text = response.split('\n')
-        text_boxes = []
-        for item in text:
-            item = item[3:]
-            text_boxes.append(item)
-            
         id = memenumber
-        txt1 = text_boxes[0]
-        txt2 = text_boxes[1]
-
-        URL = 'https://api.imgflip.com/caption_image'
+        
         params = {
-            'username':imgflip_username,
-            'password':imgflip_password,
-            'template_id':memepics[id-1]['id'],
-            'text0':txt1,
-            'text1':txt2
+            'username':"Bottlec4p",
+            'password':'Cookies@22',
+            'template_id':memepics[id-1]['id']
         }
+        boxes = []
+        text = panel_text.split('\n')
+        for x in range(len(text)):
+            if text[x].strip() != "":
+                item = text[x][3:]
+                if len(params)-3 < panel_count:
+                    dictionary = {"text":item, "color": "#ffffff", "outline_color": "#000000"}
+                    boxes.append(dictionary)
+
+        for i, box in enumerate(boxes):
+            params[f"boxes[{i}][text]"] = box["text"]
+            params[f"boxes[{i}][color]"] = box["color"]
+            params[f"boxes[{i}][outline_color]"] = box["outline_color"]
+            
+        URL = 'https://api.imgflip.com/caption_image'
+
         try:
-            response = requests.request('POST',URL,params=params).json()
-            #Printing Whether Creating A meme was A success
+            async with aiohttp.ClientSession() as session:
+                async with session.post(URL, params=params) as resp:
+                    response = await resp.json()
             print(f"Generated Meme = {response['success']}\nImage Link = {response['data']['url']}\nPage Link = {response['data']['page_url']}")
             image_link = response['data']['url']
         except Exception as error:
-            print("\nAaaaah An error occured when requesting Data..")
             await handle_error(error)
         try:
     #------------------------------------Saving Image Using Requests---------------------------------#
