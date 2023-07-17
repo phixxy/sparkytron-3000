@@ -592,35 +592,26 @@ async def meme(ctx):
     async def update_meme_webpage(filename):
         server_folder = os.getenv('ftp_ai_memes')
         client = aioftp.Client()
-
+        await client.connect(ftp_server)
+        await client.login(ftp_username, ftp_password)
+        await client.change_directory(server_folder)
+        server_files = await client.list()
         try:
-            await client.connect(ftp_server)
-            await client.login(ftp_username, ftp_password)
-            await client.change_directory(server_folder)
-
-            async with client:
-                server_files = await client.list()
-
-                file_count = len(server_files) if server_files else 0
-                new_file_name = str(file_count) + ".png"
-                await client.upload(filename, new_file_name, write_into=True)
-                print("Uploaded", new_file_name)
-
-                async with aiofiles.open("phixxy.com/ai-memes/index.html", 'r') as f:
-                    html_data = await f.read()
-
-                html_insert = '<!--ADD IMG HERE-->\n        <img src="' + new_file_name + '" loading="lazy">'
-                html_data = html_data.replace('<!--ADD IMG HERE-->', html_insert)
-
-                async with aiofiles.open("phixxy.com/ai-memes/index.html", "w") as f:
-                    await f.write(html_data)
-
-                await client.upload("phixxy.com/ai-memes/index.html", "index.html", write_into=True)
-        except Exception as error:
-            print("An error occurred:", error)
-            await handle_error(error)
-
+            file_count = len(server_files)
+        except:
+            file_count = 0
+        new_file_name = str(file_count) + ".png"
+        await client.upload(filename, new_file_name, write_into=True)
+        print("Uploaded", new_file_name)
+        with open("phixxy.com/ai-memes/index.html", 'r') as f:
+            html_data = f.read()
+        html_insert = '<!--ADD IMG HERE-->\n        <img src="' + new_file_name + '" loading="lazy">'
+        html_data = html_data.replace('<!--ADD IMG HERE-->',html_insert)
+        with open("phixxy.com/ai-memes/index.html", "w") as f:
+            f.writelines(html_data)
+        await client.upload("phixxy.com/ai-memes/index.html", "index.html", write_into=True)
         await client.quit()
+    
     
     async def generate_random_meme(topic):
         async with aiohttp.ClientSession() as session:
