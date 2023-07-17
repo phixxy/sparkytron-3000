@@ -4,20 +4,17 @@ from discord.utils import get
 import shutil
 import json
 import requests
-#import openai #This is being phased out and may no longer be needed.
 import random
 import time
 import os
 import io
 import base64
 import asyncio
-#import nacl #I believe this is no longer used since the removal of voice commands
 import sys
 import subprocess
 import math
 from PIL import Image, PngImagePlugin
 from dotenv import load_dotenv
-import threading
 import matplotlib.pyplot as plt
 import aiohttp
 import aioftp
