@@ -715,6 +715,7 @@ async def blog(ctx, *args):
             f.writelines(message)
         await ctx.send("Saved suggestion!")
 
+@bot.command()
 async def generate_blog(ctx):
     start_time = time.time()
     topic = ''
