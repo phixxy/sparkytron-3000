@@ -1267,8 +1267,9 @@ async def personality(ctx):
 async def change_model(ctx, model_choice='0'):
     model_choices = {
         '1': ("deliberate_v2.safetensors [9aba26abdf]", "DeliberateV2"),
-        '2': ("AnythingV5_v5PrtRE.safetensors [7f96a1a9ca]", "AnythingV5"),
-        '3': ("Anything-V3.0.ckpt [8712e20a5d]", "AnythingV3")
+        '2': ("flat2DAnimerge_v30.safetensors [5dd56bfa12]", "Flat2D"),
+        '3': ("Anything-V3.0.ckpt [8712e20a5d]", "AnythingV3"),
+        '4': ("aZovyaPhotoreal_v2.safetensors [dde3b17c05]", "PhotorealV2")
     }
     url = os.getenv('stablediffusion_url')
     if url == "disabled":
