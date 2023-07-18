@@ -142,10 +142,11 @@ async def answer_question(topic, model="gpt-3.5-turbo"):
     url = "https://api.openai.com/v1/chat/completions"
 
     try:
-        async with bot.http_session.post(url, headers=headers, json=data) as resp:
-            response_data = await resp.json()
-            response = response_data['choices'][0]['message']['content']
-            return response
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, headers=headers, json=data) as resp:
+                response_data = await resp.json()
+                response = response_data['choices'][0]['message']['content']
+                return response
 
     except Exception as error:
         return await handle_error(error)
@@ -188,33 +189,34 @@ async def look_at(ctx, look=False):
         url = os.getenv('stablediffusion_url')
         if url == "disabled":
             return
-        for attachment in ctx.attachments:
-            if attachment.url.endswith(('.jpg', '.png')):
-                print("image seen")
-                
-                async with bot.http_session.get(attachment.url) as response:
-                    imageName = "tmp/" + str(len(os.listdir('tmp/'))) + '.png'
+        async with aiohttp.ClientSession() as session:
+            for attachment in ctx.attachments:
+                if attachment.url.endswith(('.jpg', '.png')):
+                    print("image seen")
                     
-                    with open(imageName, 'wb') as out_file:
-                        print('Saving image: ' + imageName)
-                        while True:
-                            chunk = await response.content.read(1024)
-                            if not chunk:
-                                break
-                            out_file.write(chunk)
+                    async with session.get(attachment.url) as response:
+                        imageName = "tmp/" + str(len(os.listdir('tmp/'))) + '.png'
+                        
+                        with open(imageName, 'wb') as out_file:
+                            print('Saving image: ' + imageName)
+                            while True:
+                                chunk = await response.content.read(1024)
+                                if not chunk:
+                                    break
+                                out_file.write(chunk)
 
-                    img_link = my_open_img_file(imageName)
-                    
-                    try:
-                        payload = {"image": img_link}
-                        async with bot.http_session.post(f'{url}/sdapi/v1/interrogate', json=payload) as response:
-                            data = await response.json()
-                            description = data.get("caption")
-                            description = description.split(',')[0]
-                            metadata += f"<image:{description}>\n"
-                    except aiohttp.ClientError as error:
-                        await handle_error(error)
-                        return "ERROR: CLIP may not be running. Could not look at image."
+                        img_link = my_open_img_file(imageName)
+                        
+                        try:
+                            payload = {"image": img_link}
+                            async with session.post(f'{url}/sdapi/v1/interrogate', json=payload) as response:
+                                data = await response.json()
+                                description = data.get("caption")
+                                description = description.split(',')[0]
+                                metadata += f"<image:{description}>\n"
+                        except aiohttp.ClientError as error:
+                            await handle_error(error)
+                            return "ERROR: CLIP may not be running. Could not look at image."
     
     return metadata
 
@@ -248,9 +250,10 @@ async def react_to_msg(ctx, react):
             url = "https://api.openai.com/v1/chat/completions"
 
             try:
-                async with bot.http_session.post(url, headers=headers, json=data) as resp:
-                    response_data = await resp.json()
-                    reaction = response_data['choices'][0]['message']['content']
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(url, headers=headers, json=data) as resp:
+                        response_data = await resp.json()
+                        reaction = response_data['choices'][0]['message']['content']
                 await ctx.add_reaction(reaction.strip())
             except Exception as error:
                 print("Some error happened while trying to react to a message")
@@ -287,19 +290,20 @@ async def chat_response(ctx, channel_vars, chat_history_string):
 
         url = "https://api.openai.com/v1/chat/completions"
 
-        try:
-            async with bot.http_session.post(url, headers=headers, json=data) as resp:
-                response_data = await resp.json() 
-                response = response_data['choices'][0]['message']['content']
-                if "Sparkytron 3000:" in response[0:17]:
-                    response = response.replace("Sparkytron 3000:", "")
-                max_len = 1999
-                if len(response) > max_len:
-                    messages=[response[y-max_len:y] for y in range(max_len, len(response)+max_len,max_len)]
-                else:
-                    messages=[response]
-                for message in messages:
-                    await ctx.channel.send(message)
+        try: 
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, headers=headers, json=data) as resp:
+                    response_data = await resp.json() 
+                    response = response_data['choices'][0]['message']['content']
+                    if "Sparkytron 3000:" in response[0:17]:
+                        response = response.replace("Sparkytron 3000:", "")
+                    max_len = 1999
+                    if len(response) > max_len:
+                        messages=[response[y-max_len:y] for y in range(max_len, len(response)+max_len,max_len)]
+                    else:
+                        messages=[response]
+                    for message in messages:
+                        await ctx.channel.send(message)
 
         except Exception as error: 
             await handle_error(error)
@@ -346,20 +350,6 @@ async def task_loop():
             await bot_stuff.send(output)
         else:
             await bot_stuff.send("All daily tasks successfully ran!")
-            
-async def create_session():
-    return aiohttp.ClientSession(timeout=30)
-
-async def close_session(session):
-    await session.close()
-            
-@bot.event
-async def on_connect():
-    bot.http_session = await create_session()
-
-@bot.event
-async def on_disconnect():
-    await close_session(bot.http_session)
             
 @bot.event
 async def on_ready():
@@ -624,9 +614,10 @@ async def meme(ctx):
     
     
     async def generate_random_meme(topic):
-        async with bot.http_session.get('https://api.imgflip.com/get_memes') as resp:
-            response_data = await resp.json()
-            response = response_data['data']['memes']
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://api.imgflip.com/get_memes') as resp:
+                response_data = await resp.json()
+                response = response_data['data']['memes']
         memepics = [{'name':image['name'],'url':image['url'],'id':image['id']} for image in response]
         
         #Pick a meme format
@@ -660,8 +651,9 @@ async def meme(ctx):
         URL = 'https://api.imgflip.com/caption_image'
 
         try:
-            async with bot.http_session.post(URL, params=params) as resp:
-                response = await resp.json()
+            async with aiohttp.ClientSession() as session:
+                async with session.post(URL, params=params) as resp:
+                    response = await resp.json()
             print(f"Generated Meme = {response['success']}\nImage Link = {response['data']['url']}\nPage Link = {response['data']['page_url']}")
             image_link = response['data']['url']
         except Exception as error:
@@ -702,24 +694,9 @@ async def meme(ctx):
     brief="Runescape gold to usd"
     )       
 async def rsgp(ctx, amount):
-    output = ""
-    cost_per_bil = 25.50 #1b rsgp to usd
-    cost_per_bil_os = 210
-    gold_per_bond = 70000000
-    gold_per_bond_os = 7000000
-    cost_per_bond = 8 #dollars usd
-    bondcost = (int(amount)/gold_per_bond) * cost_per_bond
-    rwtcost = (int(amount) * cost_per_bil / 1000000000)
-    dollar_gp = (int(amount)*1000000000)/cost_per_bil
-    osbondcost = (int(amount)/gold_per_bond_os) * cost_per_bond
-    osrwtcost = (int(amount) * cost_per_bil_os / 1000000000)
-    osdollar_gp = (int(amount)*1000000000)/cost_per_bil_os
-    output += str(amount) + ' rs3 gp would cost: $' + str(rwtcost) + " (RWT)\n"
-    output += str(amount) + ' rs3 gp would cost: $' + str(bondcost) + " (Bonds)\n"
-    output += str(amount) + ' dollars spent on rs3 gp would be: ' + str(dollar_gp) + " (RS3 GP)\n"
-    output += str(amount) + ' osrs gp would cost: $' + str(rwtcost) + " (RWT)\n"
-    output += str(amount) + ' osrs gp would cost: $' + str(bondcost) + " (Bonds)\n"
-    output += str(amount) + ' dollars spent on osrs gp would be: ' + str(dollar_gp) + " (OSRS GP)\n"
+    cost_per_bil = 27 #1b rsgp to usd
+    cost = (int(amount) * cost_per_bil / 1000000000)
+    output = str(amount) + ' rsgp would cost: $' + str(cost)
     await ctx.send(output)
     
 @bot.command(
@@ -991,20 +968,21 @@ async def website(ctx):
         if url == "disabled":
             return
         file_list = []
-        for image in image_list:
-            filename = image.replace(" ", "").lower() + ".png"
-            payload = {"prompt": image, "steps": 25}
-            response = await session.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
-            r = await response.json()
-            for i in r['images']:
-                image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))
-                png_payload = {"image": "data:image/png;base64," + i}
-                response2 = await session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
-                pnginfo = PngImagePlugin.PngInfo()
-                json_response = await response2.json()
-                pnginfo.add_text("parameters", json_response.get("info"))
-                image.save(local_folder + filename, pnginfo=pnginfo)
-                file_list.append(filename)
+        async with aiohttp.ClientSession() as session:
+            for image in image_list:
+                filename = image.replace(" ", "").lower() + ".png"
+                payload = {"prompt": image, "steps": 25}
+                response = await session.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
+                r = await response.json()
+                for i in r['images']:
+                    image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))
+                    png_payload = {"image": "data:image/png;base64," + i}
+                    response2 = await session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
+                    pnginfo = PngImagePlugin.PngInfo()
+                    json_response = await response2.json()
+                    pnginfo.add_text("parameters", json_response.get("info"))
+                    image.save(local_folder + filename, pnginfo=pnginfo)
+                    file_list.append(filename)
         return file_list
     
     async def add_image_filenames(code, file_list):
@@ -1116,13 +1094,15 @@ async def draw(ctx):
         negative_prompt = ""
         payload = {"prompt": prompt,"steps": 25, "negative_prompt": negative_prompt,"batch_size": amount}
         try:
-            async with bot.http_session.post(url=f'{url}/sdapi/v1/txt2img', json=payload) as resp:
-                r = await resp.json()
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url=f'{url}/sdapi/v1/txt2img', json=payload) as resp:
+                    r = await resp.json()
             for i in r['images']:
                 image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
                 png_payload = {"image": "data:image/png;base64," + i}
-                async with bot.http_session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload) as resp2:
-                    response2 = await resp2.json()
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload) as resp2:
+                        response2 = await resp2.json()
                 pnginfo = PngImagePlugin.PngInfo()
                 pnginfo.add_text("parameters", response2.get("info"))
                 my_filename = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
@@ -1294,8 +1274,9 @@ async def change_model(ctx, model_choice='0'):
         await ctx.send("This command is currently disabled")
         return
 
-    async with bot.http_session.get(url=f'{url}/sdapi/v1/options') as response:
-        config_json = await response.json()
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url=f'{url}/sdapi/v1/options') as response:
+            config_json = await response.json()
 
     current_model = config_json["sd_model_checkpoint"]
     output = 'Current Model: ' + current_model + '\n'
@@ -1304,10 +1285,11 @@ async def change_model(ctx, model_choice='0'):
         model_id, model_name = model_choices[model_choice]
         if current_model != model_id:
             payload = {"sd_model_checkpoint": model_id}
-            async with bot.http_session.post(url=f'{url}/sdapi/v1/options', json=payload) as response:
-                output = "Changed model to: " + model_name
-                await ctx.send(output)
-                return
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url=f'{url}/sdapi/v1/options', json=payload) as response:
+                    output = "Changed model to: " + model_name
+                    await ctx.send(output)
+                    return
         else:
             await ctx.send(f"Already set to use {model_name}")
             return
@@ -1346,8 +1328,9 @@ async def imagine(ctx):
     payload = combine_dicts(payload, key_value_pairs)
     
     try:
-        async with bot.http_session.post(url, headers=headers, json=payload) as resp:
-            r = await resp.json()
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, headers=headers, json=payload) as resp:
+                r = await resp.json()
     except Exception as error:
         await ctx.send("My image generation service may not be running.")
         await handle_error(error)
@@ -1360,8 +1343,9 @@ async def imagine(ctx):
         png_payload = {"image": "data:image/png;base64," + i}
         
         try:
-            async with bot.http_session.post(url, json=png_payload) as resp:
-                response2 = await resp.json()
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, json=png_payload) as resp:
+                    response2 = await resp.json()
         except Exception as error:
             await ctx.send("My image generation service may not be running.")
             await handle_error(error)
@@ -1406,22 +1390,24 @@ async def describe(ctx):
         await handle_error(error)
         print("Couldn't find image.")
         return
-    
-    async with bot.http_session.get(file_url) as response:
-        imageName = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
-        with open(imageName, 'wb') as out_file:
-            print(f"Saving image: {imageName}")
-            while True:
-                chunk = await response.content.read(1024)
-                if not chunk:
-                    break
-                out_file.write(chunk)
+        
+    async with aiohttp.ClientSession() as session:
+        async with session.get(file_url) as response:
+            imageName = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
+            with open(imageName, 'wb') as out_file:
+                print(f"Saving image: {imageName}")
+                while True:
+                    chunk = await response.content.read(1024)
+                    if not chunk:
+                        break
+                    out_file.write(chunk)
 
     img_link = my_open_img_file(imageName)
     try:
         payload = {"image": img_link}
-        async with bot.http_session.post(url, json=payload) as response:
-            r = await response.json()
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload) as response:
+                r = await response.json()
         print(r)
         await ctx.send(r.get("caption"))
     except Exception as error:
@@ -1456,15 +1442,16 @@ async def reimagine(ctx):
     key_value_pairs, prompt = extract_key_value_pairs(prompt)
 
     try:
-        async with bot.http_session.get(file_url) as response:
-            imageName = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
-            with open(imageName, 'wb') as out_file:
-                print(f"Saving image: {imageName}")
-                while True:
-                    chunk = await response.content.read(1024)
-                    if not chunk:
-                        break
-                    out_file.write(chunk)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(file_url) as response:
+                imageName = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
+                with open(imageName, 'wb') as out_file:
+                    print(f"Saving image: {imageName}")
+                    while True:
+                        chunk = await response.content.read(1024)
+                        if not chunk:
+                            break
+                        out_file.write(chunk)
                         
     except Exception as error:
         await ctx.send("My image generation service may not be running.")
@@ -1481,22 +1468,23 @@ async def reimagine(ctx):
     payload = combine_dicts(payload, key_value_pairs)
 
     try:
-        async with bot.http_session.post(url=f'{url}/sdapi/v1/img2img', json=payload) as response:
-            data = await response.json()
-            for i in data['images']:
-                if not os.path.isdir("tmp/reimagined/"+ str(ctx.author.id)):
-                    os.makedirs("tmp/reimagined/"+ str(ctx.author.id))
-                image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
-                png_payload = {"image": "data:image/png;base64," + i}
-                async with bot.http_session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload) as resp2:
-                    response2 = await resp2.json()
-                    pnginfo = PngImagePlugin.PngInfo()
-                    pnginfo.add_text("parameters", response2.get("info"))
-                    my_filename = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
-                    image.save(my_filename, pnginfo=pnginfo)
-                    with open(my_filename, "rb") as fh:
-                        f = discord.File(fh, filename=my_filename)
-                    await ctx.send(file=f)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url=f'{url}/sdapi/v1/img2img', json=payload) as response:
+                data = await response.json()
+                for i in data['images']:
+                    if not os.path.isdir("tmp/reimagined/"+ str(ctx.author.id)):
+                        os.makedirs("tmp/reimagined/"+ str(ctx.author.id))
+                    image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
+                    png_payload = {"image": "data:image/png;base64," + i}
+                    async with session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload) as resp2:
+                        response2 = await resp2.json()
+                        pnginfo = PngImagePlugin.PngInfo()
+                        pnginfo.add_text("parameters", response2.get("info"))
+                        my_filename = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
+                        image.save(my_filename, pnginfo=pnginfo)
+                        with open(my_filename, "rb") as fh:
+                            f = discord.File(fh, filename=my_filename)
+                        await ctx.send(file=f)
     except Exception as error:
         await ctx.send("My image generation service may not be running.")
         await handle_error(error)
