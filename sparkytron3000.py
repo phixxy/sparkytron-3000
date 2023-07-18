@@ -348,7 +348,7 @@ async def task_loop():
             await bot_stuff.send("All daily tasks successfully ran!")
             
 async def create_session():
-    return aiohttp.ClientSession()
+    return aiohttp.ClientSession(timeout=30)
 
 async def close_session(session):
     await session.close()
