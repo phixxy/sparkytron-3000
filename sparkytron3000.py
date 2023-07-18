@@ -712,7 +712,7 @@ async def blog(ctx, *args):
     else:
         blogpost_file = "databases/blog_topics.txt"
         with open(blogpost_file, 'a') as f:
-            f.writelines(message)
+            f.writelines(message+'\n')
         await ctx.send("Saved suggestion!")
 
 @bot.command()
