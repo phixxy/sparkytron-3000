@@ -351,6 +351,20 @@ async def task_loop():
         else:
             await bot_stuff.send("All daily tasks successfully ran!")
             
+async def create_session():
+    return aiohttp.ClientSession()
+
+async def close_session(http_session):
+    await http_session.close()
+            
+@bot.event
+async def on_connect():
+    bot.http_session = await create_session()
+
+@bot.event
+async def on_disconnect():
+    await close_session(bot.http_session)
+            
 @bot.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(bot))
@@ -1071,7 +1085,7 @@ async def feature(ctx):
     help="Generates a picture using stable diffusion and gpt 3.5. It generates a list of 10 random artistic words and feeds them into stable diffusion. Usage: !draw (amount of pictures)", 
     brief="Generate a random image"
     )         
-async def draw(ctx):
+async def draw(ctx, http_session = bot.http_session):
     url = os.getenv('stablediffusion_url')
     if url == "disabled":
         return
@@ -1101,15 +1115,15 @@ async def draw(ctx):
         negative_prompt = "easynegative verybadimagenegative_v1.3"
         payload = {"prompt": prompt,"steps": 25, "negative_prompt": negative_prompt,"batch_size": amount}
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(url=f'{url}/sdapi/v1/txt2img', json=payload) as resp:
-                    r = await resp.json()
+            #async with aiohttp.ClientSession() as session:
+            async with http_session.post(url=f'{url}/sdapi/v1/txt2img', json=payload) as resp:
+                r = await resp.json()
             for i in r['images']:
                 image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
                 png_payload = {"image": "data:image/png;base64," + i}
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload) as resp2:
-                        response2 = await resp2.json()
+                #async with aiohttp.ClientSession() as session:
+                async with http_session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload) as resp2:
+                    response2 = await resp2.json()
                 pnginfo = PngImagePlugin.PngInfo()
                 pnginfo.add_text("parameters", response2.get("info"))
                 my_filename = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
