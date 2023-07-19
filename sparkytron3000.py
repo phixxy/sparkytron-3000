@@ -1098,7 +1098,7 @@ async def draw(ctx):
             prompt = prompt + " masterpiece, studio quality"
         else:
             prompt = prompt + ", masterpiece, studio quality"
-        negative_prompt = ""
+        negative_prompt = "easynegative verybadimagenegative_v1.3"
         payload = {"prompt": prompt,"steps": 25, "negative_prompt": negative_prompt,"batch_size": amount}
         try:
             async with aiohttp.ClientSession() as session:
