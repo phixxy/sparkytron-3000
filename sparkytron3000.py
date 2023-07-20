@@ -703,9 +703,24 @@ async def meme(ctx):
     brief="Runescape gold to usd"
     )       
 async def rsgp(ctx, amount):
-    cost_per_bil = 27 #1b rsgp to usd
-    cost = (int(amount) * cost_per_bil / 1000000000)
-    output = str(amount) + ' rsgp would cost: $' + str(cost)
+    output = ""
+    cost_per_bil = 25.50 #1b rsgp to usd
+    cost_per_bil_os = 210
+    gold_per_bond = 70000000
+    gold_per_bond_os = 7000000
+    cost_per_bond = 8 #dollars usd
+    bondcost = (int(amount)/gold_per_bond) * cost_per_bond
+    rwtcost = (int(amount) * cost_per_bil / 1000000000)
+    dollar_gp = (int(amount)*1000000000)/cost_per_bil
+    osbondcost = (int(amount)/gold_per_bond_os) * cost_per_bond
+    osrwtcost = (int(amount) * cost_per_bil_os / 1000000000)
+    osdollar_gp = (int(amount)*1000000000)/cost_per_bil_os
+    output += str(amount) + ' rs3 gp would cost: $' + str(rwtcost) + " (RWT)\n"
+    output += str(amount) + ' rs3 gp would cost: $' + str(bondcost) + " (Bonds)\n"
+    output += str(amount) + ' dollars spent on rs3 gp would be: ' + str(dollar_gp) + " (RS3 GP)\n"
+    output += str(amount) + ' osrs gp would cost: $' + str(rwtcost) + " (RWT)\n"
+    output += str(amount) + ' osrs gp would cost: $' + str(bondcost) + " (Bonds)\n"
+    output += str(amount) + ' dollars spent on osrs gp would be: ' + str(dollar_gp) + " (OSRS GP)\n"
     await ctx.send(output)
     
 @bot.command(
