@@ -715,12 +715,12 @@ async def rsgp(ctx, amount):
     osbondcost = (int(amount)/gold_per_bond_os) * cost_per_bond
     osrwtcost = (int(amount) * cost_per_bil_os / 1000000000)
     osdollar_gp = (int(amount)*1000000000)/cost_per_bil_os
-    output += str(amount) + ' rs3 gp would cost: $' + str(rwtcost) + " (RWT)\n"
-    output += str(amount) + ' rs3 gp would cost: $' + str(bondcost) + " (Bonds)\n"
-    output += str(amount) + ' dollars spent on rs3 gp would be: ' + str(dollar_gp) + " (RS3 GP)\n"
-    output += str(amount) + ' osrs gp would cost: $' + str(rwtcost) + " (RWT)\n"
-    output += str(amount) + ' osrs gp would cost: $' + str(bondcost) + " (Bonds)\n"
-    output += str(amount) + ' dollars spent on osrs gp would be: ' + str(dollar_gp) + " (OSRS GP)\n"
+    output += str(amount) + ' rs3 gp would cost: $' + str(round(rwtcost,2)) + " (RWT)\n"
+    output += str(amount) + ' rs3 gp would cost: $' + str(round(bondcost,2)) + " (Bonds)\n"
+    output += str(amount) + ' dollars spent on rs3 gp would be: ' + str(round(dollar_gp,2)) + " (RS3 GP)\n"
+    output += str(amount) + ' osrs gp would cost: $' + str(round(rwtcost) + " (RWT)\n"
+    output += str(amount) + ' osrs gp would cost: $' + str(round(bondcost,2)) + " (Bonds)\n"
+    output += str(amount) + ' dollars spent on osrs gp would be: ' + str(round(dollar_gp,2)) + " (OSRS GP)\n"
     await ctx.send(output)
     
 @bot.command(
