@@ -718,7 +718,7 @@ async def rsgp(ctx, amount):
     output += str(amount) + ' rs3 gp would cost: $' + str(round(rwtcost,2)) + " (RWT)\n"
     output += str(amount) + ' rs3 gp would cost: $' + str(round(bondcost,2)) + " (Bonds)\n"
     output += str(amount) + ' dollars spent on rs3 gp would be: ' + str(round(dollar_gp,2)) + " (RS3 GP)\n"
-    output += str(amount) + ' osrs gp would cost: $' + str(round(rwtcost) + " (RWT)\n"
+    output += str(amount) + ' osrs gp would cost: $' + str(round(rwtcost,2)) + " (RWT)\n"
     output += str(amount) + ' osrs gp would cost: $' + str(round(bondcost,2)) + " (Bonds)\n"
     output += str(amount) + ' dollars spent on osrs gp would be: ' + str(round(dollar_gp,2)) + " (OSRS GP)\n"
     await ctx.send(output)
