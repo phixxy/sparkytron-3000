@@ -1094,7 +1094,7 @@ async def draw(ctx):
         await ctx.send("Please be patient this may take some time!")
 
         choice1 = "Give me 11 keywords I can use to generate art using AI. They should all be related to one piece of art. Please only respond with the keywords and no other text. Be sure to use keywords that really describe what the art portrays. Keywords should be comma separated with no other text!"
-        choice2 = "Give me some keywords about a piece of new art. They should all be related to one piece of art. Please only respond with the keywords and no other text. Be sure to use keywords that really describe what the art portrays. Keywords should be comma separated with no other text!"
+        choice2 = "Describe a creative scene, use only one sentence"
         choice3 = "Give me comma seperated keywords describing an imaginary piece of art. Only return the keywords and no other text."
         prompt = random.choice([choice1,choice2,choice3])
         prompt = await answer_question(prompt)
