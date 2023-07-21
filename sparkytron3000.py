@@ -1111,7 +1111,9 @@ async def draw(ctx):
         choice1 = "Give me 11 keywords I can use to generate art using AI. They should all be related to one piece of art. Please only respond with the keywords and no other text. Be sure to use keywords that really describe what the art portrays. Keywords should be comma separated with no other text!"
         choice2 = "Describe a creative scene, use only one sentence"
         choice3 = "Give me comma seperated keywords describing an imaginary piece of art. Only return the keywords and no other text."
-        prompt = random.choice([choice1,choice2,choice3])
+        choice4 = "Describe a unique character and an environment in one sentence"
+        choice5 = "Describe a nonhuman character and an environment in one sentence"
+        prompt = random.choice([choice1,choice2,choice3,choice4,choice5])
         prompt = await answer_question(prompt)
         if random.randint(0,9):
             prompt = prompt.replace("abstract, ", "")
