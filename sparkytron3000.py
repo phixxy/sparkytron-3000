@@ -1584,7 +1584,13 @@ async def reset(ctx):
     else:
         await ctx.channel.send("You don't have permission to do that.")
         
-        
+@bot.event
+async def on_reaction_add(reaction, user):
+    if not random.randint(0,9):
+        message = reaction.message
+        emoji = reaction.emoji
+        await message.add_reaction(emoji)
+    
         
 @bot.event
 async def on_message(ctx):
