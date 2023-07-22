@@ -358,6 +358,10 @@ async def close_session(http_session):
 async def on_connect():
     bot.http_session = await create_session()
 
+@bot.event    
+async def on_resumed():
+    bot.http_session = await create_session()
+
 @bot.event
 async def on_disconnect():
     await close_session(bot.http_session)
