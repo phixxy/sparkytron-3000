@@ -1303,7 +1303,8 @@ async def change_model(ctx, model_choice='0'):
         '2': ("flat2DAnimerge_v30.safetensors [5dd56bfa12]", "Flat2D"),
         '3': ("Anything-V3.0.ckpt [8712e20a5d]", "AnythingV3"),
         '4': ("aZovyaPhotoreal_v2.safetensors [dde3b17c05]", "PhotorealV2"),
-        '5': ("Pixel_Art_V1_PublicPrompts.ckpt [0f02127697]", "Pixel Art")
+        '5': ("Pixel_Art_V1_PublicPrompts.ckpt [0f02127697]", "Pixel Art"),
+        '6': ("mistoonAnime_v20.safetensors [c35e1054c0]", "Mistoon AnimeV2")
     }
     url = os.getenv('stablediffusion_url')
     if url == "disabled":
