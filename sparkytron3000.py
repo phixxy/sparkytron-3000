@@ -209,12 +209,9 @@ async def look_at(ctx, look=False):
     
     return metadata
 
-
     
 def edit_channel_config(channel_id, key, value):
     config_file = "channels/config/" + str(channel_id) + ".json"
-    #if not os.path.exists(config_file):
-    #    create_channel_config(config_file)
     with open(config_file, 'r') as f:
         config_data = json.load(f)
     config_data[key] = value
@@ -662,7 +659,7 @@ async def meme(ctx):
         except Exception as error:
             await handle_error(error)
         try:
-    #------------------------------------Saving Image Using Requests---------------------------------#
+    #------------------------------------Saving Image Using Aiohttp---------------------------------#
             filename = memepics[id-1]['name']
             async with bot.http_session.get(image_link) as response:
                 folder = "tmp/"
