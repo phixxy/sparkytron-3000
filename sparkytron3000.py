@@ -219,6 +219,14 @@ def edit_channel_config(channel_id, key, value):
         json.dump(config_data, f)
         
 async def react_to_msg(ctx, react):
+    
+    def is_emoji(string):
+        if len(string) == 1:
+            # Range of Unicode codepoints for emojis
+            if 0x1F300 <= ord(char) <= 0x1F6FF:
+                return True
+        return False
+    
     if react:
         if not random.randint(0,10) and ctx.author.id != 1097302679836971038:
             system_msg = "Send only an emoji as a discord reaction to the following chat message"
@@ -234,12 +242,15 @@ async def react_to_msg(ctx, react):
             }
 
             url = "https://api.openai.com/v1/chat/completions"
-
+            
             try:
                 async with bot.http_session.post(url, headers=headers, json=data) as resp:
                     response_data = await resp.json()
-                    reaction = response_data['choices'][0]['message']['content']
-                await ctx.add_reaction(reaction.strip())
+                    reaction = response_data['choices'][0]['message']['content'].strip()
+                if is_emoji(reaction):
+                    await ctx.add_reaction(reaction)
+                else:
+                    await ctx.add_reaction("😓")
             except Exception as error:
                 print("Some error happened while trying to react to a message")
                 await handle_error(error)
