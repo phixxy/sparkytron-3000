@@ -3,7 +3,6 @@ from discord.ext import commands, tasks
 from discord.utils import get
 import shutil
 import json
-import requests
 import random
 import time
 import os
@@ -674,13 +673,16 @@ async def meme(ctx):
         try:
     #------------------------------------Saving Image Using Requests---------------------------------#
             filename = memepics[id-1]['name']
-            response = requests.get(f"{response['data']['url']}")
-            folder = "tmp/"
-            filename = folder + topic + str(len(os.listdir(folder))) + ".jpg"
-            file = open(filename, "wb")
-            file.write(response.content)
-            file.close()
-            print("Meme was Saved Successfuly")
+            async with bot.http_session.get(image_link) as response:
+                folder = "tmp/"
+                filename = folder + topic + str(len(os.listdir(folder))) + ".jpg"
+                
+                with open(filename, "wb") as file:
+                    while True:
+                        chunk = await response.content.read(1024) # Read the response in chunks
+                        if not chunk:
+                            break
+                        file.write(chunk)
         except Exception as error:
             await handle_error(error)
             print("Something's Wrong with the urllib So try again")
