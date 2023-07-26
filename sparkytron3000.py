@@ -691,6 +691,23 @@ async def meme(ctx):
         await handle_error(error)
         await ctx.send('Something went wrong try again. Usage: !meme (topic)')
         
+        
+@bot.command(
+    description="Errors", 
+    help="Shows the last errors that were logged.", 
+    brief="Display Errors"
+    )       
+async def errors(ctx, amount="5"):
+    output = ""
+    amount = int(amount)
+    try:
+        with open("databases/error_log.txt", 'r') as f:
+            for line in (f.readlines() [-amount:]):
+                output += line
+        await ctx.send(output)
+    except Exception as error:
+        await handle_error(error)
+        
 @bot.command(
     description="RSGP", 
     help="Uses probably outdated information to calculate how much rsgp is worth in usd. Usage: !rsgp (amount)", 
