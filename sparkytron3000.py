@@ -162,14 +162,6 @@ def extract_key_value_pairs(input_str):
     
     return key_value_pairs, output_str
     
-def combine_dicts(dict1, dict2): #prioritizes dict2 args
-    combined_dict = {}
-    for key in dict1:
-        combined_dict[key] = dict1[key]
-    for key in dict2:
-        combined_dict[key] = dict2[key]
-    return combined_dict
-    
 def my_open_img_file(path):
     img = Image.open(path)
     w, h = img.size
@@ -1361,7 +1353,7 @@ async def imagine(ctx):
     headers = {
         'Content-Type': 'application/json'
     }
-    payload = combine_dicts(payload, key_value_pairs)
+    payload.update(key_value_pairs)
     
     try:
         async with bot.http_session.post(url, headers=headers, json=payload) as resp:
@@ -1496,7 +1488,7 @@ async def reimagine(ctx):
     await ctx.send("Please be patient this may take some time! Generating: " + prompt + ".")
 
     payload = {"init_images": [img_link], "prompt": prompt, "steps": 40, "negative_prompt": negative_prompt, "denoising_strength": 0.5}
-    payload = combine_dicts(payload, key_value_pairs)
+    payload.update(key_value_pairs)
 
     try:
         async with bot.http_session.post(url=f'{url}/sdapi/v1/img2img', json=payload) as response:
