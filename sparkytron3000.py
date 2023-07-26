@@ -222,7 +222,7 @@ def edit_channel_config(channel_id, key, value):
         json.dump(config_data, f)
         
 async def react_to_msg(ctx, react):
-    if True: #this should say if react: but I am leaving it because people are enjoying it for now
+    if react:
         if not random.randint(0,10) and ctx.author.id != 1097302679836971038:
             system_msg = "Send only an emoji as a discord reaction to the following chat message"
             message = ctx.content[0]
