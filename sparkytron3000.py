@@ -223,7 +223,7 @@ async def react_to_msg(ctx, react):
     def is_emoji(string):
         if len(string) == 1:
             # Range of Unicode codepoints for emojis
-            if 0x1F300 <= ord(char) <= 0x1F6FF:
+            if 0x1F300 <= ord(string) <= 0x1F6FF:
                 return True
         return False
     
