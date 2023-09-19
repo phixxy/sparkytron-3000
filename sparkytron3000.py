@@ -771,7 +771,7 @@ async def negative_prompt(ctx, *args):
     neg_prompt_file = "databases/negative_prompt.txt"
     with open(neg_prompt_file, 'w') as f:
         f.writelines(message)
-    await ctx.send("Changed negative prompt to", message)
+    await ctx.send("Changed negative prompt to " + message)
 
 @bot.command()
 async def generate_blog(ctx):
