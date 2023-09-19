@@ -768,6 +768,8 @@ async def blog(ctx, *args):
     )
 async def negative_prompt(ctx, *args):
     message = ' '.join(args)
+    if not message:
+        message = "easynegative, badhandv4, verybadimagenegative_v1.3"
     neg_prompt_file = "databases/negative_prompt.txt"
     with open(neg_prompt_file, 'w') as f:
         f.writelines(message)
