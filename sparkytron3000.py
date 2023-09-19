@@ -760,6 +760,18 @@ async def blog(ctx, *args):
         with open(blogpost_file, 'a') as f:
             f.writelines(message+'\n')
         await ctx.send("Saved suggestion!")
+        
+@bot.command(
+    description="Negative Prompt", 
+    help="Changes the negative prompt for imagine across all channels", 
+    brief="Change the negative prompt for imagine"
+    )
+async def negative_prompt(ctx, *args):
+    message = ' '.join(args)
+    neg_prompt_file = "databases/negative_prompt.txt"
+    with open(neg_prompt_file, 'w') as f:
+        f.writelines(message)
+    await ctx.send("Changed negative prompt to", message)
 
 @bot.command()
 async def generate_blog(ctx):
@@ -1366,8 +1378,9 @@ async def imagine(ctx):
     prompt = ctx.message.content.split(" ", maxsplit=1)[1]
     key_value_pairs, prompt = extract_key_value_pairs(prompt)
     #negative_prompt = ""
-    #negative_prompt = "badhandsv4, worst quality, lowres, EasyNegative, hermaphrodite, cropped, not in the frame, additional faces, jpeg large artifacts, jpeg small artifacts, ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, not finished drawing, unfinished image, bad eyes, doll, 3d, cartoon, (bad eyes:1.2), (worst quality:1.2), (low quality:1.2), bad-image-v2-39000, (bad_prompt_version2:0.8), nude, badhandv4 By bad artist -neg easynegative ng_deepnegative_v1_75t verybadimagenegative_v1.3, (Worst Quality, Low Quality:1.4), Poorly Made Bad 3D, Lousy Bad Realistic, nsfw,(worst quality, low quality:1.4), (lip, nose, tooth, rouge, lipstick, eyeshadow:1.4), ( jpeg artifacts:1.4), (depth of field, bokeh, blurry, film grain, chromatic aberration, lens flare:1.0), (1boy, abs, muscular, rib:1.0), greyscale, monochrome, dusty sunbeams, trembling, motion lines, motion blur, emphasis lines, text, title, logo, signature, child, childlike, young, easynegative, (bad-hands-5:0.8), plain background, monochrome, poorly drawn face, poorly drawn hands, watermark, censored, (mutated hands and fingers), ugly, worst quality, low quality,, nsfw,(worst quality, low quality:1.4), (lip, nose, tooth, rouge, lipstick, eyeshadow:1.4), ( jpeg artifacts:1.4), (depth of field, bokeh, blurry, film grain, chromatic aberration, lens flare:1.0), (1boy, abs, muscular, rib:1.0), greyscale, monochrome, dusty sunbeams, trembling, motion lines, motion blur, emphasis lines, text, title, logo, signature, child, childlike, young"
-    negative_prompt = "(worst quality:0.8), verybadimagenegative_v1.3 easynegative, (surreal:0.8), (modernism:0.8), (art deco:0.8), (art nouveau:0.8)"
+    neg_prompt_file = "databases/negative_prompt.txt"
+    with open(neg_prompt_file, 'r') as f:
+        negative_prompt = f.readline()
     await ctx.send("Please be patient this may take some time! Generating: " + prompt + ".")
     
     payload = {
