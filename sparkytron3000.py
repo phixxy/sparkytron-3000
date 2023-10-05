@@ -1364,6 +1364,24 @@ async def change_model(ctx, model_choice='0'):
         model_options = '\n'.join([f"{choice}: {name}" for choice, name in model_choices.items()])
         output += model_options
         await ctx.send(output)
+        
+@bot.command(
+    description="Lora", 
+    help="List the stable diffusion loras.", 
+    brief="List the stable diffusion loras"
+    ) 
+async def lora(ctx):
+    lora_choices = {
+        '0': ("Lora Name", "Trigger Words"),
+        '1': ("<lora:rebecca:1>", "rebecca (cyberpunk)"),
+        '2': ("<lora:lucy:1>", "lucy (cyberpunk)"),
+        '3': ("<lora:dirty:1>", "dirty"),
+        '4': ("<lora:starcraft:1>", "c0nst3llation")
+    }
+    output = ""
+    lora_options = '\n'.join([f"{choice}: {name}" for choice, name in lora_choices.items()])
+    output += lora_options
+    await ctx.send(output)
 
 @bot.command(
     description="Imagine", 
