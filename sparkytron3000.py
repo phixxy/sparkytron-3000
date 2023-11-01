@@ -1322,6 +1322,21 @@ async def personality(ctx):
     personality_type = ctx.message.content.split(" ", maxsplit=1)[1]
     edit_channel_config(ctx.channel.id, "personality", personality_type)
     await ctx.send("Personality changed to " + personality_type)
+    
+@bot.command(
+    description="Secret Santa Register", 
+    help="Register for secret santa!", 
+    brief="Register for secret santa!"
+    )         
+async def ss_register(ctx):
+    try:
+        email = ctx.message.content.split(" ", maxsplit=1)[1]
+        print(ctx.author.name, email)
+        with open("santa.txt", 'a') as f:
+            f.writelines(ctx.author.name + ';' + email + ',')
+        await ctx.send(ctx.author.name + " registered for secret santa!")
+    except:
+        await ctx.send("Usage: !ss_register (email address)")
 
 
 @bot.command(
@@ -1361,7 +1376,7 @@ async def change_model(ctx, model_choice='0'):
             await ctx.send(f"Already set to use {model_name}")
             return
     else:
-        model_options = '\n'.join([f"{choice}: {name}" for choice, name in model_choices.items()])
+        default = '\n'.join([f"{choice}: {name}" for choice, name in model_choices.items()])
         output += model_options
         await ctx.send(output)
         
