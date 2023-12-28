@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 import matplotlib.pyplot as plt
 import aiohttp
 import aioftp
+import asyncssh
 
 #Stable Diffusion
 #Set this env variable to http://host:port or "disabled"
@@ -51,7 +52,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
     brief="Moderation Tools"
     )
 async def moderate(ctx, filename):
-    await upload_ftp("blank_image.png", os.getenv('ftp_ai_images'), filename)
+    await upload_sftp("blank_image.png", os.getenv('ftp_ai_images'), filename)
     output = "Image " + filename + " replaced"
     await ctx.send(output)
     
@@ -62,6 +63,12 @@ async def upload_ftp(local_filename, server_folder, server_filename):
     await client.change_directory(server_folder)
     await client.upload(local_filename, server_folder+server_filename, write_into=True)
     await client.quit()
+
+async def upload_sftp(local_filename, server_folder, server_filename):
+    remotepath = server_folder + server_filename
+    async with asyncssh.connect(ftp_server, username=ftp_username, password=ftp_password) as conn:
+        async with conn.start_sftp_client() as sftp:
+            await sftp.put(local_filename, remotepath=remotepath)
     
 async def handle_error(error):
     print(error)
@@ -81,27 +88,17 @@ async def upload_ftp_ai_images(filename, prompt):
         </div>'''
     img_list = []
     server_folder = os.getenv('ftp_ai_images')
-    client = aioftp.Client()
-    await client.connect(ftp_server)
-    await client.login(ftp_username, ftp_password)
-    await client.change_directory(server_folder)
-    server_files = await client.list()
-    try:
-        file_count = int(len(server_files))
-    except:
-        file_count = 0
-    new_file_name = str(file_count) + ".png"
-    await client.upload(filename, new_file_name, write_into=True)
+    new_filename = str(time.time_ns()) + ".png"
+    await upload_sftp(filename, server_folder, new_filename)
     print("Uploaded", new_file_name)
     with open(html_file, 'r') as f:
         html_data = f.read()
-    html_insert = html_insert.replace("<!--filename-->", new_file_name)
+    html_insert = html_insert.replace("<!--filename-->", new_filename)
     html_insert = html_insert.replace("<!--description-->", prompt)
     html_data = html_data.replace("<!--REPLACE THIS COMMENT-->", html_insert)
     with open(html_file, "w") as f:
         f.writelines(html_data)
-    await client.upload(html_file, "index.html", write_into=True)
-    await client.quit()
+    await upload_sftp(html_file, server_folder, "index.html")
 
 def create_channel_config(filepath):
     config_dict = {
@@ -604,17 +601,12 @@ async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
 async def meme(ctx):
     async def update_meme_webpage(filename):
         server_folder = os.getenv('ftp_ai_memes')
-        client = aioftp.Client()
-        await client.connect(ftp_server)
-        await client.login(ftp_username, ftp_password)
-        await client.change_directory(server_folder)
-        server_files = await client.list()
         try:
             file_count = len(server_files)
         except:
             file_count = 0
-        new_file_name = str(file_count) + ".png"
-        await client.upload(filename, new_file_name, write_into=True)
+        new_file_name = str(time.time_ns()) + ".png"
+        await upload_sftp(filename, server_folder, new_file_name)
         print("Uploaded", new_file_name)
         with open("phixxy.com/ai-memes/index.html", 'r') as f:
             html_data = f.read()
@@ -622,8 +614,7 @@ async def meme(ctx):
         html_data = html_data.replace('<!--ADD IMG HERE-->',html_insert)
         with open("phixxy.com/ai-memes/index.html", "w") as f:
             f.writelines(html_data)
-        await client.upload("phixxy.com/ai-memes/index.html", "index.html", write_into=True)
-        await client.quit()
+        await upload_sftp("phixxy.com/ai-memes/index.html", server_folder, "index.html")
     
     
     async def generate_random_meme(topic):
@@ -832,7 +823,7 @@ async def generate_blog(ctx):
         f.write(html_data)
     
     
-    await upload_ftp(filename, "/media/sdq1/bottlecap/www/phixxy.com/public_html/ai-blog/", "index.html")
+    await upload_sftp(filename, "/media/sdq1/bottlecap/www/phixxy.com/public_html/ai-blog/", "index.html")
     run_time = time.time() - start_time
     print("It took " + str(run_time) + " seconds to generate the blog post!")
     output = "Blog Updated! (" + str(run_time) + " seconds) https://phixxy.com/ai-blog"
@@ -992,8 +983,15 @@ async def website(ctx):
         for filename in os.listdir(local_folder):
             if ".png" in filename:
                 os.remove(local_folder + filename)
+    
+    async def delete_sftp_pngs(server_folder):
+        async with asyncssh.connect(ftp_server, username=ftp_username, password=ftp_password) as conn:
+            async with conn.start_sftp_client() as sftp:
+                for filename in (await sftp.listdir(server_folder)):
+                    print("Deleting", filename)
+                    await sftp.remove(server_folder+filename)
                 
-    async def delete_ftp_pngs(server_folder):
+    '''async def delete_ftp_pngs(server_folder):
         client = aioftp.Client()
         await client.connect(ftp_server)
         await client.login(ftp_username, ftp_password)
@@ -1002,7 +1000,7 @@ async def website(ctx):
             if ".png" in path.name:
                 print("Deleting", path.name)
                 await client.remove(path.name)
-        await client.quit()
+        await client.quit()'''
                         
     async def extract_image_tags(code):
         count = code.count("<img")
@@ -1051,22 +1049,35 @@ async def website(ctx):
         return code
         
 
-
+    async def upload_sftp(local_filename, server_folder, server_filename):
+        remotepath = server_folder + server_filename
+        async with asyncssh.connect(ftp_server, username=ftp_username, password=ftp_password) as conn:
+            async with conn.start_sftp_client() as sftp:
+                await sftp.put(local_filename, remotepath=remotepath)
 
     async def upload_html_and_imgs(local_folder, server_folder):
-        client = aioftp.Client()
+        '''client = aioftp.Client()
         await client.connect(ftp_server)
         await client.login(ftp_username, ftp_password)
-        await client.change_directory(server_folder)
+        await client.change_directory(server_folder)'''
+        
+                
         
         for filename in os.listdir(local_folder):
             if ".png" in filename:
-                await client.upload(local_folder + filename, filename, write_into=True)
+                #await client.upload(local_folder + filename, filename, write_into=True)
+                async with asyncssh.connect(ftp_server, username=ftp_username, password=ftp_password) as conn:
+                    async with conn.start_sftp_client() as sftp:
+                        remotepath = server_folder + filename
+                        await sftp.put(filename, remotepath=remotepath)
         #explicitly upload html files last!
         for filename in os.listdir(local_folder):
             if ".html" in filename:
-                await client.upload(local_folder + filename, filename, write_into=True)
-        await client.quit()
+                #await client.upload(local_folder + filename, filename, write_into=True)
+                async with asyncssh.connect(ftp_server, username=ftp_username, password=ftp_password) as conn:
+                    async with conn.start_sftp_client() as sftp:
+                        remotepath = server_folder + filename
+                        await sftp.put(filename, remotepath=remotepath)
                     
         
     server_folder = os.getenv('ftp_ai_webpage')
@@ -1081,7 +1092,7 @@ async def website(ctx):
         await ctx.send("Please wait, this will take a long time! You will be able to view the website here: https://phixxy.com/ai-webpage/")
         with open(working_file, "w") as f:
             f.write("<!DOCTYPE html><html><head><script>setTimeout(function(){location.reload();}, 10000);</script><title>Generating Website</title><style>body {font-size: 24px;text-align: center;margin-top: 100px;}</style></head><body><p>This webpage is currently being generated. The page will refresh once it is complete. Please be patient.</p></body></html>")
-        await upload_ftp(working_file, server_folder, "index.html")
+        await upload_sftp(working_file, server_folder, "index.html")
         topic = ctx.message.content.split(" ", maxsplit=1)[1]
         prompt = "Generate a webpage using html and inline css. The webpage topic should be " + topic + ". Feel free to add image tags with alt text. Leave the image source blank. The images will be added later."
         code = await answer_question(prompt)
