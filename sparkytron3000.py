@@ -380,7 +380,7 @@ async def update(ctx):
     if ctx.author.id == 242018983241318410:
         output = subprocess.run(["git","pull"],capture_output=True)
         if output.stderr:
-            await ctx.send("Update Failed")
+            await ctx.send("Update Attempted")
             await ctx.send(output.stderr.decode('utf-8'))
         else:
             await ctx.send(output.stdout.decode('utf-8'))
