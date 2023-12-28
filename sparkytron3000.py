@@ -989,11 +989,12 @@ async def website(ctx):
         async with asyncssh.connect(ftp_server, username=ftp_username, password=ftp_password) as conn:
             async with conn.start_sftp_client() as sftp:
                 for filename in (await sftp.listdir(server_folder)):
-                    print("Deleting", filename)
-                    try:
-                        await sftp.remove(server_folder+filename)
-                    except:
-                        print("Couldn't delete", filename)
+                    if '.png' in filename:
+                        try:
+                            print("Deleting", filename)
+                            await sftp.remove(server_folder+filename)
+                        except:
+                            print("Couldn't delete", filename)
                 
     '''async def delete_ftp_pngs(server_folder):
         client = aioftp.Client()
