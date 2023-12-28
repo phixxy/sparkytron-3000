@@ -314,7 +314,16 @@ async def delete_all_files(path):
         elif os.path.isfile(path+filename):
             os.remove(path+filename)
 
-
+async def delete_derp_files(server_folder):
+    async with asyncssh.connect(ftp_server, username=ftp_username, password=ftp_password) as conn:
+        async with conn.start_sftp_client() as sftp:
+            for filename in (await sftp.listdir(server_folder)):
+                if filename != '.' or filename != '..' or filename != 'style.css' or filename != 'myScript.js':
+                    try:
+                        print("Deleting", filename)
+                        await sftp.remove(server_folder+filename)
+                    except:
+                        print("Couldn't delete", filename)
             
 @tasks.loop(seconds=1)  # Run the task every second
 async def task_loop():
@@ -336,6 +345,11 @@ async def task_loop():
         except Exception as error:
             await handle_error(error)
             failed_tasks.append("Delete tmp/")
+        try:
+            await delete_derp_files("/home/debian/websites/derp.phixxy.com/files/")
+        except Exception as error:
+            await handle_error(error)
+            failed_tasks.append("Delete derp files")
         if failed_tasks != []:
             for failed_task in failed_tasks:
                 output += failed_task + '\n'
