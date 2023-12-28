@@ -827,7 +827,7 @@ async def generate_blog(ctx):
     await upload_sftp(filename, (os.getenv('ftp_public_html') + 'ai-blog/'), "index.html")
     run_time = time.time() - start_time
     print("It took " + str(run_time) + " seconds to generate the blog post!")
-    output = "Blog Updated! (" + str(run_time) + " seconds) https://phixxy.com/ai-blog"
+    output = "Blog Updated! (" + str(run_time) + " seconds) https://ai.phixxy.com/ai-blog"
     #output += '\nNotifying subscribers: '
     #for subscriber in blog_subscribers:
     #    output += '<@' + subscriber + '> '
@@ -985,7 +985,7 @@ async def website(ctx):
             if ".png" in filename:
                 os.remove(local_folder + filename)
     
-    async def delete_sftp_pngs(server_folder):
+    async def delete_ftp_pngs(server_folder):
         async with asyncssh.connect(ftp_server, username=ftp_username, password=ftp_password) as conn:
             async with conn.start_sftp_client() as sftp:
                 for filename in (await sftp.listdir(server_folder)):
@@ -1090,7 +1090,7 @@ async def website(ctx):
         os.mkdir(local_folder)
     
     try:            
-        await ctx.send("Please wait, this will take a long time! You will be able to view the website here: https://phixxy.com/ai-webpage/")
+        await ctx.send("Please wait, this will take a long time! You will be able to view the website here: https://ai.phixxy.com/ai-webpage/")
         with open(working_file, "w") as f:
             f.write("<!DOCTYPE html><html><head><script>setTimeout(function(){location.reload();}, 10000);</script><title>Generating Website</title><style>body {font-size: 24px;text-align: center;margin-top: 100px;}</style></head><body><p>This webpage is currently being generated. The page will refresh once it is complete. Please be patient.</p></body></html>")
         await upload_sftp(working_file, server_folder, "index.html")
@@ -1113,7 +1113,7 @@ async def website(ctx):
         
         await upload_html_and_imgs(local_folder, server_folder)        
         
-        await ctx.send("Finished https://phixxy.com/ai-webpage/")
+        await ctx.send("Finished https://ai.phixxy.com/ai-webpage/")
     except Exception as error:
         await handle_error(error)
         await ctx.send("Failed, Try again.")
