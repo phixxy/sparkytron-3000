@@ -1068,11 +1068,11 @@ async def website(ctx):
 
         for filename in os.listdir(local_folder):
             if ".png" in filename:
-                await upload_sftp(filename, (os.getenv('ftp_public_html') + 'ai-webpage/'), filename)
+                await upload_sftp(filename.decode(), (os.getenv('ftp_public_html') + 'ai-webpage/'), filename.decode())
         #explicitly upload html files last!
         for filename in os.listdir(local_folder):
             if ".html" in filename:
-                await upload_sftp(filename, (os.getenv('ftp_public_html') + 'ai-webpage/'), filename)
+                await upload_sftp(filename.decode(), (os.getenv('ftp_public_html') + 'ai-webpage/'), filename.decode())
                     
         
     server_folder = ftp_public_html + 'ai-webpage/'
