@@ -1041,13 +1041,6 @@ async def website(ctx):
         for filename in file_list:
             code = code.replace("src=\"\"", "src=\""+ filename + "\"", 1)
         return code
-        
-
-    async def upload_sftp(local_filename, server_folder, server_filename):
-        remotepath = server_folder + server_filename
-        async with asyncssh.connect(ftp_server, username=ftp_username, password=ftp_password) as conn:
-            async with conn.start_sftp_client() as sftp:
-                await sftp.put(local_filename, remotepath=remotepath)
 
     async def upload_html_and_imgs(local_folder, server_folder):
 
