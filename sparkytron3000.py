@@ -1065,24 +1065,14 @@ async def website(ctx):
         await client.connect(ftp_server)
         await client.login(ftp_username, ftp_password)
         await client.change_directory(server_folder)'''
-        
-                
-        
+
         for filename in os.listdir(local_folder):
             if ".png" in filename:
-                #await client.upload(local_folder + filename, filename, write_into=True)
-                async with asyncssh.connect(ftp_server, username=ftp_username, password=ftp_password) as conn:
-                    async with conn.start_sftp_client() as sftp:
-                        remotepath = server_folder + filename
-                        await sftp.put(filename, remotepath=remotepath)
+                upload_sftp(filename, (os.getenv('ftp_public_html') + 'ai-webpage/'), filename)
         #explicitly upload html files last!
         for filename in os.listdir(local_folder):
             if ".html" in filename:
-                #await client.upload(local_folder + filename, filename, write_into=True)
-                async with asyncssh.connect(ftp_server, username=ftp_username, password=ftp_password) as conn:
-                    async with conn.start_sftp_client() as sftp:
-                        remotepath = server_folder + filename
-                        await sftp.put(filename, remotepath=remotepath)
+                upload_sftp(filename, (os.getenv('ftp_public_html') + 'ai-webpage/'), filename)
                     
         
     server_folder = ftp_public_html + 'ai-webpage/'
