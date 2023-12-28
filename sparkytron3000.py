@@ -33,10 +33,11 @@ eleven_labs_api_key = os.getenv('eleven_labs_api_key')
 ftp_server = os.getenv('ftp_server')
 ftp_username = os.getenv('ftp_username')
 ftp_password = os.getenv('ftp_password')
-ftp_ai_images = os.getenv('ftp_ai_images')
-ftp_ai_memes = os.getenv('ftp_ai_memes')
-ftp_ai_webpage = os.getenv('ftp_ai_webpage')
+#ftp_ai_images = os.getenv('ftp_ai_images')
+#ftp_ai_memes = os.getenv('ftp_ai_memes')
+#ftp_ai_webpage = os.getenv('ftp_ai_webpage')
 ftp_public_html = os.getenv('ftp_public_html')
+#ftp_ai_blog = os.getenv('ftp_ai_blog')
 
 #env vars END
 
@@ -52,7 +53,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
     brief="Moderation Tools"
     )
 async def moderate(ctx, filename):
-    await upload_sftp("blank_image.png", os.getenv('ftp_ai_images'), filename)
+    await upload_sftp("blank_image.png", (os.getenv('ftp_public_html') + 'ai-images/'), filename)
     output = "Image " + filename + " replaced"
     await ctx.send(output)
     
@@ -87,7 +88,7 @@ async def upload_ftp_ai_images(filename, prompt):
             <p class="image-description"><!--description--></p>
         </div>'''
     img_list = []
-    server_folder = os.getenv('ftp_ai_images')
+    server_folder = (os.getenv('ftp_public_html') + 'ai-images/')
     new_filename = str(time.time_ns()) + ".png"
     await upload_sftp(filename, server_folder, new_filename)
     print("Uploaded", new_filename)
@@ -600,7 +601,7 @@ async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
     )       
 async def meme(ctx):
     async def update_meme_webpage(filename):
-        server_folder = os.getenv('ftp_ai_memes')
+        server_folder = (os.getenv('ftp_public_html') + 'ai-memes/')
         try:
             file_count = len(server_files)
         except:
@@ -780,7 +781,7 @@ async def generate_blog(ctx):
         await ctx.send("I already wrote a blog post today!")
         return
     blogpost_file = "databases/blog_topics.txt"
-    blog_subscribers = ["276197608735637505","242018983241318410"]
+    #blog_subscribers = ["276197608735637505","242018983241318410"]
     if os.path.isfile(blogpost_file):
         with open(blogpost_file, 'r') as f:
             blogpost_topics = f.read()
@@ -823,13 +824,13 @@ async def generate_blog(ctx):
         f.write(html_data)
     
     
-    await upload_sftp(filename, "/media/sdq1/bottlecap/www/phixxy.com/public_html/ai-blog/", "index.html")
+    await upload_sftp(filename, (os.getenv('ftp_public_html') + 'ai-blog/'), "index.html")
     run_time = time.time() - start_time
     print("It took " + str(run_time) + " seconds to generate the blog post!")
     output = "Blog Updated! (" + str(run_time) + " seconds) https://phixxy.com/ai-blog"
-    output += '\nNotifying subscribers: '
-    for subscriber in blog_subscribers:
-        output += '<@' + subscriber + '> '
+    #output += '\nNotifying subscribers: '
+    #for subscriber in blog_subscribers:
+    #    output += '<@' + subscriber + '> '
     await ctx.send(output)
         
 
@@ -1080,8 +1081,8 @@ async def website(ctx):
                         await sftp.put(filename, remotepath=remotepath)
                     
         
-    server_folder = os.getenv('ftp_ai_webpage')
-    server_archive_folder = "/media/sdq1/bottlecap/www/phixxy.com/public_html/webpage-archive/"
+    server_folder = ftp_public_html + 'ai-webpage/'
+    server_archive_folder = ftp_public_html + "webpage-archive/"
     local_archive_folder = "websites/"
     local_folder = "tmp/webpage/"
     working_file = local_folder + "index.html"
