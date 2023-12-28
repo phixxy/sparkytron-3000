@@ -90,7 +90,7 @@ async def upload_ftp_ai_images(filename, prompt):
     server_folder = os.getenv('ftp_ai_images')
     new_filename = str(time.time_ns()) + ".png"
     await upload_sftp(filename, server_folder, new_filename)
-    print("Uploaded", new_file_name)
+    print("Uploaded", new_filename)
     with open(html_file, 'r') as f:
         html_data = f.read()
     html_insert = html_insert.replace("<!--filename-->", new_filename)
@@ -1468,13 +1468,15 @@ async def imagine(ctx):
         
         channel_vars = await get_channel_config(ctx.channel.id)
         
-        if channel_vars["ftp_enabled"]:
-            await upload_ftp_ai_images(my_filename, prompt)
-        
         with open(my_filename, "rb") as fh:
             f = discord.File(fh, filename=my_filename)
-        
+            
         await ctx.send(file=f)
+            
+        if channel_vars["ftp_enabled"]:
+            await upload_ftp_ai_images(my_filename, prompt)
+            
+        
     
 @bot.command(
     description="Describe", 
