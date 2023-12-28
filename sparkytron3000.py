@@ -995,17 +995,6 @@ async def website(ctx):
                             await sftp.remove(server_folder+filename)
                         except:
                             print("Couldn't delete", filename)
-                
-    '''async def delete_ftp_pngs(server_folder):
-        client = aioftp.Client()
-        await client.connect(ftp_server)
-        await client.login(ftp_username, ftp_password)
-        await client.change_directory(server_folder)
-        for path, info in (await client.list()):
-            if ".png" in path.name:
-                print("Deleting", path.name)
-                await client.remove(path.name)
-        await client.quit()'''
                         
     async def extract_image_tags(code):
         count = code.count("<img")
@@ -1061,18 +1050,14 @@ async def website(ctx):
                 await sftp.put(local_filename, remotepath=remotepath)
 
     async def upload_html_and_imgs(local_folder, server_folder):
-        '''client = aioftp.Client()
-        await client.connect(ftp_server)
-        await client.login(ftp_username, ftp_password)
-        await client.change_directory(server_folder)'''
 
         for filename in os.listdir(local_folder):
             if ".png" in filename:
-                await upload_sftp(filename.decode(), (os.getenv('ftp_public_html') + 'ai-webpage/'), filename.decode())
+                await upload_sftp(local_folder + filename, (os.getenv('ftp_public_html') + 'ai-webpage/'), filename)
         #explicitly upload html files last!
         for filename in os.listdir(local_folder):
             if ".html" in filename:
-                await upload_sftp(filename.decode(), (os.getenv('ftp_public_html') + 'ai-webpage/'), filename.decode())
+                await upload_sftp(local_folder + filename, (os.getenv('ftp_public_html') + 'ai-webpage/'), filename)
                     
         
     server_folder = ftp_public_html + 'ai-webpage/'
