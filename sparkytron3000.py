@@ -318,7 +318,9 @@ async def delete_derp_files(server_folder):
     async with asyncssh.connect(ftp_server, username=ftp_username, password=ftp_password) as conn:
         async with conn.start_sftp_client() as sftp:
             for filename in (await sftp.listdir(server_folder)):
-                if filename != '.' or filename != '..' or filename != 'style.css' or filename != 'myScript.js':
+                if filename == '.' or filename == '..' or filename == 'style.css' or filename == 'myScript.js':
+                    pass
+                else:
                     try:
                         print("Deleting", filename)
                         await sftp.remove(server_folder+filename)
