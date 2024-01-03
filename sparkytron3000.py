@@ -1286,7 +1286,7 @@ async def topic(ctx, channel_topic):
     edit_channel_config(ctx.channel.id, "channel_topic", channel_topic)
     await ctx.send("Topic changed to " + channel_topic)
     
-@bot.command(
+'''@bot.command(
     description="Python", 
     help="Run some python code. Imports are disabled but random is imported for you. Usage !python (codeblock)", 
     brief="Run some python code"
@@ -1327,7 +1327,7 @@ async def python(ctx):
                 await ctx.send(error.stderr.decode('utf-8'))
     except Exception as error:
         await handle_error(error)
-        await ctx.send("Usage: !python (codeblock)")
+        await ctx.send("Usage: !python (codeblock)")'''
     
     
 @bot.command(
@@ -1700,8 +1700,6 @@ async def on_reaction_add(reaction, user):
         
 @bot.event
 async def on_message(ctx):
-    
-
             
     #log stuff
     logfile = "channels/logs/{0}.log".format(str(ctx.channel.id))
