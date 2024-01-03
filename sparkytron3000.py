@@ -33,11 +33,7 @@ eleven_labs_api_key = os.getenv('eleven_labs_api_key')
 ftp_server = os.getenv('ftp_server')
 ftp_username = os.getenv('ftp_username')
 ftp_password = os.getenv('ftp_password')
-#ftp_ai_images = os.getenv('ftp_ai_images')
-#ftp_ai_memes = os.getenv('ftp_ai_memes')
-#ftp_ai_webpage = os.getenv('ftp_ai_webpage')
 ftp_public_html = os.getenv('ftp_public_html')
-#ftp_ai_blog = os.getenv('ftp_ai_blog')
 
 #env vars END
 
@@ -1359,7 +1355,7 @@ async def personality(ctx):
     edit_channel_config(ctx.channel.id, "personality", personality_type)
     await ctx.send("Personality changed to " + personality_type)
     
-@bot.command(
+'''@bot.command(
     description="Secret Santa Register", 
     help="Register for secret santa!", 
     brief="Register for secret santa!"
@@ -1372,7 +1368,7 @@ async def ss_register(ctx):
             f.writelines(ctx.author.name + ';' + email + ',')
         await ctx.send(ctx.author.name + " registered for secret santa!")
     except:
-        await ctx.send("Usage: !ss_register (email address)")
+        await ctx.send("Usage: !ss_register (email address)")'''
 
 
 @bot.command(
@@ -1704,12 +1700,26 @@ async def on_reaction_add(reaction, user):
         
 @bot.event
 async def on_message(ctx):
+    
+
+            
+    #log stuff
     logfile = "channels/logs/{0}.log".format(str(ctx.channel.id))
     channel_vars = await get_channel_config(ctx.channel.id)
-
-    await react_to_msg(ctx, channel_vars["react_to_msgs"]) #emoji reactions
     chat_history_string = await log_chat_and_get_history(ctx, logfile, channel_vars)
-
+    
+    #handle non-text channels (dms, etc)
+    print(ctx.channel.type.value)
+    print(type(ctx.channel.type.value))
+    if ctx.channel.type.value != 0 and ctx.author.id != 242018983241318410:
+        if ctx.author.bot: #this stops the bot from responding to itself
+            return
+        else:
+            await ctx.channel.send("I cannot respond to you in this channel")
+            return
+    
+    await react_to_msg(ctx, channel_vars["react_to_msgs"]) #emoji reactions
+    
     if channel_vars["commands_enabled"] or (ctx.author.id == 242018983241318410 and ctx.content[0] == "!"):
         await bot.process_commands(ctx)
         if not channel_vars["commands_enabled"]:
