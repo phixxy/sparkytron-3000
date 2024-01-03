@@ -879,7 +879,7 @@ async def question_gpt4(ctx):
     help="Ask GPT4 a question about an image. Usage: !question_gpt4 (link) (question)", 
     brief="Get an answer"
     )         
-async def image_gpt4(ctx):
+async def looker(ctx):
     image_link = ctx.message.content.split(" ", maxsplit=2)[1]
     question = ctx.message.content.split(" ", maxsplit=2)[2]
     
@@ -890,23 +890,22 @@ async def image_gpt4(ctx):
 
     data = {
         "model": "gpt-4-vision-preview",
-        "messages": [{"role": "user", "content": [{"type": "text", "text": question},{"type": "image_url","image_url": {"url": image_link}}]}]
+        "messages": [{"role": "user", "content": [{"type": "text", "text": question},{"type": "image_url","image_url": {"url": image_link}}]}],
+        "max_tokens": 500
     }
 
     url = "https://api.openai.com/v1/chat/completions"
 
-    #try:
-    async with bot.http_session.post(url, headers=headers, json=data) as resp:
-        response_data = await resp.json()
-        print(response_data)
-        answer = response_data['choices'][0]['message']['content']
+    try:
+        async with bot.http_session.post(url, headers=headers, json=data) as resp:
+            response_data = await resp.json()
+            print(response_data)
+            answer = response_data['choices'][0]['message']['content']
         
 
-    #except Exception as error:
-    #    return await handle_error(error)
+    except Exception as error:
+        return await handle_error(error)
     
-    
-    #answer = await answer_question(question, "gpt-4-1106-vision-preview")
     chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
     for chunk in chunks:
         await ctx.send(chunk)
