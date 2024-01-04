@@ -640,10 +640,11 @@ async def meme(ctx):
         panel_text = await answer_question("Create text for a meme. The meme is " + meme_name + ". It has " + str(panel_count) + " panels. Only create one meme. Do not use emojis or hashtags! Use the topic: " + topic + ". Use the output format (DO NOT USE EXTRA NEWLINES AND DO NOT DESCRIBE THE PICTURE IN YOUR OUTPUT): \n1: [panel 1 text]\n2: [panel 2 text]")
         
         id = memenumber
-        
+        imgflip_username = os.getenv('imgflip_username')
+        imgflip_password = os.getenv('imgflip_password')
         params = {
-            'username':"Bottlec4p",
-            'password':'Cookies@22',
+            'username':imgflip_username,
+            'password':imgflip_password,
             'template_id':memepics[id-1]['id']
         }
         boxes = []
