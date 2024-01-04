@@ -614,10 +614,6 @@ async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
 async def meme(ctx):
     async def update_meme_webpage(filename):
         server_folder = (os.getenv('ftp_public_html') + 'ai-memes/')
-        try:
-            file_count = len(server_files)
-        except:
-            file_count = 0
         new_file_name = str(time.time_ns()) + ".png"
         await upload_sftp(filename, server_folder, new_file_name)
         print("Uploaded", new_file_name)
@@ -1409,7 +1405,7 @@ async def change_model(ctx, model_choice='0'):
             return
     else:
         default = '\n'.join([f"{choice}: {name}" for choice, name in model_choices.items()])
-        output += model_options
+        output += model_choices
         await ctx.send(output)
         
 @bot.command(
