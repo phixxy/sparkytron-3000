@@ -1706,9 +1706,11 @@ async def on_message(ctx):
     #handle non-text channels (dms, etc)
     print(ctx.channel.type.value)
     print(type(ctx.channel.type.value))
-    if ctx.channel.type.value != 0 and ctx.author.id != 242018983241318410:
+    if ctx.channel.type.value != 0:
         if ctx.author.bot: #this stops the bot from responding to itself
             return
+        elif ctx.author.id != 242018983241318410:
+            pass
         else:
             await ctx.channel.send("I cannot respond to you in this channel")
             return
