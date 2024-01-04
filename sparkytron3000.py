@@ -29,7 +29,6 @@ load_dotenv()
 imgflip_username = os.getenv('imgflip_username')
 imgflip_password = os.getenv('imgflip_password')
 discord_token    = os.getenv('discord_token')
-eleven_labs_api_key = os.getenv('eleven_labs_api_key')
 ftp_server = os.getenv('ftp_server')
 ftp_username = os.getenv('ftp_username')
 ftp_password = os.getenv('ftp_password')
@@ -1406,7 +1405,6 @@ async def change_model(ctx, model_choice='0'):
             return
     else:
         output = '\n'.join([f"{choice}: {name}" for choice, name in model_choices.items()])
-        #output += model_choices
         await ctx.send(output)
         
 @bot.command(
