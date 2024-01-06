@@ -1658,7 +1658,31 @@ async def roll(ctx, dice_string):
     total = sum(rolls) + modifier
 
     await ctx.send(f'{dice_str} + {modifier} = {total}' if modifier != 0 else f'{dice_str} = {total}')
-    
+
+@bot.command(
+    description="Pokedex", 
+    help="Get information on pokemon", 
+    brief="Pokedex",
+    hidden=False
+    )  
+async def pdex(ctx, pokemon):
+    url = "https://pokeapi.co/api/v2/pokemon/" + pokemon
+    dex_url = "https://pokeapi.co/api/v2/pokemon-species/" + pokemon
+    async with bot.http_session.get(url) as resp:
+        data = await resp.json()
+        name = data['name']
+        height = data['height']
+        weight = data['weight']
+        type1 = data['types'][0]['type']['name']
+        try:
+            type2 = data['types'][1]['type']['name']
+        except:
+            type2 = "None"
+        sprite = data["sprites"]["front_default"]
+        message = name + ' ' + str(height) + ' ' + str(weight) + ' ' + type1 + ' ' + type2 + ' ' + sprite
+        await ctx.send(message)
+
+
 @bot.command(
     description="Kill", 
     help="Kills the bot in event of an emergency. Only special users can do this! Usage: !kill", 
@@ -1702,16 +1726,9 @@ async def on_message(ctx):
     chat_history_string = await log_chat_and_get_history(ctx, logfile, channel_vars)
     
     #handle non-text channels (dms, etc)
-    print(ctx.channel.type.value)
-    print(type(ctx.channel.type.value))
-    if ctx.channel.type.value != 0:
-        if ctx.author.bot: #this stops the bot from responding to itself
-            return
-        elif ctx.author.id != 242018983241318410:
-            pass
-        else:
-            await ctx.channel.send("I cannot respond to you in this channel")
-            return
+    if ctx.channel.type.value != 0 and ctx.author.id != 242018983241318410:
+        #This used to notify the user it cannot respond in this channel, but that spammed threads
+        return
     
     await react_to_msg(ctx, channel_vars["react_to_msgs"]) #emoji reactions
     
