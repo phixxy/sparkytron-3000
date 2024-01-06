@@ -1659,6 +1659,16 @@ async def roll(ctx, dice_string):
 
     await ctx.send(f'{dice_str} + {modifier} = {total}' if modifier != 0 else f'{dice_str} = {total}')
 
+
+@bot.command(
+    description="Pokemon", 
+    help="Pokemon game", 
+    brief="Pokemon Game",
+    hidden=True
+    )  
+async def pkmn(ctx, pokemon):
+    pass
+
 @bot.command(
     description="Pokedex", 
     help="Get information on pokemon", 
