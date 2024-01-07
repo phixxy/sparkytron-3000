@@ -1703,47 +1703,51 @@ async def pokemon(ctx, pokemon):
     )  
 async def pokedex(ctx, pokemon):
     pokemon = ctx.message.content.split(" ", maxsplit=1)[1]
-    shiny = False
-    if 'shiny ' in pokemon:
-        shiny = True
-        pokemon = pokemon.replace('shiny ', '')
-    url = "https://pokeapi.co/api/v2/pokemon/" + pokemon
-    dex_url = "https://pokeapi.co/api/v2/pokemon-species/" + pokemon
-    #try:
-    data = await get_json(url)
-    name = data['name']
-    height_str = str(int(data['height'])/10) + 'm'
-    weight_str = str(int(data['weight'])/10) + 'kg'
-    type1 = data['types'][0]['type']['name']
     try:
-        type2 = data['types'][1]['type']['name']
-        type_str = type1.capitalize() + ', ' + type2.capitalize()
+        shiny = False
+        if 'shiny ' in pokemon:
+            shiny = True
+            pokemon = pokemon.replace('shiny ', '')
+        url = "https://pokeapi.co/api/v2/pokemon/" + pokemon
+        dex_url = "https://pokeapi.co/api/v2/pokemon-species/" + pokemon
+        #try:
+        data = await get_json(url)
+        name = data['name']
+        height_str = str(int(data['height'])/10) + 'm'
+        weight_str = str(int(data['weight'])/10) + 'kg'
+        type1 = data['types'][0]['type']['name']
+        try:
+            type2 = data['types'][1]['type']['name']
+            type_str = type1.capitalize() + ', ' + type2.capitalize()
+        except:
+            type2 = "None"
+            type_str = type1.capitalize()
+        sprite = data["sprites"]["front_default"]
+        if shiny:
+            sprite = data["sprites"]["front_shiny"]
+        dex_data = await get_json(dex_url)
+        for entry in dex_data['flavor_text_entries']:
+            print(type(entry))
+            print(entry['language']['name'])
+            if entry['language']['name'] == 'en':
+                dex_desc = entry['flavor_text']
+                break
+        for entry in dex_data['genera']:
+            if entry['language']['name'] == 'en':
+                genus = entry['genus']
+                break
+        dex_num = dex_data['pokedex_numbers'][0]['entry_number']
+        embed=discord.Embed(title=name.capitalize())
+        embed.set_image(url=sprite)
+        embed.add_field(name="Number", value=dex_num, inline=False)
+        embed.add_field(name=genus, value=dex_desc, inline=False)
+        embed.add_field(name="Weight", value=weight_str , inline=True)
+        embed.add_field(name="Height", value=height_str, inline=True)
+        embed.add_field(name="Types", value=type_str, inline=True)
+        await ctx.send(embed=embed)
     except:
-        type2 = "None"
-        type_str = type1.capitalize()
-    sprite = data["sprites"]["front_default"]
-    if shiny:
-        sprite = data["sprites"]["front_shiny"]
-    dex_data = await get_json(dex_url)
-    for entry in dex_data['flavor_text_entries']:
-        print(type(entry))
-        print(entry['language']['name'])
-        if entry['language']['name'] == 'en':
-            dex_desc = entry['flavor_text']
-            break
-    for entry in dex_data['genera']:
-        if entry['language']['name'] == 'en':
-            genus = entry['genus']
-            break
-    dex_num = dex_data['pokedex_numbers'][0]['entry_number']
-    embed=discord.Embed(title=name.capitalize())
-    embed.set_image(url=sprite)
-    embed.add_field(name="Number", value=dex_num, inline=False)
-    embed.add_field(name=genus, value=dex_desc, inline=False)
-    embed.add_field(name="Weight", value=weight_str , inline=True)
-    embed.add_field(name="Height", value=height_str, inline=True)
-    embed.add_field(name="Types", value=type_str, inline=True)
-    await ctx.send(embed=embed)
+        message = "No data for " + str(pokemon)
+        await ctx.channel.send(message)
 
 @bot.command(
     description="Kill", 
