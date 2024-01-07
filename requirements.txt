@@ -4,3 +4,4 @@ python-dotenv
 pillow
 matplotlib
 aioftp
+asyncssh

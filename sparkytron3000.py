@@ -1705,19 +1705,42 @@ async def pokedex(ctx, pokemon):
     pokemon = pokemon.lower()
     url = "https://pokeapi.co/api/v2/pokemon/" + pokemon
     dex_url = "https://pokeapi.co/api/v2/pokemon-species/" + pokemon
-    async with bot.http_session.get(url) as resp:
-        data = await resp.json()
-        name = data['name']
-        height = data['height']
-        weight = data['weight']
-        type1 = data['types'][0]['type']['name']
-        try:
-            type2 = data['types'][1]['type']['name']
-        except:
-            type2 = "None"
-        sprite = data["sprites"]["front_default"]
-        message = name + ' ' + str(height) + ' ' + str(weight) + ' ' + type1 + ' ' + type2 + ' ' + sprite
-        await ctx.send(message)
+    #try:
+    data = await get_json(url)
+    name = data['name']
+    height = data['height']
+    weight = data['weight']
+    type1 = data['types'][0]['type']['name']
+    try:
+        type2 = data['types'][1]['type']['name']
+        type_str = type1.capitalize() + ', ' + type2.capitalize()
+    except:
+        type2 = "None"
+        type_str = type1.capitalize()
+    sprite = data["sprites"]["front_default"]
+    dex_data = await get_json(dex_url)
+    for entry in dex_data['flavor_text_entries']:
+        print(type(entry))
+        print(entry['language']['name'])
+        if entry['language']['name'] == 'en':
+            dex_desc = entry['flavor_text']
+            break
+    for entry in dex_data['genera']:
+        if entry['language']['name'] == 'en':
+            genus = entry['genus']
+            break
+    print("pdex ran")
+    embed=discord.Embed(title=name.capitalize())
+    embed.set_image(url=sprite)
+    embed.add_field(name=genus, value=dex_desc, inline=False)
+    embed.add_field(name="Weight", value=weight, inline=True)
+    embed.add_field(name="Height", value=height, inline=True)
+    embed.add_field(name="Types", value=type_str, inline=True)
+    await ctx.send(embed=embed)
+
+    #message = name + ' ' + str(height) + ' ' + str(weight) + ' ' + type1 + ' ' + type2 + ' ' + sprite
+    #await ctx.send(message)
+
 
 
 @bot.command(
