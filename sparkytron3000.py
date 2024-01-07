@@ -1726,16 +1726,19 @@ async def pokedex(ctx, pokemon):
         if shiny:
             sprite = data["sprites"]["front_shiny"]
         dex_data = await get_json(dex_url)
+        generation = dex_data['generation']['name'].upper().replace("GENERATION","Generation")
         for entry in dex_data['flavor_text_entries']:
             print(type(entry))
             print(entry['language']['name'])
             if entry['language']['name'] == 'en':
-                dex_desc = entry['flavor_text']
+                dex_desc = entry['flavor_text'].replace("\u000c", '\n')
+                dex_desc_game = entry['version']['name'].capitalize()
                 break
         for entry in dex_data['genera']:
             if entry['language']['name'] == 'en':
                 genus = entry['genus']
                 break
+        footer = generation + ' | Pokédex entry from Pokémon ' + dex_desc_game
         dex_num = dex_data['pokedex_numbers'][0]['entry_number']
         embed=discord.Embed(title=name.capitalize())
         embed.set_image(url=sprite)
@@ -1744,6 +1747,7 @@ async def pokedex(ctx, pokemon):
         embed.add_field(name="Weight", value=weight_str , inline=True)
         embed.add_field(name="Height", value=height_str, inline=True)
         embed.add_field(name="Types", value=type_str, inline=True)
+        embed.set_footer(text=footer)
         await ctx.send(embed=embed)
     except:
         message = "No data for " + str(pokemon)
