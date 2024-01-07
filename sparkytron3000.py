@@ -1735,9 +1735,10 @@ async def pokedex(ctx, pokemon):
         if entry['language']['name'] == 'en':
             genus = entry['genus']
             break
-    print("pdex ran")
+    dex_num = dex_data['pokedex_numbers'][0]['entry_number']
     embed=discord.Embed(title=name.capitalize())
     embed.set_image(url=sprite)
+    embed.add_field(name="Number", value=dex_num, inline=False)
     embed.add_field(name=genus, value=dex_desc, inline=False)
     embed.add_field(name="Weight", value=weight_str , inline=True)
     embed.add_field(name="Height", value=height_str, inline=True)
