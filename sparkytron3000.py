@@ -1659,23 +1659,50 @@ async def roll(ctx, dice_string):
 
     await ctx.send(f'{dice_str} + {modifier} = {total}' if modifier != 0 else f'{dice_str} = {total}')
 
+async def get_json(url):
+    async with bot.http_session.get(url) as resp:
+            json_data = await resp.json()
+            return json_data
+
 
 @bot.command(
     description="Pokemon", 
     help="Pokemon game", 
     brief="Pokemon Game",
+    aliases=['pkmn'],
     hidden=True
-    )  
-async def pkmn(ctx, pokemon):
+    )
+async def pokemon(ctx, pokemon):
+
+    async def is_base_form(id): #id = pokedex number
+        url = "https://pokeapi.co/api/v2/pokemon-species/" + str(id)
+        json_data = await get_json(url)
+        if json_data["evolves_from_species"] == None:
+            return True
+        else:
+            return False
+    
+    async def shiny_roll():
+        roll = random.randint(0,2047)
+        return not roll
+    
+    async def save_pokemon(discord_id, pokemon_dict):
+        path = "database/"+str(discord_id)+".json"
+        pokemon_dict = json.dumps(pokemon_dict)
+        with open(path, 'w') as f:
+            f.writelines(pokemon_dict)
+
     pass
 
 @bot.command(
     description="Pokedex", 
     help="Get information on pokemon", 
     brief="Pokedex",
+    aliases=['pdex'],
     hidden=False
     )  
-async def pdex(ctx, pokemon):
+async def pokedex(ctx, pokemon):
+    pokemon = pokemon.lower()
     url = "https://pokeapi.co/api/v2/pokemon/" + pokemon
     dex_url = "https://pokeapi.co/api/v2/pokemon-species/" + pokemon
     async with bot.http_session.get(url) as resp:
