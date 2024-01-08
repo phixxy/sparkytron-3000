@@ -1764,6 +1764,7 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
             json_data['nature'] = nature
             json_data['buddy_level'] = 1
             json_data['buddy_xp'] = 0
+            await save_pokemon(ctx.author.id, json_data)
             embed = await make_pmkn_embed(json_data)
             await ctx.channel.send(embed=embed)
             return
