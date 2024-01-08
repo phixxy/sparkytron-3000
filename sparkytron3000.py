@@ -1743,9 +1743,10 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
         embed.add_field(name="Buddy XP", value=buddy_xp, inline=True)
         embed.add_field(name="Types", value=type_str, inline=False)
         return embed
-
-
-
+    
+    async def add_pkmn_reacts(message):
+        await message.add_reaction('🥰')
+        await message.add_reaction('🍙')
 
     if arg1=='start':
         if not os.path.isdir("databases/pokemon/"):
@@ -1791,7 +1792,8 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
         await ctx.channel.send("You don't have a buddy yet. Type ```!pokemon start``` to start your Pokemon journey!")
     else:
         embed = await make_pmkn_embed(buddy_json)
-        await ctx.channel.send(embed=embed)
+        message = await ctx.channel.send(embed=embed)
+        await add_pkmn_reacts(message)
         return
 
         
