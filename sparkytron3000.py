@@ -1672,12 +1672,11 @@ async def get_json(url):
     aliases=['pkmn'],
     hidden=True
     )
-async def pokemon(ctx, pokemon):
-
-    async def is_base_form(id): #id = pokedex number
+async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
+    async def starter_picker(id): #id = pokedex number
         url = "https://pokeapi.co/api/v2/pokemon-species/" + str(id)
         json_data = await get_json(url)
-        if json_data["evolves_from_species"] == None:
+        if (json_data["evolves_from_species"] == None) and (not json_data['is_mythical']) and (not json_data['is_legendary']):
             return True
         else:
             return False
@@ -1687,12 +1686,115 @@ async def pokemon(ctx, pokemon):
         return not roll
     
     async def save_pokemon(discord_id, pokemon_dict):
-        path = "database/"+str(discord_id)+".json"
+        if not os.path.isdir("databases/pokemon/"):
+            os.makedirs("databases/pokemon/")
+
+        path = "databases/pokemon/"+str(discord_id)+".json"
         pokemon_dict = json.dumps(pokemon_dict)
         with open(path, 'w') as f:
             f.writelines(pokemon_dict)
+        return True
+        
+    async def load_pokemon(discord_id):
+        if not os.path.isdir("databases/pokemon/"):
+            os.makedirs("databases/pokemon/")
+        if os.path.isfile("databases/pokemon/"+str(discord_id)+".json"):
+            with open("databases/pokemon/"+str(discord_id)+".json", 'r') as f:
+                json_data = json.loads(f.readline())
+            return json_data
+        else:
+            return False
 
-    pass
+    async def generate_starter(discord_id):
+        random.seed(discord_id)
+        json_data = await get_json('https://pokeapi.co/api/v2/pokemon-species/')
+        pokemon_count = json_data['count']
+        base_pokemon = False
+        while not base_pokemon:
+            starter_id = random.randint(1,pokemon_count)
+            base_pokemon = await starter_picker(starter_id)
+        random.seed()
+        return starter_id
+    
+    async def get_pkmn_from_id(id):
+        url = 'https://pokeapi.co/api/v2/pokemon/' + str(id)
+        json_data = await get_json(url)
+        return json_data
+    
+    async def make_pmkn_embed(pkmn_dict):
+        if pkmn_dict['nickname']:
+            title = pkmn_dict['nickname'] + ' (' + pkmn_dict['name'].capitalize() + ')'
+        else:
+            title = pkmn_dict['name'].capitalize()
+        embed=discord.Embed(title=title)
+        if pkmn_dict['shiny']:
+            embed.set_image(url=pkmn_dict['sprites']['front_shiny'])
+        else:
+            embed.set_image(url=pkmn_dict['sprites']['front_default'])
+        nature = pkmn_dict['nature']
+        buddy_level = pkmn_dict['buddy_level']
+        buddy_xp = pkmn_dict['buddy_xp']
+        types = []
+        for key in pkmn_dict['types']:
+            types.append(key['type']['name'].capitalize())
+        type_str = ', '.join(types)
+        embed.add_field(name="Nature", value=nature.capitalize(), inline=False)
+        embed.add_field(name="Buddy Level", value=buddy_level , inline=True)
+        embed.add_field(name="Buddy XP", value=buddy_xp, inline=True)
+        embed.add_field(name="Types", value=type_str, inline=False)
+        return embed
+
+
+
+
+    if arg1=='start':
+        if not os.path.isdir("databases/pokemon/"):
+            os.makedirs("databases/pokemon/")
+        if not os.path.isfile("databases/pokemon/"+str(ctx.author.id)+'.json'):
+            uniq_id = time.time()
+            starter_id = await generate_starter(ctx.author.id)
+            json_data = await get_pkmn_from_id(starter_id)
+            is_shiny = await shiny_roll()
+            nature = random.randint(0,19)
+            nature_data = await get_json('https://pokeapi.co/api/v2/nature/')
+            nature = nature_data['results'][nature]['name']
+            json_data['shiny'] = is_shiny
+            json_data['nickname'] = None
+            json_data['unique_id'] = uniq_id
+            json_data['nature'] = nature
+            json_data['buddy_level'] = 1
+            json_data['buddy_xp'] = 0
+            embed = await make_pmkn_embed(json_data)
+            await ctx.channel.send(embed=embed)
+            return
+        else:
+            await ctx.channel.send("You already have a pokemon!")
+            return
+
+
+
+        
+    if arg1 == 'nick' or arg1 == 'nickname':
+        nickname = arg2
+        json_data = await load_pokemon(ctx.author.id)
+        json_data['nickname'] = nickname
+        await save_pokemon(ctx.author.id, json_data)
+        message = "You gave " + nickname + ' a new name!'
+        await ctx.channel.send(message)
+        return
+
+    #Default !pokemon behavior (Load and show pokemon embed)
+    discord_id = ctx.author.id
+    buddy_json = await load_pokemon(discord_id)
+    if not buddy_json:
+        await ctx.channel.send("You don't have a buddy yet. Type ```!pokemon start``` to start your Pokemon journey!")
+    else:
+        embed = await make_pmkn_embed(buddy_json)
+        await ctx.channel.send(embed=embed)
+        return
+
+        
+
 
 @bot.command(
     description="Pokedex", 
@@ -1701,7 +1803,7 @@ async def pokemon(ctx, pokemon):
     aliases=['pdex'],
     hidden=False
     )  
-async def pokedex(ctx, pokemon):
+async def pokedex(ctx):
     pokemon = ctx.message.content.split(" ", maxsplit=1)[1]
     try:
         shiny = False
@@ -1728,8 +1830,6 @@ async def pokedex(ctx, pokemon):
         dex_data = await get_json(dex_url)
         generation = dex_data['generation']['name'].upper().replace("GENERATION","Generation")
         for entry in dex_data['flavor_text_entries']:
-            print(type(entry))
-            print(entry['language']['name'])
             if entry['language']['name'] == 'en':
                 dex_desc = entry['flavor_text'].replace("\u000c", '\n')
                 dex_desc_game = entry['version']['name'].capitalize()
