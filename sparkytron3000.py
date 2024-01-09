@@ -1721,6 +1721,10 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
         json_data = await get_json(url)
         return json_data
     
+    async def calc_pkmn_buddy_level(pkmn_json): #this uses the 'fast' xp rate
+        buddy_xp = pkmn_json['buddy_xp']
+        return math.floor(((5*buddy_xp)/4)**(1/3))
+    
     async def make_pmkn_embed(pkmn_dict):
         if pkmn_dict['nickname']:
             title = pkmn_dict['nickname'] + ' (' + pkmn_dict['name'].capitalize() + ')'
@@ -1732,7 +1736,7 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
         else:
             embed.set_image(url=pkmn_dict['sprites']['front_default'])
         nature = pkmn_dict['nature']
-        buddy_level = pkmn_dict['buddy_level']
+        buddy_level = await calc_pkmn_buddy_level(pkmn_dict)
         buddy_xp = pkmn_dict['buddy_xp']
         types = []
         for key in pkmn_dict['types']:
@@ -1743,6 +1747,8 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
         embed.add_field(name="Buddy XP", value=buddy_xp, inline=True)
         embed.add_field(name="Types", value=type_str, inline=False)
         return embed
+
+
     
     async def add_pkmn_reacts(message):
         await message.add_reaction('🥰')
@@ -1772,9 +1778,6 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
         else:
             await ctx.channel.send("You already have a pokemon!")
             return
-
-
-
         
     if arg1 == 'nick' or arg1 == 'nickname':
         nickname = arg2
@@ -1795,9 +1798,6 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
         message = await ctx.channel.send(embed=embed)
         await add_pkmn_reacts(message)
         return
-
-        
-
 
 @bot.command(
     description="Pokedex", 
@@ -1889,7 +1889,18 @@ async def on_reaction_add(reaction, user):
         emoji = reaction.emoji
         await message.add_reaction(emoji)
     
-        
+
+async def pkmn_msg(discord_id):
+    path = "databases/pokemon/"+str(discord_id)+'.json'
+    if os.path.isfile(path):
+        with open(path, 'r') as f:
+            json_data = json.loads(f.readline())
+            json_data['buddy_xp'] += random.randint(1,5)
+            json_data = json.dumps(json_data)
+        with open(path, 'w') as f:
+            f.writelines(json_data)
+
+
 @bot.event
 async def on_message(ctx):
             
@@ -1897,6 +1908,9 @@ async def on_message(ctx):
     logfile = "channels/logs/{0}.log".format(str(ctx.channel.id))
     channel_vars = await get_channel_config(ctx.channel.id)
     chat_history_string = await log_chat_and_get_history(ctx, logfile, channel_vars)
+
+    #add pokemon xp
+    await pkmn_msg(ctx.author.id)
     
     #handle non-text channels (dms, etc)
     if ctx.channel.type.value != 0 and ctx.author.id != 242018983241318410:
