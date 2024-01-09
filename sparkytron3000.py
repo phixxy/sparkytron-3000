@@ -1721,6 +1721,16 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
         json_data = await get_json(url)
         return json_data
     
+    async def give_buddy_food(pkmn_data): #for now this will do the same as affection
+        return await give_buddy_affection(pkmn_data)
+
+    async def give_buddy_affection(pkmn_data):
+        print(pkmn_data['buddy_xp'])
+        xp = pkmn_data['buddy_xp']
+        level = await calc_pkmn_buddy_level(pkmn_data)
+        pkmn_data['buddy_xp'] += (3*level)
+        return pkmn_data
+    
     async def calc_pkmn_buddy_level(pkmn_json): #this uses the 'fast' xp rate
         buddy_xp = pkmn_json['buddy_xp']
         return min(math.floor(((5*buddy_xp)/4)**(1/3)),100)
@@ -1779,12 +1789,23 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
             await ctx.channel.send("You already have a pokemon!")
             return
         
-    if arg1 == 'nick' or arg1 == 'nickname':
+    elif arg1 == 'nick' or arg1 == 'nickname':
         nickname = arg2
         json_data = await load_pokemon(ctx.author.id)
         json_data['nickname'] = nickname
         await save_pokemon(ctx.author.id, json_data)
         message = "You gave " + nickname + ' a new name!'
+        await ctx.channel.send(message)
+        return
+    
+    elif arg1 == 'feed' or arg1 == 'hug':
+        json_data = await load_pokemon(ctx.author.id)
+        json_data = await give_buddy_affection(json_data)
+        await save_pokemon(ctx.author.id, json_data)
+        if json_data['nickname']:
+            message = "You " + arg1 + ' ' + json_data['nickname']
+        else:
+            message = "You " + arg1 + ' ' + json_data['name']
         await ctx.channel.send(message)
         return
 
