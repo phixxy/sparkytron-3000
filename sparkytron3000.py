@@ -1723,7 +1723,7 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
     
     async def calc_pkmn_buddy_level(pkmn_json): #this uses the 'fast' xp rate
         buddy_xp = pkmn_json['buddy_xp']
-        return math.floor(((5*buddy_xp)/4)**(1/3))
+        return min(math.floor(((5*buddy_xp)/4)**(1/3)),100)
     
     async def make_pmkn_embed(pkmn_dict):
         if pkmn_dict['nickname']:
