@@ -1721,7 +1721,7 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
         json_data = await get_json(url)
         return json_data
     
-    async def give_buddy_food(pkmn_data): #for now this will do the same as affection
+    async def give_buddy_food(pkmn_data):
         try:
             last_food = pkmn_data['last_food']
         except:
