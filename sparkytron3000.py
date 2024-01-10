@@ -1722,14 +1722,32 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
         return json_data
     
     async def give_buddy_food(pkmn_data): #for now this will do the same as affection
-        return await give_buddy_affection(pkmn_data)
+        try:
+            last_food = pkmn_data['last_food']
+        except:
+            last_food = 0
+        this_food = time.time()
+        if (this_food - last_food) >= 1800:
+            pkmn_data['last_food'] = this_food
+            level = await calc_pkmn_buddy_level(pkmn_data)
+            pkmn_data['buddy_xp'] += (4*level)
+            return pkmn_data, True
+        else:
+            return pkmn_data, False
 
     async def give_buddy_affection(pkmn_data):
-        print(pkmn_data['buddy_xp'])
-        xp = pkmn_data['buddy_xp']
-        level = await calc_pkmn_buddy_level(pkmn_data)
-        pkmn_data['buddy_xp'] += (3*level)
-        return pkmn_data
+        try:
+            last_hug = pkmn_data['last_hug']
+        except:
+            last_hug = 0
+        this_hug = time.time()
+        if (this_hug - last_hug) >= 600:
+            pkmn_data['last_hug'] = this_hug
+            level = await calc_pkmn_buddy_level(pkmn_data)
+            pkmn_data['buddy_xp'] += (3*level)
+            return pkmn_data, True
+        else:
+            return pkmn_data, False
     
     async def calc_pkmn_buddy_level(pkmn_json): #this uses the 'fast' xp rate
         buddy_xp = pkmn_json['buddy_xp']
@@ -1758,12 +1776,6 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
         embed.add_field(name="Types", value=type_str, inline=False)
         return embed
 
-
-    
-    async def add_pkmn_reacts(message):
-        await message.add_reaction('🥰')
-        await message.add_reaction('🍙')
-
     if arg1=='start':
         if not os.path.isdir("databases/pokemon/"):
             os.makedirs("databases/pokemon/")
@@ -1781,6 +1793,8 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
             json_data['nature'] = nature
             json_data['buddy_level'] = 1
             json_data['buddy_xp'] = 0
+            json_data['last_food'] = 0
+            json_data['last_hug'] = 0
             await save_pokemon(ctx.author.id, json_data)
             embed = await make_pmkn_embed(json_data)
             await ctx.channel.send(embed=embed)
@@ -1798,16 +1812,43 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
         await ctx.channel.send(message)
         return
     
-    elif arg1 == 'feed' or arg1 == 'hug':
+    elif arg1 == 'feed':
         json_data = await load_pokemon(ctx.author.id)
-        json_data = await give_buddy_affection(json_data)
-        await save_pokemon(ctx.author.id, json_data)
-        if json_data['nickname']:
-            message = "You " + arg1 + ' ' + json_data['nickname']
+        json_data, fed = await give_buddy_food(json_data)
+        if fed:
+            await save_pokemon(ctx.author.id, json_data)
+            if json_data['nickname']:
+                message = "You " + arg1 + ' ' + json_data['nickname']
+            else:
+                message = "You " + arg1 + ' ' + json_data['name']
+            await ctx.channel.send(message)
+            return
         else:
-            message = "You " + arg1 + ' ' + json_data['name']
-        await ctx.channel.send(message)
-        return
+            if json_data['nickname']:
+                message = "Your " + json_data['nickname'] + " isn't hungry!"
+            else:
+                message = "Your " + json_data['name'] + " isn't hungry!"
+            await ctx.channel.send(message)
+            return
+    
+    elif arg1 == 'hug':
+        json_data = await load_pokemon(ctx.author.id)
+        json_data, hugged = await give_buddy_affection(json_data)
+        if hugged:
+            await save_pokemon(ctx.author.id, json_data)
+            if json_data['nickname']:
+                message = "You " + arg1 + ' ' + json_data['nickname']
+            else:
+                message = "You " + arg1 + ' ' + json_data['name']
+            await ctx.channel.send(message)
+            return
+        else:
+            if json_data['nickname']:
+                message = "You hugged " + json_data['nickname'] + " but " + json_data['nickname'] + " has been hugged recently."
+            else:
+                message = "You hugged " + json_data['name'] + " but " + json_data['name'] + " has been hugged recently."
+            await ctx.channel.send(message)
+            return
 
     #Default !pokemon behavior (Load and show pokemon embed)
     discord_id = ctx.author.id
@@ -1817,7 +1858,6 @@ async def pokemon(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
     else:
         embed = await make_pmkn_embed(buddy_json)
         message = await ctx.channel.send(embed=embed)
-        await add_pkmn_reacts(message)
         return
 
 @bot.command(
