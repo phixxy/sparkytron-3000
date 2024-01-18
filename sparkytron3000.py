@@ -237,7 +237,7 @@ async def chat_response(ctx, channel_vars, chat_history_string):
             await handle_error(error)
     
 async def folder_setup():
-    folder_names = ["tmp", "tmp/sfw", "tmp/nsfw", "tmp/meme/", "channels", "users", "channels/config", "channels/logs", "databases", "databases/currency", "databases/currency/players"]
+    folder_names = ["tmp", "tmp/sfw", "tmp/nsfw", "tmp/meme", "channels", "users", "channels/config", "channels/logs", "databases", "databases/currency", "databases/currency/players"]
     for folder_name in folder_names:
         if not os.path.exists(folder_name):
             os.mkdir(folder_name)
@@ -261,11 +261,25 @@ async def delete_derp_files(server_folder):
                         await sftp.remove(server_folder+filename)
                     except:
                         print("Couldn't delete", filename)
+
+async def meme_handler(folder):
+    if folder[:-1] != '/':
+        folder += '/'
+    for file in os.listdir(folder):
+        filepath = folder + file
+        await update_meme_webpage(filepath)
+
             
 @tasks.loop(seconds=1)  # Run the task every second
 async def task_loop():
     current_time = time.localtime()
-    
+    #Run every minute
+    if current_time.tm_sec == 0:
+        await meme_handler('tmp/meme/')
+
+
+
+
     #Run daily tasks
     if current_time.tm_hour == 17 and current_time.tm_min == 0 and current_time.tm_sec == 0:
         bot_stuff = bot.get_channel(544408659174883328)
@@ -481,7 +495,21 @@ async def generate_blog(ctx):
     #for subscriber in blog_subscribers:
     #    output += '<@' + subscriber + '> '
     await ctx.send(output)
-        
+
+async def update_meme_webpage(filename):
+        server_folder = (os.getenv('ftp_public_html') + 'ai-memes/')
+        new_file_name = str(time.time_ns()) + ".png"
+        await upload_sftp(filename, server_folder, new_file_name)
+        print("Uploaded", new_file_name)
+        with open("phixxy.com/ai-memes/index.html", 'r') as f:
+            html_data = f.read()
+        html_insert = '<!--ADD IMG HERE-->\n        <img src="' + new_file_name + '" loading="lazy">'
+        html_data = html_data.replace('<!--ADD IMG HERE-->',html_insert)
+        with open("phixxy.com/ai-memes/index.html", "w") as f:
+            f.writelines(html_data)
+        await upload_sftp("phixxy.com/ai-memes/index.html", server_folder, "index.html")
+        os.rename(filename, f'tmp/{filename}')
+
 
 @bot.command(
     description="Question", 

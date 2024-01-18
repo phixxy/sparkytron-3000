@@ -43,20 +43,6 @@ async def handle_error(error):
     brief="Generate a meme"
     )       
 async def meme(ctx):
-    '''async def update_meme_webpage(filename):
-        server_folder = (os.getenv('ftp_public_html') + 'ai-memes/')
-        new_file_name = str(time.time_ns()) + ".png"
-        await upload_sftp(filename, server_folder, new_file_name)
-        print("Uploaded", new_file_name)
-        with open("phixxy.com/ai-memes/index.html", 'r') as f:
-            html_data = f.read()
-        html_insert = '<!--ADD IMG HERE-->\n        <img src="' + new_file_name + '" loading="lazy">'
-        html_data = html_data.replace('<!--ADD IMG HERE-->',html_insert)
-        with open("phixxy.com/ai-memes/index.html", "w") as f:
-            f.writelines(html_data)
-        await upload_sftp("phixxy.com/ai-memes/index.html", server_folder, "index.html")'''
-    
-    
     async def generate_random_meme(topic):
         http_session = aiohttp.ClientSession()
         async with http_session.get('https://api.imgflip.com/get_memes') as resp:
