@@ -73,28 +73,33 @@ async def handle_error(error):
     with open("databases/error_log.txt", 'a') as f:
         f.write(log_line)
     return error
-    
 
-async def upload_ftp_ai_images(filename, prompt):
-    html_file = "phixxy.com/ai-images/index.html"
-    html_insert = '''<!--REPLACE THIS COMMENT-->
-        <div>
-            <img src="<!--filename-->" loading="lazy">
-            <p class="image-description"><!--description--></p>
-        </div>'''
-    img_list = []
-    server_folder = (os.getenv('ftp_public_html') + 'ai-images/')
-    new_filename = str(time.time_ns()) + ".png"
-    await upload_sftp(filename, server_folder, new_filename)
-    print("Uploaded", new_filename)
-    with open(html_file, 'r') as f:
-        html_data = f.read()
-    html_insert = html_insert.replace("<!--filename-->", new_filename)
-    html_insert = html_insert.replace("<!--description-->", prompt)
-    html_data = html_data.replace("<!--REPLACE THIS COMMENT-->", html_insert)
-    with open(html_file, "w") as f:
-        f.writelines(html_data)
-    await upload_sftp(html_file, server_folder, "index.html")
+
+async def upload_ftp_ai_images(folder):
+    for filename in os.listdir(folder):
+        if filename[-4:] == '.png':
+            filepath = folder + filename
+            prompt = "Unknown Prompt" # Will have to update this later
+
+            html_file = "phixxy.com/ai-images/index.html"
+            html_insert = '''<!--REPLACE THIS COMMENT-->
+                <div>
+                    <img src="<!--filename-->" loading="lazy">
+                    <p class="image-description"><!--description--></p>
+                </div>'''
+            server_folder = (os.getenv('ftp_public_html') + 'ai-images/')
+            new_filename = str(time.time_ns()) + ".png"
+            await upload_sftp(filepath, server_folder, new_filename)
+            print("Uploaded", new_filename)
+            with open(html_file, 'r') as f:
+                html_data = f.read()
+            html_insert = html_insert.replace("<!--filename-->", new_filename)
+            html_insert = html_insert.replace("<!--description-->", prompt)
+            html_data = html_data.replace("<!--REPLACE THIS COMMENT-->", html_insert)
+            with open(html_file, "w") as f:
+                f.writelines(html_data)
+            await upload_sftp(html_file, server_folder, "index.html")
+            os.rename(filepath, f"tmp/{new_filename}")
 
 def create_channel_config(filepath):
     config_dict = {
@@ -275,6 +280,7 @@ async def task_loop():
     #Run every minute
     if current_time.tm_sec == 0:
         await meme_handler('tmp/meme/')
+        await upload_ftp_ai_images('tmp/sfw')
 
 
 
