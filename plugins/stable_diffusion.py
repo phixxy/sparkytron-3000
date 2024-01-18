@@ -296,7 +296,7 @@ async def imagine(ctx):
         with open(my_filename, "rb") as fh:
             f = discord.File(fh, filename=my_filename)
 
-        log_data = f'Author: {ctx.author.name}, Prompt: {prompt}, Filename:{my_filename}\n'
+        log_data = f'Author: {ctx.author.name}, Prompt: {prompt}, Filename: {my_filename}\n'
         with open("databases/stable_diffusion.log", 'a') as log_file:
             log_file.writelines(log_data)
 
