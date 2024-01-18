@@ -7,12 +7,10 @@ import random
 import time
 import os
 import asyncio
-import sys
 import subprocess
 from dotenv import load_dotenv
 
 import aiohttp
-import aioftp
 import asyncssh
 
 #Stable Diffusion
@@ -37,7 +35,6 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 #discord setup END
-
 @bot.command(
     description="Moderate", 
     help="This currently tool works by replacing the filename on the ftp server with a black image. The description will remain the same and may need to be altered.", 
@@ -47,14 +44,6 @@ async def moderate(ctx, filename):
     await upload_sftp("blank_image.png", (os.getenv('ftp_public_html') + 'ai-images/'), filename)
     output = "Image " + filename + " replaced"
     await ctx.send(output)
-    
-async def upload_ftp(local_filename, server_folder, server_filename):
-    client = aioftp.Client()
-    await client.connect(ftp_server)
-    await client.login(ftp_username, ftp_password)
-    await client.change_directory(server_folder)
-    await client.upload(local_filename, server_folder+server_filename, write_into=True)
-    await client.quit()
 
 async def upload_sftp(local_filename, server_folder, server_filename):
     remotepath = server_folder + server_filename
@@ -69,7 +58,6 @@ async def handle_error(error):
     with open("databases/error_log.txt", 'a') as f:
         f.write(log_line)
     return error
-
 
 async def upload_ftp_ai_images(folder):
     for filename in os.listdir(folder):
@@ -121,30 +109,8 @@ async def get_channel_config(channel_id):
         config_dict = json.loads(f.readline())
     return config_dict
     
-async def answer_question(topic, model="gpt-3.5-turbo"):
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': f'Bearer {os.getenv("openai.api_key")}',
-    }
-
-    data = {
-        "model": model,
-        "messages": [{"role": "user", "content": topic}]
-    }
-
-    url = "https://api.openai.com/v1/chat/completions"
-
-    try:
-        async with bot.http_session.post(url, headers=headers, json=data) as resp:
-            response_data = await resp.json()
-            response = response_data['choices'][0]['message']['content']
-            return response
-
-    except Exception as error:
-        return await handle_error(error)
         
 async def react_to_msg(ctx, react):
-    
     def is_emoji(string):
         if len(string) == 1:
             # Range of Unicode codepoints for emojis
@@ -181,7 +147,6 @@ async def react_to_msg(ctx, react):
                 await handle_error(error)
             
 async def log_chat_and_get_history(ctx, logfile, channel_vars):
-    #metadata = await look_at(ctx, channel_vars["look_at_images"])
     log_line = ''           
     log_line += ctx.content
     log_line =  ctx.author.name + ": " + log_line  +"\n"
@@ -324,22 +289,6 @@ async def on_ready():
     await delete_all_files("tmp/", folders_made)
     task_loop.start()
     
-@bot.command(
-    description="Update", 
-    help="This will update sparkytron to the most recent version on github. Only privileged users can run this command! Usage: !update", 
-    brief="Runs git pull",
-    hidden=True
-    )           
-async def update(ctx):
-    if ctx.author.id == 242018983241318410:
-        output = subprocess.run(["git","pull"],capture_output=True)
-        if output.stderr:
-            await ctx.send("Update Attempted")
-            await ctx.send(output.stderr.decode('utf-8'))
-        else:
-            await ctx.send(output.stdout.decode('utf-8'))
-    else:
-        await ctx.send("You don't have permission to do this.")
 
 async def update_meme_webpage(filename):
         server_folder = (os.getenv('ftp_public_html') + 'ai-memes/')
@@ -401,31 +350,6 @@ async def roll(ctx, dice_string):
 
     await ctx.send(f'{dice_str} + {modifier} = {total}' if modifier != 0 else f'{dice_str} = {total}')
 
-@bot.command(
-    description="Kill", 
-    help="Kills the bot in event of an emergency. Only special users can do this! Usage: !kill", 
-    brief="Kill the bot",
-    hidden=True
-    )      
-async def kill(ctx):
-    "Kills the bot"
-    if ctx.author.id == 242018983241318410:
-        exit()
-    else:
-        await ctx.channel.send("You don't have permission to do that.")
-        
-@bot.command(
-    description="Reset", 
-    help="Resets the bot in event of an emergency. Only special users can do this! Usage: !reset", 
-    brief="Reset the bot",
-    hidden=True
-    )  
-async def reset(ctx):
-    if ctx.author.id == 242018983241318410:
-        python = sys.executable
-        os.execl(python, python, *sys.argv)
-    else:
-        await ctx.channel.send("You don't have permission to do that.")
         
 @bot.event
 async def on_reaction_add(reaction, user):
