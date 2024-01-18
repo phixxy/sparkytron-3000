@@ -142,7 +142,7 @@ async def answer_question(topic, model="gpt-3.5-turbo"):
     except Exception as error:
         return await handle_error(error)
     
-def extract_key_value_pairs(input_str):
+'''def extract_key_value_pairs(input_str):
     output_str = input_str
     
     key_value_pairs = {}
@@ -153,9 +153,9 @@ def extract_key_value_pairs(input_str):
             key_value_pairs[key] = value
             output_str = output_str.replace(token+', ', '') # Remove the key-value pair from the output string
     
-    return key_value_pairs, output_str
+    return key_value_pairs, output_str'''
     
-def my_open_img_file(path):
+'''def my_open_img_file(path):
     img = Image.open(path)
     w, h = img.size
     encoded = ""  
@@ -200,9 +200,9 @@ async def look_at(ctx, look=False):
                         await handle_error(error)
                         return "ERROR: CLIP may not be running. Could not look at image."
     
-    return metadata
+    return metadata'''
 
-    
+
 def edit_channel_config(channel_id, key, value):
     config_file = "channels/config/" + str(channel_id) + ".json"
     with open(config_file, 'r') as f:
@@ -249,8 +249,8 @@ async def react_to_msg(ctx, react):
                 await handle_error(error)
             
 async def log_chat_and_get_history(ctx, logfile, channel_vars):
-    metadata = await look_at(ctx, channel_vars["look_at_images"])
-    log_line = metadata            
+    #metadata = await look_at(ctx, channel_vars["look_at_images"])
+    log_line = ''           
     log_line += ctx.content
     log_line =  ctx.author.name + ": " + log_line  +"\n"
     chat_history = ""
@@ -1372,7 +1372,7 @@ async def ss_register(ctx):
         await ctx.send("Usage: !ss_register (email address)")'''
 
 
-@bot.command(
+'''@bot.command(
     description="Change Model", 
     help="Choose from a list of stable diffusion models.", 
     brief="Change stable diffusion model"
@@ -1616,7 +1616,7 @@ async def reimagine(ctx):
                     await ctx.send(file=f)
     except Exception as error:
         await ctx.send("My image generation service may not be running.")
-        await handle_error(error)
+        await handle_error(error)'''
 
 
 @bot.command(
