@@ -424,6 +424,20 @@ async def reimagine(ctx):
         await ctx.send("My image generation service may not be running.")
         await handle_error(error)
     await http_session.close()
+        
+@commands.command(
+    description="Negative Prompt", 
+    help="Changes the negative prompt for imagine across all channels", 
+    brief="Change the negative prompt for imagine"
+    )
+async def negative_prompt(ctx, *args):
+    message = ' '.join(args)
+    if not message:
+        message = "easynegative, badhandv4, verybadimagenegative_v1.3"
+    neg_prompt_file = "databases/negative_prompt.txt"
+    with open(neg_prompt_file, 'w') as f:
+        f.writelines(message)
+    await ctx.send("Changed negative prompt to " + message)
 
 
 async def setup(bot):
@@ -433,3 +447,4 @@ async def setup(bot):
     bot.add_command(change_model)
     bot.add_command(lora)
     bot.add_command(draw)
+    bot.add_command(negative_prompt)
