@@ -4,10 +4,34 @@ import base64
 import aiohttp
 import os
 import time
+import random
 from PIL import Image, PngImagePlugin
 
 from discord.ext import commands
 import discord
+
+async def answer_question(topic, model="gpt-3.5-turbo"): # Only needed for draw command
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {os.getenv("openai.api_key")}',
+    }
+
+    data = {
+        "model": model,
+        "messages": [{"role": "user", "content": topic}]
+    }
+
+    url = "https://api.openai.com/v1/chat/completions"
+
+    try:
+        http_session = aiohttp.ClientSession()
+        async with http_session.post(url, headers=headers, json=data) as resp:
+            response_data = await resp.json()
+            response = response_data['choices'][0]['message']['content']
+            return response
+
+    except Exception as error:
+        return await handle_error(error)
 
 async def handle_error(error):
     print(error)
@@ -78,6 +102,69 @@ async def look_at(ctx, look=False):
                         return "ERROR: CLIP may not be running. Could not look at image."
     
     return metadata
+
+@commands.command(
+    description="Draw", 
+    help="Generates a picture using stable diffusion and gpt 3.5. It generates a list of 10 random artistic words and feeds them into stable diffusion. Usage: !draw (amount of pictures)", 
+    brief="Generate a random image"
+    )         
+async def draw(ctx):
+    url = os.getenv('stablediffusion_url')
+    if url == "disabled":
+        return
+    try:
+        if " " in ctx.message.content:
+            amount = ctx.message.content.split(" ", maxsplit=1)[1]
+            if int(amount) > 4:
+                await ctx.send("No, that's too many.")
+                return
+        else:
+            amount = 1
+        await ctx.send("Please be patient this may take some time!")
+
+        choice1 = "Give me 11 keywords I can use to generate art using AI. They should all be related to one piece of art. Please only respond with the keywords and no other text. Be sure to use keywords that really describe what the art portrays. Keywords should be comma separated with no other text!"
+        choice2 = "Describe a creative scene, use only one sentence"
+        choice3 = "Give me comma seperated keywords describing an imaginary piece of art. Only return the keywords and no other text."
+        choice4 = "Describe a unique character and an environment in one sentence"
+        choice5 = "Describe a nonhuman character and an environment in one sentence"
+        prompt = random.choice([choice1,choice2,choice3,choice4,choice5])
+        prompt = await answer_question(prompt)
+        if random.randint(0,9):
+            prompt = prompt.replace("abstract, ", "")
+        prompt = prompt.replace("AI, ", "")
+        if "." in prompt:
+            prompt = prompt.replace(".",",")
+            prompt = prompt + " masterpiece, studio quality"
+        else:
+            prompt = prompt + ", masterpiece, studio quality"
+        negative_prompt = "easynegative verybadimagenegative_v1.3"
+        payload = {"prompt": prompt,"steps": 25, "negative_prompt": negative_prompt,"batch_size": amount}
+        try:
+            http_session = aiohttp.ClientSession()
+            async with http_session.post(url=f'{url}/sdapi/v1/txt2img', json=payload) as resp:
+                r = await resp.json()
+            for i in r['images']:
+                image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
+                png_payload = {"image": "data:image/png;base64," + i}
+                async with http_session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload) as resp2:
+                    response2 = await resp2.json()
+                pnginfo = PngImagePlugin.PngInfo()
+                pnginfo.add_text("parameters", response2.get("info"))
+                my_filename = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
+                image.save(my_filename, pnginfo=pnginfo)
+                '''channel_vars = await get_channel_config(ctx.channel.id)
+                if channel_vars["ftp_enabled"]:
+                    await upload_ftp_ai_images(my_filename, prompt)'''
+                with open(my_filename, "rb") as fh:
+                    f = discord.File(fh, filename=my_filename)
+                await ctx.send(file=f)
+                await ctx.send(prompt)
+        except Exception as error:
+            await handle_error(error)
+            await ctx.send("My image generation service may not be running.")
+    except Exception as error:
+        await handle_error(error)
+        await ctx.send('Did you mean to use !imagine?. Usage: !draw (number)')
 
 @commands.command(
     description="Change Model", 
