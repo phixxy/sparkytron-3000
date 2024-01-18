@@ -24,7 +24,7 @@ async def answer_question(topic, model="gpt-3.5-turbo"): # Only needed for draw 
         async with http_session.post(url, headers=headers, json=data) as resp:
             response_data = await resp.json()
             response = response_data['choices'][0]['message']['content']
-            http_session.close()
+            await http_session.close()
             return response
 
     except Exception as error:
@@ -106,7 +106,7 @@ async def meme(ctx):
         except Exception as error:
             await handle_error(error)
             print("Something's Wrong with the urllib So try again")
-        http_session.close()
+        await http_session.close()
         return image_link, filename
     
     try:
