@@ -83,7 +83,7 @@ async def meme(ctx):
         URL = 'https://api.imgflip.com/caption_image'
 
         try:
-            http_session = aiohttp.ClientSession()
+            #http_session = aiohttp.ClientSession()
             async with http_session.post(URL, params=params) as resp:
                 response = await resp.json()
             print(f"Generated Meme = {response['success']}\nImage Link = {response['data']['url']}\nPage Link = {response['data']['page_url']}")
