@@ -77,6 +77,7 @@ async def handle_error(error):
 
 async def upload_ftp_ai_images(folder):
     for filename in os.listdir(folder):
+        print(filename, filename[-4:])
         if filename[-4:] == '.png':
             filepath = folder + filename
             prompt = "Unknown Prompt" # Will have to update this later
