@@ -263,8 +263,6 @@ async def delete_derp_files(server_folder):
                         print("Couldn't delete", filename)
 
 async def meme_handler(folder):
-    if folder[:-1] != '/':
-        folder += '/'
     for file in os.listdir(folder):
         filepath = folder + file
         await update_meme_webpage(filepath)

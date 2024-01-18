@@ -109,14 +109,8 @@ async def meme(ctx):
     
     try:
         topic = ctx.message.content.split(" ", maxsplit=1)[1]
+        await ctx.send(f'Generating {topic} meme')
         link, filepath = await generate_random_meme(topic)
-        '''channel_vars = await get_channel_config(ctx.channel.id)
-        try:
-            if channel_vars["ftp_enabled"]:
-                await update_meme_webpage(filepath)
-        except Exception as error:
-            print("COULDN'T UPLOAD TO FTP!")
-            await handle_error(error)'''
         await ctx.send(link)
     except Exception as error:
         await handle_error(error)
