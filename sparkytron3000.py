@@ -77,7 +77,6 @@ async def handle_error(error):
 
 async def upload_ftp_ai_images(folder):
     for filename in os.listdir(folder):
-        print(filename, filename[-4:])
         if filename[-4:] == '.png':
             filepath = folder + filename
             prompt = "Unknown Prompt" # Will have to update this later
@@ -281,7 +280,7 @@ async def task_loop():
     #Run every minute
     if current_time.tm_sec == 0:
         await meme_handler('tmp/meme/')
-        await upload_ftp_ai_images('tmp/sfw')
+        await upload_ftp_ai_images('tmp/sfw/')
 
 
 
