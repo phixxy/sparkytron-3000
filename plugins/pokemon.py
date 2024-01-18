@@ -1,3 +1,5 @@
+#plugin file for sparkytron 3000
+
 from discord.ext import commands
 import discord
 import random
