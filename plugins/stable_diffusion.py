@@ -426,3 +426,4 @@ async def setup(bot):
     bot.add_command(describe)
     bot.add_command(change_model)
     bot.add_command(lora)
+    bot.add_command(draw)
