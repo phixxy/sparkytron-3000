@@ -28,6 +28,7 @@ async def answer_question(topic, model="gpt-3.5-turbo"): # Only needed for draw 
         async with http_session.post(url, headers=headers, json=data) as resp:
             response_data = await resp.json()
             response = response_data['choices'][0]['message']['content']
+            await http_session.close()
             return response
 
     except Exception as error:
@@ -100,7 +101,7 @@ async def look_at(ctx, look=False):
                     except aiohttp.ClientError as error:
                         await handle_error(error)
                         return "ERROR: CLIP may not be running. Could not look at image."
-    
+    await http_session.close()
     return metadata
 
 @commands.command(
@@ -169,6 +170,7 @@ async def draw(ctx):
     except Exception as error:
         await handle_error(error)
         await ctx.send('Did you mean to use !imagine?. Usage: !draw (number)')
+    await http_session.close()
 
 @commands.command(
     description="Change Model", 
@@ -206,9 +208,11 @@ async def change_model(ctx, model_choice='0'):
                 return
         else:
             await ctx.send(f"Already set to use {model_name}")
+            await http_session.close()
             return
     else:
         output = '\n'.join([f"{choice}: {name}" for choice, name in model_choices.items()])
+        await http_session.close()
         await ctx.send(output)
         
 @commands.command(
@@ -243,7 +247,6 @@ async def imagine(ctx):
         url=f"{url}/sdapi/v1/txt2img"
     prompt = ctx.message.content.split(" ", maxsplit=1)[1]
     key_value_pairs, prompt = extract_key_value_pairs(prompt)
-    #negative_prompt = ""
     neg_prompt_file = "databases/negative_prompt.txt"
     with open(neg_prompt_file, 'r') as f:
         negative_prompt = f.readline()
@@ -258,9 +261,8 @@ async def imagine(ctx):
         'Content-Type': 'application/json'
     }
     payload.update(key_value_pairs)
-    
+    http_session = aiohttp.ClientSession()
     try:
-        http_session = aiohttp.ClientSession()
         async with http_session.post(url, headers=headers, json=payload) as resp:
             r = await resp.json()
     except Exception as error:
@@ -279,7 +281,6 @@ async def imagine(ctx):
         png_payload = {"image": "data:image/png;base64," + i}
         
         try:
-            http_session = aiohttp.ClientSession()
             async with http_session.post(url, json=png_payload) as resp:
                 response2 = await resp.json()
         except Exception as error:
@@ -298,15 +299,10 @@ async def imagine(ctx):
         my_filename = folder + str(time.time_ns()) + ".png"
         image.save(my_filename, pnginfo=pnginfo)
         
-        #channel_vars = await get_channel_config(ctx.channel.id)
-        
         with open(my_filename, "rb") as fh:
             f = discord.File(fh, filename=my_filename)
-            
         await ctx.send(file=f)
-            
-        #if channel_vars["ftp_enabled"]:
-        #    await upload_ftp_ai_images(my_filename, prompt)
+    await http_session.close()
             
         
     
@@ -349,7 +345,6 @@ async def describe(ctx):
     img_link = my_open_img_file(imageName)
     try:
         payload = {"image": img_link}
-        http_session = aiohttp.ClientSession()
         async with http_session.post(url, json=payload) as response:
             r = await response.json()
         print(r)
@@ -357,6 +352,7 @@ async def describe(ctx):
     except Exception as error:
         await handle_error(error)
         await ctx.send("My image generation service may not be running.")
+    await http_session.close()
         
 @commands.command(
     description="Reimagine", 
@@ -384,9 +380,8 @@ async def reimagine(ctx):
         return
 
     key_value_pairs, prompt = extract_key_value_pairs(prompt)
-
+    http_session = aiohttp.ClientSession()
     try:
-        http_session = aiohttp.ClientSession()
         async with http_session.get(file_url) as response:
             imageName = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
             with open(imageName, 'wb') as out_file:
@@ -403,7 +398,6 @@ async def reimagine(ctx):
 
     img_link = my_open_img_file(imageName)
 
-    #negative_prompt = ""
     negative_prompt = "badhandsv4, worst quality, lowres, EasyNegative, hermaphrodite, cropped, not in the frame, additional faces, jpeg large artifacts, jpeg small artifacts, ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, not finished drawing, unfinished image, bad eyes, doll, 3d, cartoon, (bad eyes:1.2), (worst quality:1.2), (low quality:1.2), bad-image-v2-39000, (bad_prompt_version2:0.8), nude, badhandv4 By bad artist -neg easynegative ng_deepnegative_v1_75t verybadimagenegative_v1.3, (Worst Quality, Low Quality:1.4), Poorly Made Bad 3D, Lousy Bad Realistic, nsfw,(worst quality, low quality:1.4), (lip, nose, tooth, rouge, lipstick, eyeshadow:1.4), ( jpeg artifacts:1.4), (depth of field, bokeh, blurry, film grain, chromatic aberration, lens flare:1.0), (1boy, abs, muscular, rib:1.0), greyscale, monochrome, dusty sunbeams, trembling, motion lines, motion blur, emphasis lines, text, title, logo, signature, child, childlike, young, easynegative, (bad-hands-5:0.8), plain background, monochrome, poorly drawn face, poorly drawn hands, watermark, censored, (mutated hands and fingers), ugly, worst quality, low quality,, nsfw,(worst quality, low quality:1.4), (lip, nose, tooth, rouge, lipstick, eyeshadow:1.4), ( jpeg artifacts:1.4), (depth of field, bokeh, blurry, film grain, chromatic aberration, lens flare:1.0), (1boy, abs, muscular, rib:1.0), greyscale, monochrome, dusty sunbeams, trembling, motion lines, motion blur, emphasis lines, text, title, logo, signature, child, childlike, young"
 
     await ctx.send("Please be patient this may take some time! Generating: " + prompt + ".")
@@ -412,7 +406,6 @@ async def reimagine(ctx):
     payload.update(key_value_pairs)
 
     try:
-        http_session = aiohttp.ClientSession()
         async with http_session.post(url=f'{url}/sdapi/v1/img2img', json=payload) as response:
             data = await response.json()
             for i in data['images']:
@@ -432,6 +425,7 @@ async def reimagine(ctx):
     except Exception as error:
         await ctx.send("My image generation service may not be running.")
         await handle_error(error)
+    await http_session.close()
 
 
 async def setup(bot):
