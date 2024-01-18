@@ -150,11 +150,15 @@ async def draw(ctx):
                     response2 = await resp2.json()
                 pnginfo = PngImagePlugin.PngInfo()
                 pnginfo.add_text("parameters", response2.get("info"))
-                my_filename = "tmp/" + str(len(os.listdir("tmp/"))) + ".png"
+                try:
+                    if ctx.channel.is_nsfw():
+                        folder = "tmp/nsfw/"
+                    else:
+                        folder = "tmp/sfw/"
+                except:
+                    folder = "tmp/"
+                my_filename = folder + str(time.time_ns()) + ".png"
                 image.save(my_filename, pnginfo=pnginfo)
-                '''channel_vars = await get_channel_config(ctx.channel.id)
-                if channel_vars["ftp_enabled"]:
-                    await upload_ftp_ai_images(my_filename, prompt)'''
                 with open(my_filename, "rb") as fh:
                     f = discord.File(fh, filename=my_filename)
                 await ctx.send(file=f)
@@ -266,6 +270,10 @@ async def imagine(ctx):
     for i in r['images']:
         if not os.path.isdir("users/" + str(ctx.author.id)):
             os.makedirs("users/" + str(ctx.author.id))
+        if not os.path.isdir("users/" + str(ctx.author.id) + '/nsfw/'):
+            os.makedirs("users/" + str(ctx.author.id) + '/nsfw/')
+        if not os.path.isdir("users/" + str(ctx.author.id) + '/sfw/'):
+            os.makedirs("users/" + str(ctx.author.id) + '/sfw/')
         
         image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))
         png_payload = {"image": "data:image/png;base64," + i}
@@ -280,8 +288,14 @@ async def imagine(ctx):
 
         pnginfo = PngImagePlugin.PngInfo()
         pnginfo.add_text("parameters", response2.get("info"))
-        
-        my_filename = "users/" + str(ctx.author.id) + '/' + str(len(os.listdir("users/" + str(ctx.author.id) + '/'))) + ".png"
+        try:
+            if ctx.channel.is_nsfw():
+                folder = "users/" + str(ctx.author.id) + '/nsfw/'
+            else:
+                folder = "users/" + str(ctx.author.id) + '/sfw/'
+        except:
+            folder = "users/" + str(ctx.author.id) + '/'
+        my_filename = folder + str(time.time_ns()) + ".png"
         image.save(my_filename, pnginfo=pnginfo)
         
         #channel_vars = await get_channel_config(ctx.channel.id)

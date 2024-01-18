@@ -107,7 +107,7 @@ async def meme(ctx):
     #------------------------------------Saving Image Using Aiohttp---------------------------------#
             filename = memepics[id-1]['name']
             async with http_session.get(image_link) as response:
-                folder = "tmp/"
+                folder = "tmp/meme/"
                 filename = folder + topic + str(len(os.listdir(folder))) + ".jpg"
                 
                 with open(filename, "wb") as file:

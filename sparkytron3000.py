@@ -237,7 +237,7 @@ async def chat_response(ctx, channel_vars, chat_history_string):
             await handle_error(error)
     
 async def folder_setup():
-    folder_names = ["tmp", "channels", "users", "channels/config", "channels/logs", "databases", "databases/currency", "databases/currency/players"]
+    folder_names = ["tmp", "tmp/sfw", "tmp/nsfw", "tmp/meme/", "channels", "users", "channels/config", "channels/logs", "databases", "databases/currency", "databases/currency/players"]
     for folder_name in folder_names:
         if not os.path.exists(folder_name):
             os.mkdir(folder_name)
@@ -1038,7 +1038,6 @@ async def pkmn_msg(discord_id):
 
 @bot.event
 async def on_message(ctx):
-            
     #log stuff
     logfile = "channels/logs/{0}.log".format(str(ctx.channel.id))
     channel_vars = await get_channel_config(ctx.channel.id)
