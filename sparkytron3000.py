@@ -35,15 +35,6 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 #discord setup END
-@bot.command(
-    description="Moderate", 
-    help="This currently tool works by replacing the filename on the ftp server with a black image. The description will remain the same and may need to be altered.", 
-    brief="Moderation Tools"
-    )
-async def moderate(ctx, filename):
-    await upload_sftp("blank_image.png", (os.getenv('ftp_public_html') + 'ai-images/'), filename)
-    output = "Image " + filename + " replaced"
-    await ctx.send(output)
 
 async def upload_sftp(local_filename, server_folder, server_filename):
     remotepath = server_folder + server_filename
