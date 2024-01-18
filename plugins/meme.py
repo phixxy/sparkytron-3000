@@ -1,0 +1,140 @@
+#plugin for sparkytron3000
+import os
+import random
+import time
+import aiohttp
+
+from discord.ext import commands
+
+async def answer_question(topic, model="gpt-3.5-turbo"): # Only needed for draw command
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {os.getenv("openai.api_key")}',
+    }
+
+    data = {
+        "model": model,
+        "messages": [{"role": "user", "content": topic}]
+    }
+
+    url = "https://api.openai.com/v1/chat/completions"
+
+    try:
+        http_session = aiohttp.ClientSession()
+        async with http_session.post(url, headers=headers, json=data) as resp:
+            response_data = await resp.json()
+            response = response_data['choices'][0]['message']['content']
+            return response
+
+    except Exception as error:
+        return await handle_error(error)
+
+async def handle_error(error):
+    print(error)
+    current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    log_line = current_time + ': ' + str(error) + '\n'
+    with open("databases/error_log.txt", 'a') as f:
+        f.write(log_line)
+    return error
+
+@commands.command(
+    description="Meme", 
+    help="Generates a meme based on input. Usage: !meme (topic)", 
+    brief="Generate a meme"
+    )       
+async def meme(ctx):
+    '''async def update_meme_webpage(filename):
+        server_folder = (os.getenv('ftp_public_html') + 'ai-memes/')
+        new_file_name = str(time.time_ns()) + ".png"
+        await upload_sftp(filename, server_folder, new_file_name)
+        print("Uploaded", new_file_name)
+        with open("phixxy.com/ai-memes/index.html", 'r') as f:
+            html_data = f.read()
+        html_insert = '<!--ADD IMG HERE-->\n        <img src="' + new_file_name + '" loading="lazy">'
+        html_data = html_data.replace('<!--ADD IMG HERE-->',html_insert)
+        with open("phixxy.com/ai-memes/index.html", "w") as f:
+            f.writelines(html_data)
+        await upload_sftp("phixxy.com/ai-memes/index.html", server_folder, "index.html")'''
+    
+    
+    async def generate_random_meme(topic):
+        http_session = aiohttp.ClientSession()
+        async with http_session.get('https://api.imgflip.com/get_memes') as resp:
+            response_data = await resp.json()
+            response = response_data['data']['memes']
+        memepics = [{'name':image['name'],'url':image['url'],'id':image['id']} for image in response]
+        
+        #Pick a meme format
+        memenumber = random.randint(1,99)
+        meme_name = response[memenumber-1]['name']
+        panel_count = response[memenumber-1]['box_count']
+        print("panel_count ",panel_count)
+        panel_text = await answer_question("Create text for a meme. The meme is " + meme_name + ". It has " + str(panel_count) + " panels. Only create one meme. Do not use emojis or hashtags! Use the topic: " + topic + ". Use the output format (DO NOT USE EXTRA NEWLINES AND DO NOT DESCRIBE THE PICTURE IN YOUR OUTPUT): \n1: [panel 1 text]\n2: [panel 2 text]")
+        
+        id = memenumber
+        imgflip_username = os.getenv('imgflip_username')
+        imgflip_password = os.getenv('imgflip_password')
+        params = {
+            'username':imgflip_username,
+            'password':imgflip_password,
+            'template_id':memepics[id-1]['id']
+        }
+        boxes = []
+        text = panel_text.split('\n')
+        for x in range(len(text)):
+            if text[x].strip() != "":
+                item = text[x][3:]
+                if len(params)-3 < panel_count:
+                    dictionary = {"text":item, "color": "#ffffff", "outline_color": "#000000"}
+                    boxes.append(dictionary)
+
+        for i, box in enumerate(boxes):
+            params[f"boxes[{i}][text]"] = box["text"]
+            params[f"boxes[{i}][color]"] = box["color"]
+            params[f"boxes[{i}][outline_color]"] = box["outline_color"]
+            
+        URL = 'https://api.imgflip.com/caption_image'
+
+        try:
+            http_session = aiohttp.ClientSession()
+            async with http_session.post(URL, params=params) as resp:
+                response = await resp.json()
+            print(f"Generated Meme = {response['success']}\nImage Link = {response['data']['url']}\nPage Link = {response['data']['page_url']}")
+            image_link = response['data']['url']
+        except Exception as error:
+            await handle_error(error)
+        try:
+    #------------------------------------Saving Image Using Aiohttp---------------------------------#
+            filename = memepics[id-1]['name']
+            async with http_session.get(image_link) as response:
+                folder = "tmp/"
+                filename = folder + topic + str(len(os.listdir(folder))) + ".jpg"
+                
+                with open(filename, "wb") as file:
+                    while True:
+                        chunk = await response.content.read(1024) # Read the response in chunks
+                        if not chunk:
+                            break
+                        file.write(chunk)
+        except Exception as error:
+            await handle_error(error)
+            print("Something's Wrong with the urllib So try again")
+        return image_link, filename
+    
+    try:
+        topic = ctx.message.content.split(" ", maxsplit=1)[1]
+        link, filepath = await generate_random_meme(topic)
+        '''channel_vars = await get_channel_config(ctx.channel.id)
+        try:
+            if channel_vars["ftp_enabled"]:
+                await update_meme_webpage(filepath)
+        except Exception as error:
+            print("COULDN'T UPLOAD TO FTP!")
+            await handle_error(error)'''
+        await ctx.send(link)
+    except Exception as error:
+        await handle_error(error)
+        await ctx.send('Something went wrong try again. Usage: !meme (topic)')
+
+async def setup(bot):
+    bot.add_command(meme)
