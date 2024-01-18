@@ -507,7 +507,7 @@ async def update_meme_webpage(filename):
         with open("phixxy.com/ai-memes/index.html", "w") as f:
             f.writelines(html_data)
         await upload_sftp("phixxy.com/ai-memes/index.html", server_folder, "index.html")
-        os.rename(filename, f'tmp/{filename}')
+        os.rename(filename, 'tmp/' + new_file_name)
 
 
 @bot.command(
