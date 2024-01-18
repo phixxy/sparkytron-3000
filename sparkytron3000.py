@@ -241,10 +241,11 @@ async def folder_setup():
     for folder_name in folder_names:
         if not os.path.exists(folder_name):
             os.mkdir(folder_name)
+    return folder_names
             
-async def delete_all_files(path):
+async def delete_all_files(path, safe_folders):
     for filename in os.listdir(path):
-        if os.path.isdir(path+filename):
+        if os.path.isdir(path+filename) and not path+filename in safe_folders:
             shutil.rmtree(path+filename)
         elif os.path.isfile(path+filename):
             os.remove(path+filename)
@@ -334,8 +335,8 @@ async def on_ready():
 
     print('We have logged in as {0.user}'.format(bot))
     #stuff to do if first run
-    await folder_setup()
-    await delete_all_files("tmp/")
+    folders_made = await folder_setup()
+    await delete_all_files("tmp/", folders_made)
     task_loop.start()
     
 @bot.command(
