@@ -6,15 +6,11 @@ import json
 import random
 import time
 import os
-import io
-import base64
 import asyncio
 import sys
 import subprocess
-import math
-from PIL import Image, PngImagePlugin
 from dotenv import load_dotenv
-import matplotlib.pyplot as plt
+
 import aiohttp
 import aioftp
 import asyncssh
@@ -146,15 +142,6 @@ async def answer_question(topic, model="gpt-3.5-turbo"):
 
     except Exception as error:
         return await handle_error(error)
-
-
-'''def edit_channel_config(channel_id, key, value):
-    config_file = "channels/config/" + str(channel_id) + ".json"
-    with open(config_file, 'r') as f:
-        config_data = json.load(f)
-    config_data[key] = value
-    with open(config_file, "w") as f:
-        json.dump(config_data, f)'''
         
 async def react_to_msg(ctx, react):
     
@@ -354,12 +341,6 @@ async def update(ctx):
     else:
         await ctx.send("You don't have permission to do this.")
 
-
-
-    
-    
-    
-
 async def update_meme_webpage(filename):
         server_folder = (os.getenv('ftp_public_html') + 'ai-memes/')
         new_file_name = str(time.time_ns()) + ".png"
@@ -373,177 +354,6 @@ async def update_meme_webpage(filename):
             f.writelines(html_data)
         await upload_sftp("phixxy.com/ai-memes/index.html", server_folder, "index.html")
         os.rename(filename, 'tmp/' + new_file_name)
-
-
-@bot.command(
-    description="Highscores", 
-    help="Shows a bar graph of users in this channel and how many messages they have sent.", 
-    brief="Display chat highscores"
-    ) 
-async def highscores(ctx, limit=0):
-    filename = str(ctx.channel.id) + ".log"
-    with open("channels/logs/" + filename, 'r', encoding="utf-8") as logfile:
-        data = logfile.readlines()
-        logfile.close()
-    
-    def is_username(user):
-        for character in user:
-            if character.isupper():
-                return False
-            if not (character.isalpha() or character.isdigit() or character == '.' or character == '_'):
-                return False
-        return True
-
-    user_message_counts = {}    
-    for line in data:
-        try:
-            user = line[0:line.find(':')]
-            if is_username(user):
-                if user not in user_message_counts and user != "" and len(user) <= 32:
-                    user_message_counts[user] = 1
-                else:
-                    user_message_counts[user] += 1
-        except Exception as error:
-            await handle_error(error)
-    
-    def remove_dict_keys_if_less_than_x(dictionary,x):
-        for key in dictionary:
-            if dictionary[key] <= x:
-                dictionary.pop(key)
-                return remove_dict_keys_if_less_than_x(dictionary,x)
-        return dictionary
-    
-    print(user_message_counts)   
-    remove_dict_keys_if_less_than_x(user_message_counts,limit) 
-    keys = list(user_message_counts.keys())
-    values = list(user_message_counts.values())
-    fig, ax = plt.subplots()
-    bar_container = ax.barh(keys, values)
-    ax.set_xlabel("Message Count")
-    ax.set_ylabel("Username")
-    ax.set_title("Messages Sent in " + ctx.channel.name)
-    ax.bar_label(bar_container, label_type='center')
-    plt.savefig(str(ctx.channel.id) + '_hiscores.png', dpi=1000, bbox_inches="tight")
-    with open(str(ctx.channel.id) + '_hiscores.png', "rb") as fh:
-        f = discord.File(fh, filename=str(ctx.channel.id) + '_hiscores.png')
-    await ctx.send(file=f)
-    
-
-@bot.command(
-    description="Highscores Server", 
-    help="Shows a bar graph of users across all servers I am in and how many messages they have sent.", 
-    brief="Display chat highscores"
-    ) 
-async def highscores_server(ctx, limit=0):
-
-    def remove_dict_keys_if_less_than_x(dictionary,x):
-        for key in dictionary:
-            if dictionary[key] <= x:
-                dictionary.pop(key)
-                return remove_dict_keys_if_less_than_x(dictionary,x)
-        return dictionary
-    
-    def is_username(user):
-        for character in user:
-            if character.isupper():
-                return False
-            if not (character.isalpha() or character.isdigit() or character == '.' or character == '_'):
-                return False
-        return True
-
-    user_message_counts = {}
-    data = []
-    for filename in os.listdir("channels/logs/"):
-        with open("channels/logs/" + filename, 'r', encoding="utf-8") as logfile:
-            data += logfile.readlines()
-            logfile.close()
-    user_message_counts = {}    
-    for line in data:
-        try:
-            user = line[0:line.find(':')]
-            if is_username(user):
-                if user not in user_message_counts and user != "" and len(user) <= 32:
-                    user_message_counts[user] = 1
-                else:
-                    user_message_counts[user] += 1
-        except Exception as error:
-            await handle_error(error)
-
-    print(user_message_counts)
-    print("printed")
-    user_message_counts = remove_dict_keys_if_less_than_x(user_message_counts,limit)
-    keys = list(user_message_counts.keys())
-    values = list(user_message_counts.values())
-    fig, ax = plt.subplots()
-    bar_container = ax.barh(keys, values)
-    ax.set_xlabel("Message Count")
-    ax.set_ylabel("Username")
-    ax.set_title("Messages Sent in all channels I can see")
-    ax.bar_label(bar_container, label_type='center')
-    plt.savefig(str(ctx.channel.id) + '_hiscores.png', dpi=1000, bbox_inches="tight")
-    with open(str(ctx.channel.id) + '_hiscores.png', "rb") as fh:
-        f = discord.File(fh, filename=str(ctx.channel.id) + '_hiscores.png')
-    await ctx.send(file=f)
-    
-    
-'''@bot.command(
-    description="Python", 
-    help="Run some python code. Imports are disabled but random is imported for you. Usage !python (codeblock)", 
-    brief="Run some python code"
-    ) 
-async def python(ctx):
-    try:
-        code = ctx.message.content
-        print(code.find("```"),code.rfind("```"))
-        code = code[code.find("```")+3:code.rfind("```")] #Finds the code in codeblocks
-        if "import" in code:
-            await ctx.send("Imports not allowed")
-            return 0
-        if "```" in code:
-            code = code.replace("```", "")
-        code = "import random\nimport math\n" + code
-        if len(code) == 0:
-            await ctx.send('Please provide some code to run')
-        else:
-            folder_path = "tmp/python_temp_scripts/"
-            if not os.path.exists(folder_path):
-                os.makedirs(folder_path)
-            unique_num = str(len(os.listdir(folder_path)))
-            filename = f"{folder_path}{unique_num}.py"
-            with open(filename, "w") as f:
-                f.write(code)
-            try:
-                try:
-                    response = subprocess.run(["python", filename], timeout=10, capture_output=True, check=True)
-                except subprocess.TimeoutExpired:
-                    await ctx.send("Code took too long to run!")
-                    return 0
-                print("response", response.stdout.decode('utf-8'))
-                if response.stdout.decode('utf-8') == "":
-                    await ctx.send("No Output")
-                    return 0
-                await ctx.send(response.stdout.decode('utf-8'))
-            except subprocess.CalledProcessError as error:
-                await ctx.send(error.stderr.decode('utf-8'))
-    except Exception as error:
-        await handle_error(error)
-        await ctx.send("Usage: !python (codeblock)")'''
-
-    
-'''@bot.command(
-    description="Secret Santa Register", 
-    help="Register for secret santa!", 
-    brief="Register for secret santa!"
-    )         
-async def ss_register(ctx):
-    try:
-        email = ctx.message.content.split(" ", maxsplit=1)[1]
-        print(ctx.author.name, email)
-        with open("santa.txt", 'a') as f:
-            f.writelines(ctx.author.name + ';' + email + ',')
-        await ctx.send(ctx.author.name + " registered for secret santa!")
-    except:
-        await ctx.send("Usage: !ss_register (email address)")'''
 
 
 @bot.command(
