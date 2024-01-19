@@ -64,7 +64,7 @@ async def blog(ctx, *args):
         await ctx.send("Saved suggestion!")
 
 @commands.command()
-async def generate_blog():
+async def generate_blog(ctx):
     start_time = time.time()
     topic = ''
     filename = "phixxy.com/ai-blog/index.html"
