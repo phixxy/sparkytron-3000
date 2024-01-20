@@ -269,7 +269,7 @@ class PhixxyCom(commands.Cog):
         #Run every minute
         if current_time.tm_sec == 0:
             await self.meme_handler('tmp/meme/')
-            await self.upload_ftp_ai_images('tmp/sfw/')
+            await self.upload_ftp_ai_images('tmp/stable_diffusion/sfw/')
         if current_time.tm_hour == 17 and current_time.tm_min == 0 and current_time.tm_sec == 0:
             bot_stuff_channel = self.bot.get_channel(544408659174883328)
             await bot_stuff_channel.send("Running Daily Tasks")
