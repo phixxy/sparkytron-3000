@@ -254,7 +254,7 @@ class StableDiffusion(commands.Cog):
                 if ctx.channel.is_nsfw():
                     folder = self.working_dir + "nsfw/"
                 else:
-                    folder = self.working_dir + "sfw"
+                    folder = self.working_dir + "sfw/"
             except:
                 folder = self.working_dir
             my_filename = folder + str(time.time_ns()) + ".png"
