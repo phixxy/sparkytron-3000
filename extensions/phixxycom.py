@@ -184,7 +184,6 @@ class PhixxyCom(commands.Cog):
 
         except Exception as error:
             return None
-            #return await self.handle_error(error)
 
     @commands.command()
     async def generate_blog(self, ctx):
