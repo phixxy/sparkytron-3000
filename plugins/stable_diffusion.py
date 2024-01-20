@@ -83,6 +83,7 @@ class StableDiffusion(commands.Cog):
     def get_prompt_from_ctx(self, ctx):
         prompt = ctx.message.content.split(" ", maxsplit=1)[1]
         prompt = ' '.join(list(filter(lambda x: '=' not in x,prompt.split(' '))))
+        return prompt
 
     async def my_open_img_file(self, path):
         img = Image.open(path)
