@@ -24,6 +24,8 @@ class StableDiffusion(commands.Cog):
         try:
             if not os.path.exists(self.working_dir):
                 os.mkdir(self.working_dir)
+                os.mkdir(f"{self.working_dir}sfw")
+                os.mkdir(f"{self.working_dir}nsfw")
             if not os.path.exists(self.db_dir):
                 os.mkdir(self.db_dir)
         except:
@@ -297,7 +299,7 @@ class StableDiffusion(commands.Cog):
             pnginfo.add_text("parameters", response2.get("info"))
             try:
                 if ctx.channel.is_nsfw():
-                    folder = self.working_dir
+                    folder = self.working_dir + "nsfw/"
                 else:
                     folder = self.working_dir + "sfw/"
             except:
