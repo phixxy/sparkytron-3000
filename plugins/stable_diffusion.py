@@ -255,12 +255,8 @@ class StableDiffusion(commands.Cog):
             return
         else:
             url=f"{url}/sdapi/v1/txt2img"
-        
         prompt = ctx.message.content.split(" ", maxsplit=1)[1]
-        await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.1")
-        key_value_pairs, prompt = self.extract_key_value_pairs(prompt)
-        await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.2")
-        '''
+        key_value_pairs, prompt = await self.extract_key_value_pairs(prompt)
         try:
             neg_prompt_file = f"{self.db_dir}negative_prompt.txt"
             with open(neg_prompt_file, 'r') as f:
@@ -269,11 +265,8 @@ class StableDiffusion(commands.Cog):
             neg_prompt_file = f"{self.db_dir}negative_prompt.txt"
             with open(neg_prompt_file, 'w') as f:
                 f.writelines("")
-                negative_prompt = ""'''
-        negative_prompt = ""
-
-        await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.3")
-        
+                negative_prompt = ""
+        await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.")
         payload = {
             "prompt": prompt,
             "steps": 25,
@@ -299,7 +292,7 @@ class StableDiffusion(commands.Cog):
                     response2 = await resp.json()
             except Exception as error:
                 await ctx.send("My image generation service may not be running.")
-                await self.handle_error(error)
+                await self.handle_error(self, error)
 
             pnginfo = PngImagePlugin.PngInfo()
             pnginfo.add_text("parameters", response2.get("info"))
@@ -392,7 +385,7 @@ class StableDiffusion(commands.Cog):
             await self.handle_error(error)
             print("Couldn't find image.")
             return
-        key_value_pairs, prompt = self.extract_key_value_pairs(prompt)
+        key_value_pairs, prompt = await self.extract_key_value_pairs(prompt)
         try:
             async with self.bot.http_session.get(file_url) as response:
                 imageName = self.working_dir + str(time.time_ns()) + ".png"
