@@ -260,7 +260,6 @@ class PhixxyCom(commands.Cog):
             
             await ctx.send("Finished https://ai.phixxy.com/ai-webpage/")
         except Exception as error:
-            await self.handle_error(error)
             await ctx.send("Failed, Try again.")
 
     @tasks.loop(seconds=1)
@@ -276,7 +275,7 @@ class PhixxyCom(commands.Cog):
             try:
                 await self.generate_blog()
             except Exception as error:
-                await self.handle_error(error)
+                print("Failed to generate blog")
 
 async def setup(bot):
     await bot.add_cog(PhixxyCom(bot))
