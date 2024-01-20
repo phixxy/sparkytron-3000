@@ -2,12 +2,8 @@
 import os
 import time
 from PIL import Image, PngImagePlugin
-import io
-import base64
-
 import aiohttp
-import asyncssh
-from discord.ext import commands, tasks
+from discord.ext import commands
 
 class AsyncOpenAI(commands.Cog):
 
@@ -138,4 +134,4 @@ class AsyncOpenAI(commands.Cog):
             await ctx.send(chunk)
 
 async def setup(bot):
-    await bot.add_cog(AsyncOpenAI)
+    await bot.add_cog(AsyncOpenAI(bot))
