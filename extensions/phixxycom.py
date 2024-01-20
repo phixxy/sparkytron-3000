@@ -163,6 +163,30 @@ class PhixxyCom(commands.Cog):
                 await self.upload_sftp(html_file, server_folder, "index.html")
                 os.rename(filepath, f"tmp/{new_filename}")
 
+    async def answer_question(self, topic, model="gpt-3.5-turbo"):
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {os.getenv("openai.api_key")}',
+        }
+
+        data = {
+            "model": model,
+            "messages": [{"role": "user", "content": topic}]
+        }
+
+        url = "https://api.openai.com/v1/chat/completions"
+
+        try:
+            http_session = aiohttp.ClientSession()
+            async with http_session.post(url, headers=headers, json=data) as resp:
+                response_data = await resp.json()
+                response = response_data['choices'][0]['message']['content']
+                await http_session.close()
+                return response
+
+        except Exception as error:
+            return await self.handle_error(error)
+
     @commands.command()
     async def generate_blog(self, ctx):
         start_time = time.time()
