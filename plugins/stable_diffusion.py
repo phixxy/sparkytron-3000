@@ -255,8 +255,11 @@ class StableDiffusion(commands.Cog):
             return
         else:
             url=f"{url}/sdapi/v1/txt2img"
+        
         prompt = ctx.message.content.split(" ", maxsplit=1)[1]
+        await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.1")
         key_value_pairs, prompt = self.extract_key_value_pairs(prompt)
+        await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.2")
         '''
         try:
             neg_prompt_file = f"{self.db_dir}negative_prompt.txt"
@@ -269,7 +272,7 @@ class StableDiffusion(commands.Cog):
                 negative_prompt = ""'''
         negative_prompt = ""
 
-        await ctx.send("Please be patient this may take some time! Generating: " + prompt + ".")
+        await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.3")
         
         payload = {
             "prompt": prompt,
