@@ -273,14 +273,10 @@ async def on_ready():
     folders_made = await folder_setup()
     await delete_all_files("tmp/", folders_made)
     
-    # Import plugins from plugins folder
-    for plugin_file in os.listdir('plugins/'):
-        if plugin_file != '__init__.py' and plugin_file[-3:] == '.py':
-            await bot.load_extension(f'plugins.{plugin_file[:-3]}')
-    
+    # Import plugins from extensions folder
     for plugin_file in os.listdir('extensions/'):
         if plugin_file != '__init__.py' and plugin_file[-3:] == '.py':
-            await bot.load_extension(f'plugins.{plugin_file[:-3]}')
+            await bot.load_extension(f'extensions.{plugin_file[:-3]}')
 
     print('We have logged in as {0.user}'.format(bot))
 
