@@ -2,7 +2,6 @@
 # This extension enables the ability to generate AI artwork using the AUTOMATIC1111 API
 import io
 import base64
-import aiohttp
 import os
 import time
 import random
@@ -29,7 +28,7 @@ class StableDiffusion(commands.Cog):
             if not os.path.exists(self.db_dir):
                 os.mkdir(self.db_dir)
         except:
-            print(" StableDiffusion failed to make directories")
+            print("StableDiffusion failed to make directories")
 
     async def answer_question(self, topic, model="gpt-3.5-turbo"): # Only needed for draw command
         headers = {
@@ -65,7 +64,6 @@ class StableDiffusion(commands.Cog):
 
     async def extract_key_value_pairs(self, input_str):
         output_str = input_str
-        
         key_value_pairs = {}
         tokens = input_str.split(', ')
         for token in tokens:
@@ -75,6 +73,16 @@ class StableDiffusion(commands.Cog):
                 output_str = output_str.replace(token+', ', '') # Remove the key-value pair from the output string
         
         return key_value_pairs, output_str
+
+    def get_kv_from_ctx(self, ctx):
+        prompt = ctx.message.content.split(" ", maxsplit=1)[1]
+        kv_strings = list(filter(lambda x: '=' in x,prompt.split(' ')))
+        key_value_pairs = dict(map(lambda a: a.replace(',','').split('='),kv_strings))
+        return key_value_pairs
+    
+    def get_prompt_from_ctx(self, ctx):
+        prompt = ctx.message.content.split(" ", maxsplit=1)[1]
+        prompt = ' '.join(list(filter(lambda x: '=' not in x,prompt.split(' '))))
 
     async def my_open_img_file(self, path):
         img = Image.open(path)
@@ -115,7 +123,7 @@ class StableDiffusion(commands.Cog):
                                 description = data.get("caption")
                                 description = description.split(',')[0]
                                 metadata += f"<image:{description}>\n"
-                        except aiohttp.ClientError as error:
+                        except self.bot.aiohttp.ClientError as error:
                             await self.handle_error(error)
                             return "ERROR: CLIP may not be running. Could not look at image."
         return metadata
