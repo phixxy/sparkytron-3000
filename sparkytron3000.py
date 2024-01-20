@@ -36,45 +36,15 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 #discord setup END
 
-async def upload_sftp(local_filename, server_folder, server_filename):
-    remotepath = server_folder + server_filename
-    async with asyncssh.connect(ftp_server, username=ftp_username, password=ftp_password) as conn:
-        async with conn.start_sftp_client() as sftp:
-            await sftp.put(local_filename, remotepath=remotepath)
+
     
 async def handle_error(error):
     print(error)
     current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     log_line = current_time + ': ' + str(error) + '\n'
-    with open("databases/error_log.txt", 'a') as f:
+    with open("data/error_log.txt", 'a') as f:
         f.write(log_line)
     return error
-
-async def upload_ftp_ai_images(folder):
-    for filename in os.listdir(folder):
-        if filename[-4:] == '.png':
-            filepath = folder + filename
-            prompt = "Unknown Prompt" # Will have to update this later
-
-            html_file = "phixxy.com/ai-images/index.html"
-            html_insert = '''<!--REPLACE THIS COMMENT-->
-                <div>
-                    <img src="<!--filename-->" loading="lazy">
-                    <p class="image-description"><!--description--></p>
-                </div>'''
-            server_folder = (os.getenv('ftp_public_html') + 'ai-images/')
-            new_filename = str(time.time_ns()) + ".png"
-            await upload_sftp(filepath, server_folder, new_filename)
-            print("Uploaded", new_filename)
-            with open(html_file, 'r') as f:
-                html_data = f.read()
-            html_insert = html_insert.replace("<!--filename-->", new_filename)
-            html_insert = html_insert.replace("<!--description-->", prompt)
-            html_data = html_data.replace("<!--REPLACE THIS COMMENT-->", html_insert)
-            with open(html_file, "w") as f:
-                f.writelines(html_data)
-            await upload_sftp(html_file, server_folder, "index.html")
-            os.rename(filepath, f"tmp/{new_filename}")
 
 def create_channel_config(filepath):
     config_dict = {
@@ -199,56 +169,16 @@ async def delete_all_files(path, safe_folders):
         elif os.path.isfile(path+filename):
             os.remove(path+filename)
 
-async def delete_derp_files(server_folder):
-    async with asyncssh.connect(ftp_server, username=ftp_username, password=ftp_password) as conn:
-        async with conn.start_sftp_client() as sftp:
-            for filename in (await sftp.listdir(server_folder)):
-                if filename == '.' or filename == '..' or filename == 'style.css' or filename == 'myScript.js':
-                    pass
-                else:
-                    try:
-                        print("Deleting", filename)
-                        await sftp.remove(server_folder+filename)
-                    except:
-                        print("Couldn't delete", filename)
-
-async def meme_handler(folder):
-    for file in os.listdir(folder):
-        filepath = folder + file
-        await update_meme_webpage(filepath)
-
             
 @tasks.loop(seconds=1)  # Run the task every second
 async def task_loop():
     current_time = time.localtime()
-    #Run every minute
-    if current_time.tm_sec == 0:
-        await meme_handler('tmp/meme/')
-        await upload_ftp_ai_images('tmp/sfw/')
-
     #Run daily tasks
-    if current_time.tm_hour == 17 and current_time.tm_min == 0 and current_time.tm_sec == 0:
-        bot_stuff = bot.get_channel(544408659174883328)
-        output = 'The following tasks failed:\n```'
-        failed_tasks = []
-        await bot_stuff.send("<@242018983241318410> The current time is 5pm. Running daily tasks!")
+    if current_time.tm_hour == 0 and current_time.tm_min == 0 and current_time.tm_sec == 0:
         try:
             await delete_all_files("tmp/")
         except Exception as error:
             await handle_error(error)
-            failed_tasks.append("Delete tmp/")
-        try:
-            await delete_derp_files("/home/debian/websites/derp.phixxy.com/files/")
-        except Exception as error:
-            await handle_error(error)
-            failed_tasks.append("Delete derp files")
-        if failed_tasks != []:
-            for failed_task in failed_tasks:
-                output += failed_task + '\n'
-            output += '```'
-            await bot_stuff.send(output)
-        else:
-            await bot_stuff.send("All daily tasks successfully ran!")
             
 async def create_session():
     return aiohttp.ClientSession()
@@ -272,31 +202,12 @@ async def on_disconnect():
 async def on_ready():
     folders_made = await folder_setup()
     await delete_all_files("tmp/", folders_made)
-    
     # Import plugins from extensions folder
     for plugin_file in os.listdir('extensions/'):
         if plugin_file != '__init__.py' and plugin_file[-3:] == '.py':
             await bot.load_extension(f'extensions.{plugin_file[:-3]}')
-
     print('We have logged in as {0.user}'.format(bot))
-
     task_loop.start()
-    
-
-async def update_meme_webpage(filename):
-        server_folder = (os.getenv('ftp_public_html') + 'ai-memes/')
-        new_file_name = str(time.time_ns()) + ".png"
-        await upload_sftp(filename, server_folder, new_file_name)
-        print("Uploaded", new_file_name)
-        with open("phixxy.com/ai-memes/index.html", 'r') as f:
-            html_data = f.read()
-        html_insert = '<!--ADD IMG HERE-->\n        <img src="' + new_file_name + '" loading="lazy">'
-        html_data = html_data.replace('<!--ADD IMG HERE-->',html_insert)
-        with open("phixxy.com/ai-memes/index.html", "w") as f:
-            f.writelines(html_data)
-        await upload_sftp("phixxy.com/ai-memes/index.html", server_folder, "index.html")
-        os.rename(filename, 'tmp/' + new_file_name)
-
         
 @bot.event
 async def on_reaction_add(reaction, user):
