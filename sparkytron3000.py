@@ -270,6 +270,9 @@ async def on_disconnect():
             
 @bot.event
 async def on_ready():
+    folders_made = await folder_setup()
+    await delete_all_files("tmp/", folders_made)
+    
     # Import plugins from plugins folder
     for plugin_file in os.listdir('plugins/'):
         if plugin_file != '__init__.py' and plugin_file[-3:] == '.py':
@@ -280,9 +283,7 @@ async def on_ready():
             await bot.load_extension(f'plugins.{plugin_file[:-3]}')
 
     print('We have logged in as {0.user}'.format(bot))
-    #stuff to do if first run
-    folders_made = await folder_setup()
-    await delete_all_files("tmp/", folders_made)
+
     task_loop.start()
     
 
