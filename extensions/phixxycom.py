@@ -177,15 +177,14 @@ class PhixxyCom(commands.Cog):
         url = "https://api.openai.com/v1/chat/completions"
 
         try:
-            http_session = aiohttp.ClientSession()
-            async with http_session.post(url, headers=headers, json=data) as resp:
+            async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
                 response_data = await resp.json()
                 response = response_data['choices'][0]['message']['content']
-                await http_session.close()
                 return response
 
         except Exception as error:
-            return await self.handle_error(error)
+            return None
+            #return await self.handle_error(error)
 
     @commands.command()
     async def generate_blog(self, ctx):
