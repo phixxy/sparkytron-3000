@@ -257,11 +257,12 @@ class StableDiffusion(commands.Cog):
             url=f"{url}/sdapi/v1/txt2img"
         prompt = ctx.message.content.split(" ", maxsplit=1)[1]
         key_value_pairs, prompt = self.extract_key_value_pairs(prompt)
-        neg_prompt_file = f"{self.db_dir}negative_prompt.txt"
         try:
+            neg_prompt_file = f"{self.db_dir}negative_prompt.txt"
             with open(neg_prompt_file, 'r') as f:
                 negative_prompt = f.readline()
         except:
+            neg_prompt_file = f"{self.db_dir}negative_prompt.txt"
             with open(neg_prompt_file, 'w') as f:
                 f.writelines("")
                 negative_prompt = ""
