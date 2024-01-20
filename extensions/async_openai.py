@@ -138,4 +138,4 @@ class AsyncOpenAI(commands.Cog):
             await ctx.send(chunk)
 
 async def setup(bot):
-    bot.add_cog(AsyncOpenAI)
+    await bot.add_cog(AsyncOpenAI)
