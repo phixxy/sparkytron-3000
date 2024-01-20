@@ -448,4 +448,5 @@ class StableDiffusion(commands.Cog):
 
 
 async def setup(bot):
-    bot.add_cog(StableDiffusion)
+    print("Added StableDiffusion Cog")
+    await bot.add_cog(StableDiffusion(bot))
