@@ -260,7 +260,8 @@ class PhixxyCom(commands.Cog):
             
             await ctx.send("Finished https://ai.phixxy.com/ai-webpage/")
         except Exception as error:
-            await ctx.send("Failed, Try again.")
+            #await ctx.send("Failed, Try again.")
+            print(error)
 
     @tasks.loop(seconds=1)
     async def phixxy_loop(self):
