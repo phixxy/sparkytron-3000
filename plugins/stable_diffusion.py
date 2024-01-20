@@ -170,13 +170,12 @@ class StableDiffusion(commands.Cog):
                         else:
                             folder = self.working_dir + "sfw/"
                     except:
-                        folder = "tmp/"
+                        folder = self.working_dir
                     my_filename = folder + str(time.time_ns()) + ".png"
                     image.save(my_filename, pnginfo=pnginfo)
                     with open(my_filename, "rb") as fh:
                         f = discord.File(fh, filename=my_filename)
-                    await ctx.send(file=f)
-                    await ctx.send(prompt)
+                    await ctx.send(prompt, file=f)
             except Exception as error:
                 await self.handle_error(error)
                 await ctx.send("My image generation service may not be running.")
