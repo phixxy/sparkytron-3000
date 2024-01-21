@@ -139,90 +139,105 @@ class PokemonGame(commands.Cog):
             embed.add_field(name="Buddy XP", value=buddy_xp, inline=True)
             embed.add_field(name="Types", value=type_str, inline=False)
             return embed
-
-        if args[0]=='start':
-            if not os.path.isdir("databases/pokemon/"):
-                os.makedirs("databases/pokemon/")
-            if not os.path.isfile("databases/pokemon/"+str(ctx.author.id)+'.json'):
-                uniq_id = time.time()
-                starter_id = await generate_starter(ctx.author.id)
-                json_data = await get_pkmn_from_id(starter_id)
-                is_shiny = await shiny_roll()
-                nature = random.randint(0,19)
-                nature_data = await self.get_json('https://pokeapi.co/api/v2/nature/')
-                nature = nature_data['results'][nature]['name']
-                json_data['shiny'] = is_shiny
-                json_data['nickname'] = None
-                json_data['unique_id'] = uniq_id
-                json_data['nature'] = nature
-                json_data['buddy_level'] = 1
-                json_data['buddy_xp'] = 0
-                json_data['last_food'] = 0
-                json_data['last_hug'] = 0
+        try:
+            if args[0]=='start':
+                if not os.path.isdir("databases/pokemon/"):
+                    os.makedirs("databases/pokemon/")
+                if not os.path.isfile("databases/pokemon/"+str(ctx.author.id)+'.json'):
+                    uniq_id = time.time()
+                    starter_id = await generate_starter(ctx.author.id)
+                    json_data = await get_pkmn_from_id(starter_id)
+                    is_shiny = await shiny_roll()
+                    nature = random.randint(0,19)
+                    nature_data = await self.get_json('https://pokeapi.co/api/v2/nature/')
+                    nature = nature_data['results'][nature]['name']
+                    json_data['shiny'] = is_shiny
+                    json_data['nickname'] = None
+                    json_data['unique_id'] = uniq_id
+                    json_data['nature'] = nature
+                    json_data['buddy_level'] = 1
+                    json_data['buddy_xp'] = 0
+                    json_data['last_food'] = 0
+                    json_data['last_hug'] = 0
+                    await save_pokemon(ctx.author.id, json_data)
+                    embed = await make_pmkn_embed(json_data)
+                    await ctx.channel.send(embed=embed)
+                    return
+                else:
+                    await ctx.channel.send("You already have a pokemon!")
+                    return
+                
+            elif args[0] == 'nick' or args[0] == 'nickname':
+                nickname = args[1]
+                json_data = await load_pokemon(ctx.author.id)
+                json_data['nickname'] = nickname
                 await save_pokemon(ctx.author.id, json_data)
-                embed = await make_pmkn_embed(json_data)
-                await ctx.channel.send(embed=embed)
-                return
-            else:
-                await ctx.channel.send("You already have a pokemon!")
+                message = "You gave " + nickname + ' a new name!'
+                await ctx.channel.send(message)
                 return
             
-        elif args[0] == 'nick' or args[0] == 'nickname':
-            nickname = args[1]
-            json_data = await load_pokemon(ctx.author.id)
-            json_data['nickname'] = nickname
-            await save_pokemon(ctx.author.id, json_data)
-            message = "You gave " + nickname + ' a new name!'
-            await ctx.channel.send(message)
-            return
-        
-        elif args[0] == 'feed':
-            json_data = await load_pokemon(ctx.author.id)
-            json_data, fed = await give_buddy_food(json_data)
-            if fed:
-                await save_pokemon(ctx.author.id, json_data)
-                if json_data['nickname']:
-                    message = "You " + args[0] + ' ' + json_data['nickname']
+            elif args[0] == 'feed':
+                json_data = await load_pokemon(ctx.author.id)
+                json_data, fed = await give_buddy_food(json_data)
+                if fed:
+                    await save_pokemon(ctx.author.id, json_data)
+                    if json_data['nickname']:
+                        message = "You " + args[0] + ' ' + json_data['nickname']
+                    else:
+                        message = "You " + args[0] + ' ' + json_data['name']
+                    await ctx.channel.send(message)
+                    return
                 else:
-                    message = "You " + args[0] + ' ' + json_data['name']
-                await ctx.channel.send(message)
-                return
+                    if json_data['nickname']:
+                        message = "Your " + json_data['nickname'] + " isn't hungry!"
+                    else:
+                        message = "Your " + json_data['name'] + " isn't hungry!"
+                    await ctx.channel.send(message)
+                    return
+            
+            elif args[0] == 'hug':
+                json_data = await load_pokemon(ctx.author.id)
+                json_data, hugged = await give_buddy_affection(json_data)
+                if hugged:
+                    await save_pokemon(ctx.author.id, json_data)
+                    if json_data['nickname']:
+                        message = "You " + args[0] + ' ' + json_data['nickname']
+                    else:
+                        message = "You " + args[0] + ' ' + json_data['name']
+                    await ctx.channel.send(message)
+                    return
+                else:
+                    if json_data['nickname']:
+                        message = "You hugged " + json_data['nickname'] + " but " + json_data['nickname'] + " has been hugged recently."
+                    else:
+                        message = "You hugged " + json_data['name'] + " but " + json_data['name'] + " has been hugged recently."
+                    await ctx.channel.send(message)
+                    return
+        except:
+            #Default !pokemon behavior (Load and show pokemon embed)
+            discord_id = ctx.author.id
+            buddy_json = await load_pokemon(discord_id)
+            if not buddy_json:
+                await ctx.channel.send("You don't have a buddy yet. Type ```!pokemon start``` to start your Pokemon journey!")
             else:
-                if json_data['nickname']:
-                    message = "Your " + json_data['nickname'] + " isn't hungry!"
-                else:
-                    message = "Your " + json_data['name'] + " isn't hungry!"
-                await ctx.channel.send(message)
+                embed = await make_pmkn_embed(buddy_json)
+                message = await ctx.channel.send(embed=embed)
                 return
         
-        elif args[0] == 'hug':
-            json_data = await load_pokemon(ctx.author.id)
-            json_data, hugged = await give_buddy_affection(json_data)
-            if hugged:
-                await save_pokemon(ctx.author.id, json_data)
-                if json_data['nickname']:
-                    message = "You " + args[0] + ' ' + json_data['nickname']
-                else:
-                    message = "You " + args[0] + ' ' + json_data['name']
-                await ctx.channel.send(message)
-                return
-            else:
-                if json_data['nickname']:
-                    message = "You hugged " + json_data['nickname'] + " but " + json_data['nickname'] + " has been hugged recently."
-                else:
-                    message = "You hugged " + json_data['name'] + " but " + json_data['name'] + " has been hugged recently."
-                await ctx.channel.send(message)
-                return
+    async def pkmn_msg(self, discord_id):
+        path = "databases/pokemon/"+str(discord_id)+'.json'
+        if os.path.isfile(path):
+            with open(path, 'r') as f:
+                json_data = json.loads(f.readline())
+                json_data['buddy_xp'] += random.randint(1,5)
+                json_data = json.dumps(json_data)
+            with open(path, 'w') as f:
+                f.writelines(json_data)
+        
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        await self.pkmn_msg(message.author.id)
 
-        #Default !pokemon behavior (Load and show pokemon embed)
-        discord_id = ctx.author.id
-        buddy_json = await load_pokemon(discord_id)
-        if not buddy_json:
-            await ctx.channel.send("You don't have a buddy yet. Type ```!pokemon start``` to start your Pokemon journey!")
-        else:
-            embed = await make_pmkn_embed(buddy_json)
-            message = await ctx.channel.send(embed=embed)
-            return
 
     @commands.command(
         description="Pokedex", 
