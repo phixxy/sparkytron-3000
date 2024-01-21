@@ -2,8 +2,6 @@
 import os
 import time
 import json
-from PIL import Image, PngImagePlugin
-import aiohttp
 from discord.ext import commands, tasks
 
 class AsyncOpenAI(commands.Cog):
@@ -28,7 +26,6 @@ class AsyncOpenAI(commands.Cog):
     def read_db(self,filepath):
         with open(filepath,"r") as fileobj:
             db_content = json.load(fileobj)
-        #print(db_content,type(db_content))
         return db_content
 
     def save_to_db(self,filepath,db_content):
@@ -62,11 +59,9 @@ class AsyncOpenAI(commands.Cog):
         url = "https://api.openai.com/v1/chat/completions"
 
         try:
-            http_session = aiohttp.ClientSession()
-            async with http_session.post(url, headers=headers, json=data) as resp:
+            async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
                 response_data = await resp.json()
                 response = response_data['choices'][0]['message']['content']
-                await http_session.close()
                 return response
 
         except Exception as error:
@@ -135,12 +130,10 @@ class AsyncOpenAI(commands.Cog):
         url = "https://api.openai.com/v1/chat/completions"
 
         try:
-            http_session = aiohttp.ClientSession()
-            async with http_session.post(url, headers=headers, json=data) as resp:
+            async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
                 response_data = await resp.json()
                 print(response_data)
                 answer = response_data['choices'][0]['message']['content']
-            await http_session.close()
             
 
         except Exception as error:
@@ -208,18 +201,6 @@ class AsyncOpenAI(commands.Cog):
                 print("Fulfilled reminders successfully purged")
 
         self.save_to_db(reminders_path,data)
-
-
-    # def read_db(filepath):
-    #     with open(filepath,"r") as fileobj:
-    #         db_content = json.load(fileobj)
-    #     #print(db_content,type(db_content))
-    #     return db_content
-
-    # def save_to_db(filepath,db_content):
-    #     with open(filepath,"w") as fileobj:
-    #         json.dump(db_content,fileobj,indent=4)
         
-
 async def setup(bot):
     await bot.add_cog(AsyncOpenAI(bot))
