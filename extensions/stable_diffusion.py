@@ -329,21 +329,18 @@ class StableDiffusion(commands.Cog):
         try:
             if ctx.message.attachments:
                 file_url = ctx.message.attachments[0].url
-                prompt = ctx.message.content.split(" ", maxsplit=1)[1]
             elif ctx.message.content.startswith("!reimagine "):
                 file_url = ctx.message.content.split(" ", maxsplit=2)[1]
-                try:
-                    prompt = ctx.message.content.split(" ", maxsplit=2)[2]
-                except:
-                    prompt = ""
             else:
-                print("No image linked or attached.")
+                await ctx.send("No image linked or attached.")
                 return
         except Exception as error:
             await self.handle_error(error)
             print("Couldn't find image.")
             return
         prompt = self.get_prompt_from_ctx(ctx)
+        if not prompt:
+            prompt = ""
         key_value_pairs = self.get_kv_from_ctx(ctx)
         try:
             async with self.bot.http_session.get(file_url) as response:
