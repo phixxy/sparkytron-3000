@@ -152,7 +152,7 @@ class AsyncOpenAI(commands.Cog):
 
     @commands.command(
         description="Remind Me",
-        help="Send a request in natural language to ask Sparky to remind you of a task or event in a specified amount of time. Minimum 1 minute.",
+        help="Send a request in natural language to ask Sparky to remind you of a task or event by direct message in a specified amount of time. Minimum 1 minute.",
         brief="Get a reminder",
         aliases=["remindme","remind_me","remind"]
     )
