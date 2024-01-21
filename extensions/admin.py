@@ -55,18 +55,7 @@ async def update(ctx):
     else:
         await ctx.send("You don't have permission to do this.")
 
-@commands.command(
-    description="Moderate", 
-    help="This currently tool works by replacing the filename on the ftp server with a black image. The description will remain the same and may need to be altered.", 
-    brief="Moderation Tools"
-    )
-async def moderate(ctx, filename):
-    await upload_sftp("blank_image.png", (os.getenv('ftp_public_html') + 'ai-images/'), filename)
-    output = "Image " + filename + " replaced"
-    await ctx.send(output)
-
 async def setup(bot):
     bot.add_command(update)
     bot.add_command(reset)
     bot.add_command(kill)
-    bot.add_command(moderate)

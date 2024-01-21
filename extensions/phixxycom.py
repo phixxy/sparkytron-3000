@@ -311,5 +311,15 @@ class PhixxyCom(commands.Cog):
             except Exception as error:
                 print("Failed to generate blog")
 
+    @commands.command(
+    description="Moderate", 
+    help="This currently tool works by replacing the filename on the ftp server with a black image. The description will remain the same and may need to be altered.", 
+    brief="Moderation Tools"
+    )
+    async def moderate(self, ctx, filename):
+        await self.upload_sftp(f"{self.data_dir}blank_image.png", (os.getenv('ftp_public_html') + 'ai-images/'), filename)
+        output = "Image " + filename + " replaced"
+        await ctx.send(output)
+
 async def setup(bot):
     await bot.add_cog(PhixxyCom(bot))
