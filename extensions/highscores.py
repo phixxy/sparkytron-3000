@@ -17,7 +17,8 @@ async def handle_error(error):
 @commands.command(
     description="Highscores", 
     help="Shows a bar graph of users in this channel and how many messages they have sent.", 
-    brief="Display chat highscores"
+    brief="Display chat highscores",
+    aliases=["highscore"]
     ) 
 async def highscores(ctx, limit=0):
     filename = str(ctx.channel.id) + ".log"
@@ -71,7 +72,8 @@ async def highscores(ctx, limit=0):
 @commands.command(
     description="Highscores Server", 
     help="Shows a bar graph of users across all servers I am in and how many messages they have sent.", 
-    brief="Display chat highscores"
+    brief="Display chat highscores",
+    aliases=["highscore_server"]
     ) 
 async def highscores_server(ctx, limit=0):
 
@@ -111,8 +113,10 @@ async def highscores_server(ctx, limit=0):
     print(user_message_counts)
     print("printed")
     user_message_counts = remove_dict_keys_if_less_than_x(user_message_counts,limit)
-    keys = list(user_message_counts.keys())
-    values = list(user_message_counts.values())
+    keys = user_message_counts.keys()
+    print(keys)
+    values = user_message_counts.values()
+    print(values)
     fig, ax = plt.subplots()
     bar_container = ax.barh(keys, values)
     ax.set_xlabel("Message Count")

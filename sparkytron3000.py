@@ -159,7 +159,7 @@ async def folder_setup():
             os.mkdir(folder_name)
     return folder_names
             
-async def delete_all_files(path, safe_folders):
+async def delete_all_files(path, safe_folders=None):
     for filename in os.listdir(path):
         if os.path.isdir(path+filename) and not path+filename in safe_folders:
             shutil.rmtree(path+filename)
