@@ -2,7 +2,7 @@ import os
 import io
 import base64
 import time
-import json
+import html
 import asyncssh
 from PIL import Image, PngImagePlugin
 from discord.ext import commands, tasks
@@ -36,7 +36,7 @@ class PhixxyCom(commands.Cog):
                 if filename in line:
                     prompt = line[line.index("Prompt: ") + 7:line.index("Filename: ")]
                     prompt = ''.join(prompt.rsplit(',', 1)) # Remove the last comma
-                    return prompt
+                    return html.escape(prompt)
         return "Unknown Prompt"
 
     async def upload_sftp(self, local_filename, server_folder, server_filename):
