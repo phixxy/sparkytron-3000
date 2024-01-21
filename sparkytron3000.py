@@ -7,11 +7,9 @@ import random
 import time
 import os
 import asyncio
-import subprocess
 from dotenv import load_dotenv
 
 import aiohttp
-import asyncssh
 
 #Stable Diffusion
 #Set this env variable to http://host:port or "disabled"
