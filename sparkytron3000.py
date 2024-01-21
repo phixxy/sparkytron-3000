@@ -153,7 +153,7 @@ async def chat_response(ctx, channel_vars, chat_history_string):
     
 async def folder_setup():
     # Only tmp, extensions and data are supported, all other folders only exist for backwards compatibility and will be removed soon!
-    folder_names = ["tmp", "extensions", "data", "plugins", "tmp/sfw", "tmp/nsfw", "tmp/meme", "channels", "users", "channels/config", "channels/logs", "databases", "databases/currency", "databases/currency/players"]
+    folder_names = ["tmp", "extensions", "data", "channels","channels/config", "channels/logs"]
     for folder_name in folder_names:
         if not os.path.exists(folder_name):
             os.mkdir(folder_name)
