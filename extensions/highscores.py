@@ -20,7 +20,7 @@ async def handle_error(error):
     brief="Display chat highscores",
     aliases=["highscore"]
     ) 
-async def highscores(ctx, limit=0):
+async def highscores(ctx, limit=15):
     filename = str(ctx.channel.id) + ".log"
     with open("channels/logs/" + filename, 'r', encoding="utf-8") as logfile:
         data = logfile.readlines()
@@ -45,26 +45,20 @@ async def highscores(ctx, limit=0):
                     user_message_counts[user] += 1
         except Exception as error:
             await handle_error(error)
-    
-    def remove_dict_keys_if_less_than_x(dictionary,x):
-        for key in dictionary:
-            if dictionary[key] <= x:
-                dictionary.pop(key)
-                return remove_dict_keys_if_less_than_x(dictionary,x)
-        return dictionary
-    
-    print(user_message_counts)   
-    remove_dict_keys_if_less_than_x(user_message_counts,limit) 
-    keys = list(user_message_counts.keys())
-    values = list(user_message_counts.values())
+     
+    sorted_message_counts = sorted(user_message_counts.items(), key=lambda x:x[1])
+    sorted_dict = dict(sorted_message_counts[-limit::])
+    keys = list(sorted_dict.keys())
+    values = list(sorted_dict.values())
     fig, ax = plt.subplots()
     bar_container = ax.barh(keys, values)
     ax.set_xlabel("Message Count")
     ax.set_ylabel("Username")
     ax.set_title("Messages Sent in " + ctx.channel.name)
     ax.bar_label(bar_container, label_type='center')
-    plt.savefig(str(ctx.channel.id) + '_hiscores.png', dpi=1000, bbox_inches="tight")
-    with open(str(ctx.channel.id) + '_hiscores.png', "rb") as fh:
+    filepath = 'tmp/' + str(time.time_ns()) + '.png'
+    plt.savefig(filepath, dpi=1000, bbox_inches="tight")
+    with open(filepath, "rb") as fh:
         f = discord.File(fh, filename=str(ctx.channel.id) + '_hiscores.png')
     await ctx.send(file=f)
     
@@ -75,14 +69,7 @@ async def highscores(ctx, limit=0):
     brief="Display chat highscores",
     aliases=["highscore_server"]
     ) 
-async def highscores_server(ctx, limit=0):
-
-    def remove_dict_keys_if_less_than_x(dictionary,x):
-        for key in dictionary:
-            if dictionary[key] <= x:
-                dictionary.pop(key)
-                return remove_dict_keys_if_less_than_x(dictionary,x)
-        return dictionary
+async def highscores_server(ctx, limit=15):
     
     def is_username(user):
         for character in user:
@@ -110,21 +97,19 @@ async def highscores_server(ctx, limit=0):
         except Exception as error:
             await handle_error(error)
 
-    print(user_message_counts)
-    print("printed")
-    user_message_counts = remove_dict_keys_if_less_than_x(user_message_counts,limit)
-    keys = user_message_counts.keys()
-    print(keys)
-    values = user_message_counts.values()
-    print(values)
+    sorted_message_counts = sorted(user_message_counts.items(), key=lambda x:x[1])
+    sorted_dict = dict(sorted_message_counts[-limit::])
+    keys = list(sorted_dict.keys())
+    values = list(sorted_dict.values())
     fig, ax = plt.subplots()
     bar_container = ax.barh(keys, values)
     ax.set_xlabel("Message Count")
     ax.set_ylabel("Username")
     ax.set_title("Messages Sent in all channels I can see")
     ax.bar_label(bar_container, label_type='center')
-    plt.savefig(str(ctx.channel.id) + '_hiscores.png', dpi=1000, bbox_inches="tight")
-    with open(str(ctx.channel.id) + '_hiscores.png', "rb") as fh:
+    filepath = 'tmp/' + str(time.time_ns()) + '.png'
+    plt.savefig(filepath, dpi=1000, bbox_inches="tight")
+    with open(filepath, "rb") as fh:
         f = discord.File(fh, filename=str(ctx.channel.id) + '_hiscores.png')
     await ctx.send(file=f)
 
