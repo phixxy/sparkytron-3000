@@ -29,7 +29,7 @@ ftp_public_html = os.getenv('ftp_public_html')
 #env vars END
 
 #discord setup START
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 #discord setup END
