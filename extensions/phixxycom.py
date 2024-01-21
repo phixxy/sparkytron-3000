@@ -29,7 +29,7 @@ class PhixxyCom(commands.Cog):
         except:
             print("PhixxyCom failed to make directories")
 
-    def find_prompt_from_filename(sd_log, filename):
+    def find_prompt_from_filename(self, sd_log, filename):
         with open(sd_log, 'r') as f:
             lines = f.readlines()
             for line in reversed(lines):
