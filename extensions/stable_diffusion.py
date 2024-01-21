@@ -332,7 +332,10 @@ class StableDiffusion(commands.Cog):
                 prompt = ctx.message.content.split(" ", maxsplit=1)[1]
             elif ctx.message.content.startswith("!reimagine "):
                 file_url = ctx.message.content.split(" ", maxsplit=2)[1]
-                prompt = ctx.message.content.split(" ", maxsplit=2)[2]
+                try:
+                    prompt = ctx.message.content.split(" ", maxsplit=2)[2]
+                except:
+                    prompt = ""
             else:
                 print("No image linked or attached.")
                 return
