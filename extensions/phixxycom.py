@@ -140,13 +140,13 @@ class PhixxyCom(commands.Cog):
         new_file_name = str(time.time_ns()) + ".png"
         await self.upload_sftp(filename, server_folder, new_file_name)
         print("Uploaded", new_file_name)
-        with open("phixxy.com/ai-memes/index.html", 'r') as f:
+        with open(f"{self.data_dir}ai-memes/index.html", 'r') as f:
             html_data = f.read()
         html_insert = '<!--ADD IMG HERE-->\n        <img src="' + new_file_name + '" loading="lazy">'
         html_data = html_data.replace('<!--ADD IMG HERE-->',html_insert)
-        with open("phixxy.com/ai-memes/index.html", "w") as f:
+        with open(f"{self.data_dir}ai-memes/index.html", "w") as f:
             f.writelines(html_data)
-        await self.upload_sftp("phixxy.com/ai-memes/index.html", server_folder, "index.html")
+        await self.upload_sftp(f"{self.data_dir}ai-memes/index.html", server_folder, "index.html")
         os.rename(filename, 'tmp/' + new_file_name)
 
     async def upload_ftp_ai_images(self, folder):
@@ -154,7 +154,7 @@ class PhixxyCom(commands.Cog):
             if filename[-4:] == '.png':
                 filepath = folder + filename
                 prompt = self.find_prompt_from_filename(self.stable_diffusion_log, filename)
-                html_file = "phixxy.com/ai-images/index.html"
+                html_file = f"{self.data_dir}ai-images/index.html"
                 html_insert = '''<!--REPLACE THIS COMMENT-->
                     <div>
                         <img src="<!--filename-->" loading="lazy">
