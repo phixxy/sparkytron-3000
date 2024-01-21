@@ -104,7 +104,7 @@ class StableDiffusion(commands.Cog):
                                     break
                                 out_file.write(chunk)
 
-                        img_link = self.my_open_img_file(imageName)
+                        img_link = await self.my_open_img_file(imageName)
                         
                         try:
                             payload = {"image": img_link}
@@ -305,7 +305,7 @@ class StableDiffusion(commands.Cog):
                         break
                     out_file.write(chunk)
 
-        img_link = self.my_open_img_file(imageName)
+        img_link = await self.my_open_img_file(imageName)
         try:
             payload = {"image": img_link}
             async with self.bot.http_session.post(url, json=payload) as response:
@@ -357,14 +357,15 @@ class StableDiffusion(commands.Cog):
             await ctx.send("My image generation service may not be running.")
             await self.handle_error(error)
 
-        img_link = self.my_open_img_file(imageName)
+        img_link = await self.my_open_img_file(imageName)
 
         negative_prompt = "badhandsv4, worst quality, lowres, EasyNegative, hermaphrodite, cropped, not in the frame, additional faces, jpeg large artifacts, jpeg small artifacts, ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, not finished drawing, unfinished image, bad eyes, doll, 3d, cartoon, (bad eyes:1.2), (worst quality:1.2), (low quality:1.2), bad-image-v2-39000, (bad_prompt_version2:0.8), nude, badhandv4 By bad artist -neg easynegative ng_deepnegative_v1_75t verybadimagenegative_v1.3, (Worst Quality, Low Quality:1.4), Poorly Made Bad 3D, Lousy Bad Realistic, nsfw,(worst quality, low quality:1.4), (lip, nose, tooth, rouge, lipstick, eyeshadow:1.4), ( jpeg artifacts:1.4), (depth of field, bokeh, blurry, film grain, chromatic aberration, lens flare:1.0), (1boy, abs, muscular, rib:1.0), greyscale, monochrome, dusty sunbeams, trembling, motion lines, motion blur, emphasis lines, text, title, logo, signature, child, childlike, young, easynegative, (bad-hands-5:0.8), plain background, monochrome, poorly drawn face, poorly drawn hands, watermark, censored, (mutated hands and fingers), ugly, worst quality, low quality,, nsfw,(worst quality, low quality:1.4), (lip, nose, tooth, rouge, lipstick, eyeshadow:1.4), ( jpeg artifacts:1.4), (depth of field, bokeh, blurry, film grain, chromatic aberration, lens flare:1.0), (1boy, abs, muscular, rib:1.0), greyscale, monochrome, dusty sunbeams, trembling, motion lines, motion blur, emphasis lines, text, title, logo, signature, child, childlike, young"
 
         await ctx.send("Please be patient this may take some time! Generating: " + prompt + ".")
 
         payload = {"init_images": [img_link], "prompt": prompt, "steps": 40, "negative_prompt": negative_prompt, "denoising_strength": 0.5}
-        payload.update(key_value_pairs)
+        if key_value_pairs:
+            payload.update(key_value_pairs)
 
         try:
             async with self.bot.http_session.post(url=f'{url}/sdapi/v1/img2img', json=payload) as response:
