@@ -11,12 +11,11 @@ from discord.ext import commands
     help="Server currency. You can run !currency claim to get started!", #This needs an overhaul
     brief="Server currency tools"
     )        
-async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
+async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None): # just use *args
     
     def read_db(filepath):
         with open(filepath,"r") as fileobj:
             db_content = json.load(fileobj)
-        #print(db_content,type(db_content))
         return db_content
 
     def save_to_db(filepath,db_content):
@@ -118,7 +117,7 @@ async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
     async def transfer_currency(filepath, player_db, player_id, amount):
         try:
             amount = int(amount)
-            player2_filepath = "currency/players/" + str(player_id) + ".json"
+            player2_filepath = "data/currency/players/" + str(player_id) + ".json"
             player2_db = read_db(player2_filepath)
             if player_db["currency"] >= amount:
                 add_currency(filepath, -amount)
@@ -180,7 +179,7 @@ async def currency(ctx, arg1=None, arg2=None, arg3=None, arg4=None):
     async def gamble(filepath, player_db):
         pass
     
-    working_dir = "databases/currency/"
+    working_dir = "data/currency/"
     players_dir = "players/"
     sender_id = str(ctx.author.id)
     default_db = read_db("{0}{1}default.json".format(working_dir, players_dir))
