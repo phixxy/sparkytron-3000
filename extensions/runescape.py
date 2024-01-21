@@ -8,8 +8,8 @@ from discord.ext import commands
     )       
 async def rsgp(ctx, amount):
     output = ""
-    cost_per_bil = 25.50 #1b rsgp to usd
-    cost_per_bil_os = 210
+    cost_per_bil = 21.90 #1b rsgp to usd
+    cost_per_bil_os = 182
     gold_per_bond = 70000000
     gold_per_bond_os = 7000000
     cost_per_bond = 8 #dollars usd
