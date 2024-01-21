@@ -35,6 +35,7 @@ class PhixxyCom(commands.Cog):
             for line in reversed(lines):
                 if filename in line:
                     prompt = line[line.index("Prompt: ") + 7:line.index("Filename: ")]
+                    prompt = ''.join(prompt.rsplit(',', 1)) # Remove the last comma
                     return prompt
         return "Unknown Prompt"
 
