@@ -50,20 +50,15 @@ class PokemonGame(commands.Cog):
             return not roll
         
         async def save_pokemon(discord_id, pokemon_dict):
-            if not os.path.isdir("databases/pokemon/"):
-                os.makedirs("databases/pokemon/")
-
-            path = "databases/pokemon/"+str(discord_id)+".json"
+            path = self.data_dir+str(discord_id)+".json"
             pokemon_dict = json.dumps(pokemon_dict)
             with open(path, 'w') as f:
                 f.writelines(pokemon_dict)
             return True
             
         async def load_pokemon(discord_id):
-            if not os.path.isdir("databases/pokemon/"):
-                os.makedirs("databases/pokemon/")
-            if os.path.isfile("databases/pokemon/"+str(discord_id)+".json"):
-                with open("databases/pokemon/"+str(discord_id)+".json", 'r') as f:
+            if os.path.isfile(self.data_dir+str(discord_id)+".json"):
+                with open(self.data_dir+str(discord_id)+".json", 'r') as f:
                     json_data = json.loads(f.readline())
                 return json_data
             else:
@@ -141,9 +136,7 @@ class PokemonGame(commands.Cog):
             return embed
         try:
             if args[0]=='start':
-                if not os.path.isdir("databases/pokemon/"):
-                    os.makedirs("databases/pokemon/")
-                if not os.path.isfile("databases/pokemon/"+str(ctx.author.id)+'.json'):
+                if not os.path.isfile(self.data_dir+str(ctx.author.id)+'.json'):
                     uniq_id = time.time()
                     starter_id = await generate_starter(ctx.author.id)
                     json_data = await get_pkmn_from_id(starter_id)
@@ -225,7 +218,7 @@ class PokemonGame(commands.Cog):
                 return
         
     async def pkmn_msg(self, discord_id):
-        path = "databases/pokemon/"+str(discord_id)+'.json'
+        path = self.data_dir+str(discord_id)+'.json'
         if os.path.isfile(path):
             with open(path, 'r') as f:
                 json_data = json.loads(f.readline())
