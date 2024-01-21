@@ -30,9 +30,8 @@ ftp_public_html = os.getenv('ftp_public_html')
 #discord setup START
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='?', intents=intents)
 #discord setup END
-
 
     
 async def handle_error(error):
@@ -243,7 +242,7 @@ async def on_message(ctx):
     
     await react_to_msg(ctx, channel_vars["react_to_msgs"]) #emoji reactions
     
-    if channel_vars["commands_enabled"] or (ctx.author.id == 242018983241318410 and ctx.content[0] == "!"):
+    if channel_vars["commands_enabled"] or (ctx.author.id == 242018983241318410 and ctx.content[0] == "?"):
         await bot.process_commands(ctx)
         if not channel_vars["commands_enabled"]:
             await ctx.channel.send("This command only ran because you set it to allow to run even when commands are disabled")

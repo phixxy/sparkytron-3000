@@ -6,9 +6,8 @@ import os
 import json
 import math
 import time
-import aiohttp
 
-class Pokemon(commands.Cog):
+class PokemonGame(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -16,9 +15,17 @@ class Pokemon(commands.Cog):
         self.data_dir = "data/pokemon/"
         self.folder_setup()
 
+    def folder_setup(self):
+        try:
+            if not os.path.exists(self.working_dir):
+                os.mkdir(self.working_dir)
+            if not os.path.exists(self.data_dir):
+                os.mkdir(self.data_dir)
+        except:
+            print("PokemonGame failed to make directories")
+
     async def get_json(self, url):
-        http_session = aiohttp.ClientSession()
-        async with http_session.get(url) as resp:
+        async with self.bot.http_session.get(url) as resp:
                 json_data = await resp.json()
         return json_data
 
@@ -275,4 +282,4 @@ class Pokemon(commands.Cog):
             await ctx.channel.send(message)
 
 async def setup(bot):
-    bot.add_cog(Pokemon)
+    await bot.add_cog(PokemonGame(bot))
