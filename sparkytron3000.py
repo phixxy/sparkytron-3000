@@ -8,7 +8,6 @@ import time
 import os
 import asyncio
 from dotenv import load_dotenv
-
 import aiohttp
 
 #Stable Diffusion
@@ -43,6 +42,7 @@ async def handle_error(error):
     with open("data/error_log.txt", 'a') as f:
         f.write(log_line)
     return error
+
 
 def create_channel_config(filepath):
     config_dict = {
