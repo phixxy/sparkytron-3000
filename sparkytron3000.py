@@ -8,7 +8,6 @@ import time
 import os
 import asyncio
 from dotenv import load_dotenv
-
 import aiohttp
 
 #Stable Diffusion
@@ -34,7 +33,6 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 #discord setup END
 
-
     
 async def handle_error(error):
     print(error)
@@ -43,6 +41,7 @@ async def handle_error(error):
     with open("data/error_log.txt", 'a') as f:
         f.write(log_line)
     return error
+
 
 def create_channel_config(filepath):
     config_dict = {
@@ -213,17 +212,6 @@ async def on_reaction_add(reaction, user):
         message = reaction.message
         emoji = reaction.emoji
         await message.add_reaction(emoji)
-    
-
-async def pkmn_msg(discord_id):
-    path = "databases/pokemon/"+str(discord_id)+'.json'
-    if os.path.isfile(path):
-        with open(path, 'r') as f:
-            json_data = json.loads(f.readline())
-            json_data['buddy_xp'] += random.randint(1,5)
-            json_data = json.dumps(json_data)
-        with open(path, 'w') as f:
-            f.writelines(json_data)
 
 
 @bot.event
@@ -233,9 +221,6 @@ async def on_message(ctx):
     channel_vars = await get_channel_config(ctx.channel.id)
     chat_history_string = await log_chat_and_get_history(ctx, logfile, channel_vars)
 
-    #add pokemon xp
-    await pkmn_msg(ctx.author.id)
-    
     #handle non-text channels (dms, etc)
     if ctx.channel.type.value != 0 and ctx.author.id != 242018983241318410:
         #This used to notify the user it cannot respond in this channel, but that spammed threads
@@ -243,7 +228,7 @@ async def on_message(ctx):
     
     await react_to_msg(ctx, channel_vars["react_to_msgs"]) #emoji reactions
     
-    if channel_vars["commands_enabled"] or (ctx.author.id == 242018983241318410 and ctx.content[0] == "!"):
+    if channel_vars["commands_enabled"] or (ctx.author.id == 242018983241318410 and ctx.content[0] == "?"):
         await bot.process_commands(ctx)
         if not channel_vars["commands_enabled"]:
             await ctx.channel.send("This command only ran because you set it to allow to run even when commands are disabled")

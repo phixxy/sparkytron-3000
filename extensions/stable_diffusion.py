@@ -257,11 +257,12 @@ class StableDiffusion(commands.Cog):
                     folder = self.working_dir + "sfw/"
             except:
                 folder = self.working_dir
-            my_filename = folder + str(time.time_ns()) + ".png"
-            image.save(my_filename, pnginfo=pnginfo)
+            my_filename = str(time.time_ns()) + ".png"
+            filepath = folder + my_filename
+            image.save(filepath, pnginfo=pnginfo)
             
-            with open(my_filename, "rb") as fh:
-                f = discord.File(fh, filename=my_filename)
+            with open(filepath, "rb") as fh:
+                f = discord.File(fh, filename=filepath)
 
             log_data = f'Author: {ctx.author.name}, Prompt: {prompt}, Filename: {my_filename}\n'
             with open(f"{self.data_dir}stable_diffusion.log", 'a') as log_file:

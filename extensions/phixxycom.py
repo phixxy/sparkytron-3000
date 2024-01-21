@@ -2,6 +2,7 @@ import os
 import io
 import base64
 import time
+import json
 import asyncssh
 from PIL import Image, PngImagePlugin
 from discord.ext import commands, tasks
@@ -16,6 +17,7 @@ class PhixxyCom(commands.Cog):
         self.working_dir = "tmp/phixxy.com/"
         self.data_dir = "data/phixxy.com/"
         self.folder_setup()
+        self.stable_diffusion_log = "data/stable_diffusion/stable_diffusion.log"
         self.phixxy_loop.start()
 
     def folder_setup(self):
@@ -26,6 +28,16 @@ class PhixxyCom(commands.Cog):
                 os.mkdir(self.data_dir)
         except:
             print("PhixxyCom failed to make directories")
+
+    def find_prompt_from_filename(self, sd_log, filename):
+        with open(sd_log, 'r') as f:
+            lines = f.readlines()
+            for line in reversed(lines):
+                if filename in line:
+                    prompt = line[line.index("Prompt: ") + 7:line.index("Filename: ")]
+                    prompt = ''.join(prompt.rsplit(',', 1)) # Remove the last comma
+                    return prompt
+        return "Unknown Prompt"
 
     async def upload_sftp(self, local_filename, server_folder, server_filename):
         remotepath = server_folder + server_filename
@@ -141,8 +153,7 @@ class PhixxyCom(commands.Cog):
         for filename in os.listdir(folder):
             if filename[-4:] == '.png':
                 filepath = folder + filename
-                prompt = "Unknown Prompt" # Will have to update this later
-
+                prompt = self.find_prompt_from_filename(self.stable_diffusion_log, filename)
                 html_file = "phixxy.com/ai-images/index.html"
                 html_insert = '''<!--REPLACE THIS COMMENT-->
                     <div>
