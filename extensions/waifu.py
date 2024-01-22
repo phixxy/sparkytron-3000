@@ -18,12 +18,12 @@ class Waifu(commands.Cog):
                 resp_data = await resp.json()
         try:
             image = resp_data['images'][0]
-            return image['url'], image['is_nsfw']
+            return image['url']
         except:
             if resp_data['detail'] == "No image found matching the criteria given.":
-                return "No image found matching the criteria given.", "False"
+                return "No image found matching the criteria given."
             else:
-                return "Something went wrong", "False"
+                return "Something went wrong"
 
     @commands.command()
     async def waifu(self, ctx, nsfw=""):
@@ -31,15 +31,14 @@ class Waifu(commands.Cog):
             tag = random.choice(["ero", "ass", "hentai", "milf", "oral", "paizuri", "ecchi"])
         else:
             tag = random.choice(["waifu", "maid", "selfies", "uniform"])
-        image_url, nsfw = await self.get_waifu(tag)
+        image_url = await self.get_waifu(tag)
         if ctx.channel.type == discord.ChannelType["private"]:
             await ctx.send(image_url)
-        elif not ctx.channel.is_nsfw() and nsfw == "False":
-            await ctx.send(image_url)
-        elif ctx.channel.is_nsfw() and nsfw == "True":
-            await ctx.send(image_url)
-        else:
+        elif not ctx.channel.is_nsfw() and nsfw.lower() == "nsfw":
             await ctx.send("Cannot post NSFW images in this channel.")
+        else:
+            await ctx.send(image_url)
+            
 
 async def setup(bot):
     try:
