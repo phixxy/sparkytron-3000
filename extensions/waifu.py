@@ -30,7 +30,7 @@ class Waifu(commands.Cog):
         if nsfw.lower() == "nsfw":
             tag = random.choice(["ero", "ass", "hentai", "milf", "oral", "paizuri", "ecchi"])
         else:
-            tag = random.choice(["waifu", "maid", "selfies", "uniform"])
+            tag = random.choice(["waifu", "maid", "uniform"])
         image_url = await self.get_waifu(tag)
         if ctx.channel.type == discord.ChannelType["private"]:
             await ctx.send(image_url)
