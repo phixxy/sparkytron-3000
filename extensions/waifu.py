@@ -1,0 +1,49 @@
+import random
+from discord.ext import commands
+import discord
+
+class Waifu(commands.Cog):
+
+    def __init__(self, bot):
+        self.bot = bot
+        self.url = "https://api.waifu.im/search"
+
+    async def get_waifu(self, tags):
+        print(tags)
+        params = {
+            'included_tags': tags,
+            'height': '>=1000'
+        }
+        async with self.bot.http_session.get(self.url,  params=params) as resp:
+                resp_data = await resp.json()
+        try:
+            image = resp_data['images'][0]
+            return image['url'], image['is_nsfw']
+        except:
+            if resp_data['detail'] == "No image found matching the criteria given.":
+                return "No image found matching the criteria given.", "False"
+            else:
+                return "Something went wrong", "False"
+
+    @commands.command()
+    async def waifu(self, ctx, nsfw=""):
+        if nsfw.lower() == "nsfw":
+            tag = random.choice(["ero", "ass", "hentai", "milf", "oral", "paizuri", "ecchi"])
+        else:
+            tag = random.choice(["waifu", "maid", "selfies", "uniform"])
+        image_url, nsfw = await self.get_waifu(tag)
+        if ctx.channel.type == discord.ChannelType["private"]:
+            await ctx.send(image_url)
+        elif not ctx.channel.is_nsfw() and nsfw == "False":
+            await ctx.send(image_url)
+        elif ctx.channel.is_nsfw() and nsfw == "True":
+            await ctx.send(image_url)
+        else:
+            await ctx.send("Cannot post NSFW images in this channel.")
+
+async def setup(bot):
+    try:
+        await bot.add_cog(Waifu(bot))
+        print("Successfully added Waifu Cog")
+    except:
+        print("Failed to load Waifu Cog")
