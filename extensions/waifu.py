@@ -25,6 +25,32 @@ class Waifu(commands.Cog):
             else:
                 return "Something went wrong"
 
+    async def get_anime_from_img(self, img_url):
+        async with self.bot.http_session.get(f"https://api.trace.moe/search?anilistInfo&url={img_url}") as resp:
+            resp_data = await resp.json()
+        title = resp_data["result"][0]["anilist"]["title"]
+        return title
+
+    @commands.command(aliases=["what_anime"])
+    async def whatanime(self, ctx):
+        if ctx.message.attachments:
+            file_url = ctx.message.attachments[0].url
+        else:
+            try:
+                file_url = ctx.message.content.split(" ", maxsplit=2)[1]
+            except:
+                await ctx.send("No image linked or attached.")
+                return
+        titles = await self.get_anime_from_img(file_url)
+        message = ""
+        print(type(titles))
+        print(titles)
+        for key in titles:
+            message += f"{key}: {titles[key]}\n"
+        await ctx.send(message)
+
+
+
     @commands.command()
     async def waifu(self, ctx, nsfw=""):
         if nsfw.lower() == "nsfw":
