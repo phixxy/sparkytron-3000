@@ -17,7 +17,7 @@ class Waifu(commands.Cog):
         async with self.bot.http_session.get(self.url,  params=params) as resp:
                 resp_data = await resp.json()
         try:
-            image = resp_data['images'][0]
+            image = random.choice(resp_data['images'])
             return image['url']
         except:
             if resp_data['detail'] == "No image found matching the criteria given.":
