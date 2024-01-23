@@ -9,7 +9,7 @@ async def handle_error(error):
     print(error)
     current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     log_line = current_time + ': ' + str(error) + '\n'
-    with open("databases/error_log.txt", 'a') as f:
+    with open("data/error_log.txt", 'a') as f:
         f.write(log_line)
     return error
 
@@ -59,22 +59,6 @@ async def view_images(ctx, message):
         await ctx.send("Viewing Disabled")
     else:
         await ctx.send("Usage: !viewimages (enable|disable)")
-
-    
-@commands.command(
-    description="FTP", 
-    help="Enable or disable bot FTP to phixxy.com in this channel. Usage !ftp (enable|disable)", 
-    brief="Enable or disable uploading to web"
-    )         
-async def ftp(ctx, message):
-    if "enable" in message:
-        edit_channel_config(ctx.channel.id, "ftp_enabled", True)
-        await ctx.send("FTP Enabled")
-    elif "disable" in message:
-        edit_channel_config(ctx.channel.id, "ftp_enabled", False)
-        await ctx.send("FTP Disabled")
-    else:
-        await ctx.send("Usage: !ftp (enable|disable)")
 
 @commands.command(
     description="Personality", 
@@ -165,7 +149,7 @@ async def errors(ctx, amount="5"):
     output = ""
     amount = int(amount)
     try:
-        with open("databases/error_log.txt", 'r') as f:
+        with open("data/error_log.txt", 'r') as f:
             for line in (f.readlines() [-amount:]):
                 output += line
         await ctx.send(output)
@@ -180,6 +164,5 @@ async def setup(bot):
     bot.add_command(topic)
     bot.add_command(enable_commands)
     bot.add_command(personality)
-    bot.add_command(ftp)
     bot.add_command(view_images)
     bot.add_command(errors)

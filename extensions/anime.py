@@ -2,7 +2,7 @@ import random
 from discord.ext import commands
 import discord
 
-class Waifu(commands.Cog):
+class Anime(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -72,7 +72,7 @@ class Waifu(commands.Cog):
 
 async def setup(bot):
     try:
-        await bot.add_cog(Waifu(bot))
-        print("Successfully added Waifu Cog")
+        await bot.add_cog(Anime(bot))
+        print("Successfully added Anime Cog")
     except:
-        print("Failed to load Waifu Cog")
+        print("Failed to load Anime Cog")
