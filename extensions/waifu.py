@@ -28,6 +28,7 @@ class Waifu(commands.Cog):
     async def get_anime_from_img(self, img_url):
         async with self.bot.http_session.get(f"https://api.trace.moe/search?anilistInfo&url={img_url}") as resp:
             resp_data = await resp.json()
+        print(resp_data)
         title = resp_data["result"][0]["anilist"]["title"]
         video = resp_data["result"][0]["video"]
         return title, video
@@ -42,7 +43,10 @@ class Waifu(commands.Cog):
             except:
                 await ctx.send("No image linked or attached.")
                 return
-        titles, video = await self.get_anime_from_img(file_url)
+        try:
+            titles, video = await self.get_anime_from_img(file_url)
+        except:
+            ctx.send("An error occurred. Try again by saving and uploading the image.")
         message = ""
         for key in titles:
             message += f"{key}: {titles[key]}\n"
