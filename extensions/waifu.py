@@ -29,7 +29,8 @@ class Waifu(commands.Cog):
         async with self.bot.http_session.get(f"https://api.trace.moe/search?anilistInfo&url={img_url}") as resp:
             resp_data = await resp.json()
         title = resp_data["result"][0]["anilist"]["title"]
-        return title
+        video = resp_data["result"][0]["video"]
+        return title, video
 
     @commands.command(aliases=["what_anime"])
     async def whatanime(self, ctx):
@@ -41,12 +42,11 @@ class Waifu(commands.Cog):
             except:
                 await ctx.send("No image linked or attached.")
                 return
-        titles = await self.get_anime_from_img(file_url)
+        titles, video = await self.get_anime_from_img(file_url)
         message = ""
-        print(type(titles))
-        print(titles)
         for key in titles:
             message += f"{key}: {titles[key]}\n"
+        message += f"Scene: {video}"
         await ctx.send(message)
 
 
