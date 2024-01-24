@@ -9,8 +9,8 @@ class ChatGPT(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.API_KEY = os.getenv("openai.api_key")
-        self.working_dir = "tmp/open_ai/"
-        self.data_dir = "data/open_ai/"
+        self.working_dir = "tmp/chatgpt/"
+        self.data_dir = "data/chatgpt/"
         self.folder_setup()
         self.remind_me_loop.start()
 
