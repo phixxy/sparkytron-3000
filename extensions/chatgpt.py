@@ -20,8 +20,39 @@ class ChatGPT(commands.Cog):
                 os.mkdir(self.working_dir)
             if not os.path.exists(self.data_dir):
                 os.mkdir(self.data_dir)
+            if not os.path.exists(self.data_dir + "config"):
+                os.mkdir(self.data_dir + "config")
         except:
             print("AsyncOpenAI failed to make directories")
+
+    def create_channel_config(self, filepath):
+        config_dict = {
+            "personality":"average",
+            "channel_topic":"casual",
+            "chat_enabled":False,
+            "chat_history_len":5,
+            "react_to_msgs":False,
+        }
+
+        with open(filepath,"w") as f:
+            json.dump(config_dict,f)
+        print("Wrote ChatGPT config variables to file.")
+
+    async def get_channel_config(self, channel_id):
+        filepath = f"{self.data_dir}config/{channel_id}.json"
+        if not os.path.exists(filepath):
+            self.create_channel_config(filepath)
+        with open(filepath, "r") as f:
+            config_dict = json.loads(f.readline())
+        return config_dict
+
+    def edit_channel_config(self, channel_id, key, value):
+        config_file = f"{self.data_dir}config/{channel_id}.json"
+        with open(config_file, 'r') as f:
+            config_data = json.load(f)
+        config_data[key] = value
+        with open(config_file, "w") as f:
+            json.dump(config_data, f)
 
     def read_db(self,filepath):
         with open(filepath,"r") as fileobj:
@@ -66,6 +97,55 @@ class ChatGPT(commands.Cog):
 
         except Exception as error:
             return await self.handle_error(error)
+        
+    @commands.command(
+        description="Personality", 
+        help="Set the personality of the bot. Usage: !personality (personality)", 
+        brief="Set the personality"
+        )         
+    async def personality(self, ctx):
+        personality_type = ctx.message.content.split(" ", maxsplit=1)[1]
+        self.edit_channel_config(ctx.channel.id, "personality", personality_type)
+        await ctx.send("Personality changed to " + personality_type)
+
+    @commands.command(
+        description="Topic", 
+        help="Set the channel topic for the bot. Usage: !topic (topic)", 
+        brief="Set channel topic"
+        )         
+    async def topic(self, ctx, channel_topic):
+        self.edit_channel_config(ctx.channel.id, "channel_topic", channel_topic)
+        await ctx.send("Topic changed to " + channel_topic)
+
+    @commands.command(
+        description="Chat", 
+        help="Enable or disable bot chat in this channel. Usage !chat (enable|disable)", 
+        brief="Enable or disable bot chat"
+        )         
+    async def chat(self, ctx, message):
+        if "enable" in message:
+            self.edit_channel_config(ctx.channel.id, "chat_enabled", True)
+            await ctx.send("Chat Enabled")
+        elif "disable" in message:
+            self.edit_channel_config(ctx.channel.id, "chat_enabled", False)
+            await ctx.send("Chat Disabled")
+        else:
+            await ctx.send("Usage: !chat (enable|disable)")
+            
+    @commands.command(
+        description="Reactions", 
+        help="Enable or disable bot reactions in this channel. Usage !reactions (enable|disable)", 
+        brief="Enable or disable bot reactions"
+        ) 
+    async def reactions(self, ctx, message):
+        if "enable" in message:
+            self.edit_channel_config(ctx.channel.id, "react_to_msgs", True)
+            await ctx.send("Reactions Enabled")
+        elif "disable" in message:
+            self.edit_channel_config(ctx.channel.id, "react_to_msgs", False)
+            await ctx.send("Reactions Disabled")
+        else:
+            await ctx.send("Usage: !reactions (enable|disable)")
 
     @commands.command(
         description="Blog", 
