@@ -4,7 +4,7 @@ import time
 import json
 from discord.ext import commands, tasks
 
-class AsyncOpenAI(commands.Cog):
+class ChatGPT(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -202,5 +202,6 @@ class AsyncOpenAI(commands.Cog):
 
         self.save_to_db(reminders_path,data)
         
+        
 async def setup(bot):
-    await bot.add_cog(AsyncOpenAI(bot))
+    await bot.add_cog(ChatGPT(bot))
