@@ -19,6 +19,7 @@ class PhixxyCom(commands.Cog):
         self.folder_setup()
         self.stable_diffusion_log = "data/stable_diffusion/stable_diffusion.log"
         self.phixxy_loop.start()
+        self.blog_loop.start()
 
     def folder_setup(self):
         try:
