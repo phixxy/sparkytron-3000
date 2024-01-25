@@ -3,10 +3,8 @@ from discord.ext import commands, tasks
 from discord.utils import get
 import shutil
 import json
-import random
 import time
 import os
-import asyncio
 from dotenv import load_dotenv
 import aiohttp
 
@@ -41,115 +39,6 @@ async def handle_error(error):
     with open("data/error_log.txt", 'a') as f:
         f.write(log_line)
     return error
-
-
-def create_channel_config(filepath):
-    config_dict = {
-        "personality":"average",
-        "channel_topic":"casual",
-        "chat_enabled":False,
-        "commands_enabled":True,
-        "chat_history_len":5,
-        "look_at_images":False,
-        "react_to_msgs":False,
-        "ftp_enabled":False
-    }
-
-    with open(filepath,"w") as f:
-        json.dump(config_dict,f)
-    print("Wrote config variables to file.")
-
-async def get_channel_config(channel_id):
-    filepath = "channels/config/{0}.json".format(str(channel_id))
-    if not os.path.exists(filepath):
-        create_channel_config(filepath)
-    with open(filepath, "r") as f:
-        config_dict = json.loads(f.readline())
-    return config_dict
-    
-        
-async def react_to_msg(ctx, react):
-    def is_emoji(string):
-        if len(string) == 1:
-            # Range of Unicode codepoints for emojis
-            if 0x1F300 <= ord(string) <= 0x1F6FF:
-                return True
-        return False
-    
-    if react:
-        if not random.randint(0,10) and ctx.author.id != 1097302679836971038:
-            system_msg = "Send only an emoji as a discord reaction to the following chat message"
-            message = ctx.content[0]
-            headers = { 
-                'Content-Type': 'application/json', 
-                'Authorization': f'Bearer {os.getenv("openai.api_key")}',
-            }
-            
-            data = { 
-                "model": "gpt-3.5-turbo", 
-                "messages": [{"role": "system", "content": system_msg}, {"role": "user", "content": message}]
-            }
-
-            url = "https://api.openai.com/v1/chat/completions"
-            
-            try:
-                async with bot.http_session.post(url, headers=headers, json=data) as resp:
-                    response_data = await resp.json()
-                    reaction = response_data['choices'][0]['message']['content'].strip()
-                if is_emoji(reaction):
-                    await ctx.add_reaction(reaction)
-                else:
-                    await ctx.add_reaction("😓")
-            except Exception as error:
-                print("Some error happened while trying to react to a message")
-                await handle_error(error)
-            
-async def log_chat_and_get_history(ctx, logfile, channel_vars):
-    log_line = ''           
-    log_line += ctx.content
-    log_line =  ctx.author.name + ": " + log_line  +"\n"
-    chat_history = ""
-    print("Logging: " + log_line, end="")
-    with open(logfile, "a", encoding="utf-8") as f:
-        f.write(log_line)
-    with open(logfile, "r", encoding="utf-8") as f:
-        for line in (f.readlines() [-int(channel_vars["chat_history_len"]):]):
-            chat_history += line
-    return chat_history
-
-        
-async def chat_response(ctx, channel_vars, chat_history_string): 
-    async with ctx.channel.typing(): 
-        await asyncio.sleep(1)
-        prompt = f"You are a {channel_vars['personality']} chat bot named Sparkytron 3000 created by @phixxy.com. Your personality should be {channel_vars['personality']}. You are currently in a {channel_vars['channel_topic']} chatroom. The message history is: {chat_history_string}"
-        headers = { 
-            'Content-Type': 'application/json', 
-            'Authorization': f'Bearer {os.getenv("openai.api_key")}',
-        }
-        
-        data = { 
-            "model": "gpt-3.5-turbo", 
-            "messages": [{"role": "user", "content": prompt}]
-        }
-
-        url = "https://api.openai.com/v1/chat/completions"
-
-        try: 
-            async with bot.http_session.post(url, headers=headers, json=data) as resp:
-                response_data = await resp.json() 
-                response = response_data['choices'][0]['message']['content']
-                if "Sparkytron 3000:" in response[0:17]:
-                    response = response.replace("Sparkytron 3000:", "")
-                max_len = 1999
-                if len(response) > max_len:
-                    messages=[response[y-max_len:y] for y in range(max_len, len(response)+max_len,max_len)]
-                else:
-                    messages=[response]
-                for message in messages:
-                    await ctx.channel.send(message)
-
-        except Exception as error: 
-            await handle_error(error)
     
 async def folder_setup():
     # Only tmp, extensions and data are supported, all other folders only exist for backwards compatibility and will be removed soon!
@@ -201,43 +90,19 @@ async def on_ready():
     await delete_all_files("tmp/", folders_made)
     # Import plugins from extensions folder
     for plugin_file in os.listdir('extensions/'):
-        if plugin_file != '__init__.py' and plugin_file[-3:] == '.py':
+        if plugin_file[0] != '_' and plugin_file[-3:] == '.py':
             await bot.load_extension(f'extensions.{plugin_file[:-3]}')
     print('We have logged in as {0.user}'.format(bot))
     task_loop.start()
-        
-@bot.event
-async def on_reaction_add(reaction, user):
-    if not random.randint(0,9):
-        message = reaction.message
-        emoji = reaction.emoji
-        await message.add_reaction(emoji)
 
 
 @bot.event
 async def on_message(ctx):
-    #log stuff
-    logfile = "channels/logs/{0}.log".format(str(ctx.channel.id))
-    channel_vars = await get_channel_config(ctx.channel.id)
-    chat_history_string = await log_chat_and_get_history(ctx, logfile, channel_vars)
-
-    #handle non-text channels (dms, etc)
+    # Don't allow commands in DMs for now
     if ctx.channel.type.value != 0 and ctx.author.id != 242018983241318410:
         #This used to notify the user it cannot respond in this channel, but that spammed threads
         return
     
-    await react_to_msg(ctx, channel_vars["react_to_msgs"]) #emoji reactions
-    
-    if channel_vars["commands_enabled"] or (ctx.author.id == 242018983241318410 and ctx.content[0] == "?"):
-        await bot.process_commands(ctx)
-        if not channel_vars["commands_enabled"]:
-            await ctx.channel.send("This command only ran because you set it to allow to run even when commands are disabled")
-
-    if channel_vars["chat_enabled"] and not ctx.author.bot:
-        if ctx.content and ctx.content[0] != "!":
-            await chat_response(ctx, channel_vars, chat_history_string)
-        elif not ctx.content:
-            await chat_response(ctx, channel_vars, chat_history_string)
-
+    await bot.process_commands(ctx)
 
 bot.run(discord_token)

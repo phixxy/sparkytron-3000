@@ -2,6 +2,9 @@
 import os
 import time
 import json
+import random
+import asyncio
+import discord
 from discord.ext import commands, tasks
 
 class ChatGPT(commands.Cog):
@@ -22,6 +25,8 @@ class ChatGPT(commands.Cog):
                 os.mkdir(self.data_dir)
             if not os.path.exists(self.data_dir + "config"):
                 os.mkdir(self.data_dir + "config")
+            if not os.path.exists(self.data_dir + "logs"):
+                os.mkdir(self.data_dir + "logs")
         except:
             print("AsyncOpenAI failed to make directories")
 
@@ -281,6 +286,113 @@ class ChatGPT(commands.Cog):
                 print("Fulfilled reminders successfully purged")
 
         self.save_to_db(reminders_path,data)
+    
+    async def log_chat_and_get_history(self, ctx, logfile, channel_vars):
+        #todo: ctx is actually a message, make this obv
+        log_line = ''           
+        log_line += ctx.content
+        log_line =  ctx.author.name + ": " + log_line  +"\n"
+        chat_history = ""
+        print("Logging: " + log_line, end="")
+        with open(logfile, "a", encoding="utf-8") as f:
+            f.write(log_line)
+        with open(logfile, "r", encoding="utf-8") as f:
+            for line in (f.readlines() [-int(channel_vars["chat_history_len"]):]):
+                chat_history += line
+        return chat_history
+    
+    async def react_to_msg(self, ctx, react):
+        #todo ctx is actually a message, make this obv
+        def is_emoji(string):
+            if len(string) == 1:
+                # Range of Unicode codepoints for emojis
+                if 0x1F300 <= ord(string) <= 0x1F6FF:
+                    return True
+            return False
+        
+        if react:
+            if not random.randint(0,10) and ctx.author.id != 1097302679836971038:
+                #todo above line is do not react to self, make this work programatically
+                system_msg = "Send only an emoji as a discord reaction to the following chat message"
+                message = ctx.content[0]
+                headers = { 
+                    'Content-Type': 'application/json', 
+                    'Authorization': f'Bearer {os.getenv("openai.api_key")}',
+                }
+                
+                data = { 
+                    "model": "gpt-3.5-turbo", 
+                    "messages": [{"role": "system", "content": system_msg}, {"role": "user", "content": message}]
+                }
+
+                url = "https://api.openai.com/v1/chat/completions"
+                
+                try:
+                    async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
+                        response_data = await resp.json()
+                        reaction = response_data['choices'][0]['message']['content'].strip()
+                    if is_emoji(reaction):
+                        await ctx.add_reaction(reaction)
+                    else:
+                        await ctx.add_reaction("😓")
+                except Exception as error:
+                    print("Some error happened while trying to react to a message")
+
+    async def chat_response(self, ctx, channel_vars, chat_history_string): 
+        async with ctx.channel.typing(): 
+            await asyncio.sleep(1)
+            prompt = f"You are a {channel_vars['personality']} chat bot named Sparkytron 3000 created by @phixxy.com. Your personality should be {channel_vars['personality']}. You are currently in a {channel_vars['channel_topic']} chatroom. The message history is: {chat_history_string}"
+            headers = { 
+                'Content-Type': 'application/json', 
+                'Authorization': f'Bearer {os.getenv("openai.api_key")}',
+            }
+            
+            data = { 
+                "model": "gpt-3.5-turbo", 
+                "messages": [{"role": "user", "content": prompt}]
+            }
+
+            url = "https://api.openai.com/v1/chat/completions"
+
+            try: 
+                async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
+                    response_data = await resp.json() 
+                    response = response_data['choices'][0]['message']['content']
+                    if "Sparkytron 3000:" in response[0:17]:
+                        response = response.replace("Sparkytron 3000:", "")
+                    max_len = 1999
+                    if len(response) > max_len:
+                        messages=[response[y-max_len:y] for y in range(max_len, len(response)+max_len,max_len)]
+                    else:
+                        messages=[response]
+                    for message in messages:
+                        await ctx.channel.send(message)
+
+            except Exception as error: 
+                print("Problem with chat_response in chatgpt")
+
+    @commands.Cog.listener()
+    async def on_reaction_add(reaction, user):
+        if not random.randint(0,9):
+            message = reaction.message
+            emoji = reaction.emoji
+            await message.add_reaction(emoji)
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        # Log Chat
+        # Todo, make a logging cog to handle this stuff later
+        logfile = f"{self.data_dir}logs/{message.channel.id}.log"
+        channel_vars = await self.get_channel_config(message.channel.id)
+        chat_history_string = await self.log_chat_and_get_history(message, logfile, channel_vars)
+        # Emoji Reaction
+        await self.react_to_msg(message, channel_vars["react_to_msgs"])
+        # Chat Response
+        if channel_vars["chat_enabled"] and not message.author.bot:
+            if message.content and message.content[0] != "!":
+                await self.chat_response(message, channel_vars, chat_history_string)
+            elif not message.content:
+                await self.chat_response(message, channel_vars, chat_history_string)
         
         
 async def setup(bot):
