@@ -2,35 +2,17 @@ import discord
 from discord.ext import commands, tasks
 from discord.utils import get
 import shutil
-import json
 import time
 import os
 from dotenv import load_dotenv
 import aiohttp
 
-#Stable Diffusion
-#Set this env variable to http://host:port or "disabled"
-#os.getenv('stablediffusion_url')
-
-#env vars START
 load_dotenv()
-
-imgflip_username = os.getenv('imgflip_username')
-imgflip_password = os.getenv('imgflip_password')
 discord_token    = os.getenv('discord_token')
-ftp_server = os.getenv('ftp_server')
-ftp_username = os.getenv('ftp_username')
-ftp_password = os.getenv('ftp_password')
-ftp_public_html = os.getenv('ftp_public_html')
 
-#env vars END
-
-#discord setup START
 intents = discord.Intents.all()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
-#discord setup END
-
     
 async def folder_setup():
     folder_names = ["tmp", "extensions", "data"]
@@ -46,7 +28,6 @@ async def delete_all_files(path):
         elif os.path.isfile(path+filename):
             os.remove(path+filename)
 
-            
 @tasks.loop(seconds=1)  # Run the task every second
 async def task_loop():
     current_time = time.localtime()
@@ -85,14 +66,8 @@ async def on_ready():
     print('We have logged in as {0.user}'.format(bot))
     task_loop.start()
 
-
 @bot.event
-async def on_message(ctx):
-    # Don't allow commands in DMs for now
-    if ctx.channel.type.value != 0 and ctx.author.id != 242018983241318410:
-        #This used to notify the user it cannot respond in this channel, but that spammed threads
-        return
-    
+async def on_message(ctx):    
     await bot.process_commands(ctx)
 
 bot.run(discord_token)
