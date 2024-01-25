@@ -94,6 +94,7 @@ class ChatGPT(commands.Cog):
 
         except Exception as error:
             print("Error occurred in answer_question")
+            return "Error occurred in answer_question"
         
     @commands.command(
         description="Personality", 
