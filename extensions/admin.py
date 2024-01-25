@@ -61,7 +61,7 @@ class Admin(commands.Cog):
 
 async def setup(bot):
     try:
-        bot.logger.info(f"Successfully added Admin cog")
         await bot.add_cog(Admin(bot))
+        bot.logger.info("Successfully added Admin cog")
     except:
-        bot.logger.exception(f"Failed to add Admin cog")
+        bot.logger.exception("Failed to add Admin cog")
