@@ -9,7 +9,6 @@ class Anime(commands.Cog):
         self.url = "https://api.waifu.im/search"
 
     async def get_waifu(self, tags):
-        print(tags)
         params = {
             'included_tags': tags,
             'height': '>=1000'
@@ -21,14 +20,15 @@ class Anime(commands.Cog):
             return image['url']
         except:
             if resp_data['detail'] == "No image found matching the criteria given.":
+                self.bot.logger.info("No image found matching the criteria given.")
                 return "No image found matching the criteria given."
             else:
+                self.bot.logger.exception("Something went wrong")
                 return "Something went wrong"
 
     async def get_anime_from_img(self, img_url):
         async with self.bot.http_session.get(f"https://api.trace.moe/search?anilistInfo&url={img_url}") as resp:
             resp_data = await resp.json()
-        print(resp_data)
         title = resp_data["result"][0]["anilist"]["title"]
         video = resp_data["result"][0]["video"]
         return title, video
@@ -73,6 +73,6 @@ class Anime(commands.Cog):
 async def setup(bot):
     try:
         await bot.add_cog(Anime(bot))
-        print("Successfully added Anime Cog")
+        bot.logger.info("Successfully added Anime Cog")
     except:
-        print("Failed to load Anime Cog")
+        bot.logger.info("Failed to load Anime Cog")
