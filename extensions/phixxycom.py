@@ -198,7 +198,7 @@ class PhixxyCom(commands.Cog):
             return None
 
     @commands.command()
-    async def generate_blog(self, ctx):
+    async def generate_blog(self, ctx=None):
         start_time = time.time()
         topic = ''
         filename = f"{self.data_dir}ai-blog/index.html"
