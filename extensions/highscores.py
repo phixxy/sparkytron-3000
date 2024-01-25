@@ -2,17 +2,9 @@
 import os
 import time
 import matplotlib.pyplot as plt
-
 import discord
 from discord.ext import commands
 
-async def handle_error(error):
-    print(error)
-    current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    log_line = current_time + ': ' + str(error) + '\n'
-    with open("databases/error_log.txt", 'a') as f:
-        f.write(log_line)
-    return error
 
 @commands.command(
     description="Highscores", 
@@ -44,7 +36,7 @@ async def highscores(ctx, limit=15):
                 else:
                     user_message_counts[user] += 1
         except Exception as error:
-            await handle_error(error)
+            print("Error occurred in highscores")
      
     sorted_message_counts = sorted(user_message_counts.items(), key=lambda x:x[1])
     sorted_dict = dict(sorted_message_counts[-limit::])
@@ -95,7 +87,7 @@ async def highscores_server(ctx, limit=15):
                 else:
                     user_message_counts[user] += 1
         except Exception as error:
-            await handle_error(error)
+            print("Error occurred in highscores_server")
 
     sorted_message_counts = sorted(user_message_counts.items(), key=lambda x:x[1])
     sorted_dict = dict(sorted_message_counts[-limit::])
