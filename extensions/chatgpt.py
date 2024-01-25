@@ -28,7 +28,7 @@ class ChatGPT(commands.Cog):
             if not os.path.exists(self.data_dir + "logs"):
                 os.mkdir(self.data_dir + "logs")
         except:
-            print("AsyncOpenAI failed to make directories")
+            self.bot.logger.exception("ChatGPT failed to make directories")
 
     def create_channel_config(self, filepath):
         config_dict = {
@@ -41,7 +41,7 @@ class ChatGPT(commands.Cog):
 
         with open(filepath,"w") as f:
             json.dump(config_dict,f)
-        print("Wrote ChatGPT config variables to file.")
+        self.bot.logger.debug("Wrote ChatGPT config variables to file.")
 
     async def get_channel_config(self, channel_id):
         filepath = f"{self.data_dir}config/{channel_id}.json"
@@ -93,7 +93,7 @@ class ChatGPT(commands.Cog):
                 return response
 
         except Exception as error:
-            print("Error occurred in answer_question")
+            self.bot.logger.exception("Error occurred in answer_question")
             return "Error occurred in answer_question"
         
     @commands.command(
@@ -210,12 +210,12 @@ class ChatGPT(commands.Cog):
         try:
             async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
                 response_data = await resp.json()
-                print(response_data)
+                self.bot.logger.debug(response_data)
                 answer = response_data['choices'][0]['message']['content']
             
 
         except Exception as error:
-            print("error occurred in looker")
+            self.bot.logger.exception("error occurred in looker")
         
         chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
         for chunk in chunks:
@@ -237,8 +237,6 @@ class ChatGPT(commands.Cog):
         data = self.read_db(reminders_path)
         current_time = int(time.time_ns())
         user_id = ctx.author.id
-        #DEBUG
-        print("Called command successfully")
         
         #PARSE PROMPT
         duration_s = await self.answer_question(f"You are an automated bot whose only function is to convert a natural language number into an integer. You must determine a number representing after how long, in seconds, the user wishes you to remind them of a task based on the information provided. Please respond using only an integer of the equivalent or approximate time in seconds. You must not use any words in your response other than a single integer representing that time in seconds. You are incapable of using any English words at all. If you are unable to determine a time from the prompt given, return only the integer 0. The prompt is as follows: {prompt}")
@@ -255,7 +253,7 @@ class ChatGPT(commands.Cog):
         #CREATE FILEDUMP
         data[target_time] = {"user_id":user_id,"response":response}
 
-        print(f"Reminding user {ctx.author.id} in {duration_s} seconds || Target time (ns): {target_time}")
+        self.bot.logger.info(f"Reminding user {ctx.author.id} in {duration_s} seconds || Target time (ns): {target_time}")
         self.save_to_db(reminders_path,data)
 
     @tasks.loop(seconds=60) # THIS ONE NEEDS TO POP AND THEN CALL THE REMIND FUNC
@@ -271,12 +269,12 @@ class ChatGPT(commands.Cog):
                 reminder_dict = data[remind_time]
                 sent = await self.remind(reminder_dict) #THIS SENDS THE REMINDER DICT TO REMIND FUNC
                 if sent:
-                    print(f"Reminder sent successfully to {reminder_dict['user_id']}")
+                    self.bot.logger.info(f"Reminder sent successfully to {reminder_dict['user_id']}")
                     trash.append(remind_time) #NEED TO POP OR THEY WILL GET REMINDED AD INFINITUM
 
         for key in trash:
             if data.pop(key):
-                print("Fulfilled reminders successfully purged")
+                self.bot.logger.debug("Fulfilled reminders successfully purged")
 
         self.save_to_db(reminders_path,data)
     
@@ -286,7 +284,7 @@ class ChatGPT(commands.Cog):
         log_line += ctx.content
         log_line =  ctx.author.name + ": " + log_line  +"\n"
         chat_history = ""
-        print("Logging: " + log_line, end="")
+        self.bot.logger.debug("Logging: " + log_line, end="")
         with open(logfile, "a", encoding="utf-8") as f:
             f.write(log_line)
         with open(logfile, "r", encoding="utf-8") as f:
@@ -329,7 +327,7 @@ class ChatGPT(commands.Cog):
                     else:
                         await ctx.add_reaction("😓")
                 except Exception as error:
-                    print("Some error happened while trying to react to a message")
+                    self.bot.logger.exception("Some error happened while trying to react to a message")
 
     async def chat_response(self, ctx, channel_vars, chat_history_string): 
         async with ctx.channel.typing(): 
@@ -362,7 +360,7 @@ class ChatGPT(commands.Cog):
                         await ctx.channel.send(message)
 
             except Exception as error: 
-                print("Problem with chat_response in chatgpt")
+                self.bot.logger.exception("Problem with chat_response in chatgpt")
 
     @commands.Cog.listener()
     async def on_reaction_add(reaction, user):
