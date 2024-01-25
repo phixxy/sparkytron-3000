@@ -22,7 +22,7 @@ class PokemonGame(commands.Cog):
             if not os.path.exists(self.data_dir):
                 os.mkdir(self.data_dir)
         except:
-            print("PokemonGame failed to make directories")
+            self.bot.logger.exception("PokemonGame failed to make directories")
 
     async def get_json(self, url):
         async with self.bot.http_session.get(url) as resp:
