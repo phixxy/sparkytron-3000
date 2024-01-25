@@ -28,7 +28,7 @@ class StableDiffusion(commands.Cog):
             if not os.path.exists(self.data_dir):
                 os.mkdir(self.data_dir)
         except:
-            print("StableDiffusion failed to make directories")
+            self.bot.logger.exception("StableDiffusion failed to make directories")
 
     async def answer_question(self, topic, model="gpt-3.5-turbo"): # Only needed for draw command
         headers = {
@@ -83,12 +83,12 @@ class StableDiffusion(commands.Cog):
                 return
             for attachment in ctx.attachments:
                 if attachment.url.endswith(('.jpg', '.png')):
-                    print("image seen")
+                    self.bot.logger.debug("image seen")
                     async with self.bot.http_session.get(attachment.url) as response:
                         imageName = self.working_dir + str(time.time_ns()) + '.png'
                         
                         with open(imageName, 'wb') as out_file:
-                            print('Saving image: ' + imageName)
+                            self.bot.logger.debug('Saving image: ' + imageName)
                             while True:
                                 chunk = await response.content.read(1024)
                                 if not chunk:
@@ -105,7 +105,7 @@ class StableDiffusion(commands.Cog):
                                 description = description.split(',')[0]
                                 metadata += f"<image:{description}>\n"
                         except self.bot.aiohttp.ClientError as error:
-                            print("ERROR: CLIP may not be running. Could not look at image.")
+                            self.bot.logger.exception("ERROR: CLIP may not be running. Could not look at image.")
                             return "ERROR: CLIP may not be running. Could not look at image."
         return metadata
     
@@ -226,7 +226,7 @@ class StableDiffusion(commands.Cog):
                 r = await resp.json()
         except Exception as error:
             await ctx.send("My image generation service may not be running.")
-            print("Error in imagine 1")
+            self.bot.logger.exception("Error in imagine")
             
         for i in r['images']:
             image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))
@@ -237,7 +237,7 @@ class StableDiffusion(commands.Cog):
                     response2 = await resp.json()
             except Exception as error:
                 await ctx.send("My image generation service may not be running.")
-                print("error in imagine 2")
+                self.bot.logger.exception("error in imagine")
 
             pnginfo = PngImagePlugin.PngInfo()
             pnginfo.add_text("parameters", response2.get("info"))
@@ -280,15 +280,15 @@ class StableDiffusion(commands.Cog):
             elif ctx.message.attachments:
                 file_url = ctx.message.attachments[0].url
             else:
-                print("No image linked or attached.")
+                self.bot.logger.debug("No image linked or attached.")
                 return
         except Exception as error:
-            print("Couldn't find image.")
+            self.bot.logger.exception("Couldn't find image.")
             return   
         async with self.bot.http_session.get(file_url) as response:
             imageName = self.working_dir + str(time.time_ns()) + ".png"
             with open(imageName, 'wb') as out_file:
-                print(f"Saving image: {imageName}")
+                self.bot.logger.debug(f"Saving image: {imageName}")
                 while True:
                     chunk = await response.content.read(1024)
                     if not chunk:
@@ -300,10 +300,9 @@ class StableDiffusion(commands.Cog):
             payload = {"image": img_link}
             async with self.bot.http_session.post(url, json=payload) as response:
                 r = await response.json()
-            print(r)
             await ctx.send(r.get("caption"))
         except Exception as error:
-            print("error in describe")
+            self.bot.logger.exception("error in describe")
             await ctx.send("My image generation service may not be running.")
             
     @commands.command(
@@ -325,7 +324,7 @@ class StableDiffusion(commands.Cog):
                 await ctx.send("No image linked or attached.")
                 return
         except Exception as error:
-            print("Couldn't find image.")
+            self.bot.logger.exception("Couldn't find image.")
             return
         prompt = self.get_prompt_from_ctx(ctx)
         if not prompt:
@@ -335,7 +334,7 @@ class StableDiffusion(commands.Cog):
             async with self.bot.http_session.get(file_url) as response:
                 imageName = self.working_dir + str(time.time_ns()) + ".png"
                 with open(imageName, 'wb') as out_file:
-                    print(f"Saving image: {imageName}")
+                    self.bot.logger.debug(f"Saving image: {imageName}")
                     while True:
                         chunk = await response.content.read(1024)
                         if not chunk:
@@ -344,7 +343,7 @@ class StableDiffusion(commands.Cog):
                             
         except Exception as error:
             await ctx.send("My image generation service may not be running.")
-            print("error in reimagine 1")
+            self.bot.logger.exception("error in reimagine 1")
 
         img_link = await self.my_open_img_file(imageName)
 
@@ -375,7 +374,7 @@ class StableDiffusion(commands.Cog):
                         await ctx.send(file=f)
         except Exception as error:
             await ctx.send("My image generation service may not be running.")
-            print("error in reimagine 2")
+            self.bot.logger.exception("error in reimagine 2")
             
     @commands.command(
         description="Negative Prompt", 
@@ -395,7 +394,7 @@ class StableDiffusion(commands.Cog):
 async def setup(bot):
     try:
         await bot.add_cog(StableDiffusion(bot))
-        print("Successfully added StableDiffusion Cog")
+        bot.logger.info("Successfully added StableDiffusion Cog")
     except:
-        print("Failed to load StableDiffusion Cog")
+        bot.logger.info("Failed to load StableDiffusion Cog")
     
