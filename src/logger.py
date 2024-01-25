@@ -16,8 +16,8 @@ LOGGING_CONFIG = {
             "class": "logging.StreamHandler",
             "formatter": "standard",
         },
-        "console2": {
-            "level": "WARNING",
+        "discord": {
+            "level": "INFO",
             "class": "logging.StreamHandler",
             "formatter": "standard",
         },
@@ -32,7 +32,7 @@ LOGGING_CONFIG = {
     "loggers": {
         "bot": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
         "discord": {
-            "handlers": ["console2", "file"],
+            "handlers": ["discord", "file"],
             "level": "INFO",
             "propagate": False,
         },

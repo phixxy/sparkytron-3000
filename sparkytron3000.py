@@ -61,6 +61,7 @@ async def on_disconnect():
             
 @bot.event
 async def on_ready():
+    bot.logger = logger
     await delete_all_files("tmp/")
     # Import plugins from extensions folder
     for plugin_file in os.listdir('extensions/'):
