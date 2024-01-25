@@ -5,10 +5,7 @@ LOGGING_CONFIG = {
     "version": 1,
     "disabled_existing_loggers": False,
     "formatters": {
-        "verbose": {
-            "format": "%(levelname)-10s - %(asctime)s - %(module)-15s : %(message)s"
-        },
-        "standard": {"format": "%(levelname)-10s - %(name)-15s : %(message)s"},
+        "standard": {"format": "%(asctime)s - %(levelname)-10s - %(module)-15s : %(message)s"},
     },
     "handlers": {
         "console": {
@@ -26,7 +23,7 @@ LOGGING_CONFIG = {
             "class": "logging.FileHandler",
             "filename": "logs/info.log",
             "mode": "a",
-            "formatter": "verbose",
+            "formatter": "standard",
         },
     },
     "loggers": {
