@@ -32,14 +32,6 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 #discord setup END
 
     
-async def handle_error(error):
-    print(error)
-    current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    log_line = current_time + ': ' + str(error) + '\n'
-    with open("data/error_log.txt", 'a') as f:
-        f.write(log_line)
-    return error
-    
 async def folder_setup():
     # Only tmp, extensions and data are supported, all other folders only exist for backwards compatibility and will be removed soon!
     folder_names = ["tmp", "extensions", "data", "channels","channels/config", "channels/logs"]
@@ -64,7 +56,7 @@ async def task_loop():
         try:
             await delete_all_files("tmp/")
         except Exception as error:
-            await handle_error(error)
+            print("Failed to delete_all_files")
             
 async def create_session():
     return aiohttp.ClientSession()
