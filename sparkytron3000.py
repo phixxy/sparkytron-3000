@@ -17,7 +17,7 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
     
 async def folder_setup():
-    folder_names = ["tmp", "extensions", "data"]
+    folder_names = ["tmp", "extensions", "data", "logs"]
     for folder_name in folder_names:
         if not os.path.exists(folder_name):
             os.mkdir(folder_name)
