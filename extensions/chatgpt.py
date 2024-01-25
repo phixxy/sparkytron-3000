@@ -73,14 +73,6 @@ class ChatGPT(commands.Cog):
         user = self.bot.get_user(reminder_dict["user_id"])
         return await user.send(reminder_dict["response"])
 
-    async def handle_error(self, error):
-        print(error)
-        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        log_line = current_time + ': ' + str(error) + '\n'
-        with open("databases/error_log.txt", 'a') as f:
-            f.write(log_line)
-        return error
-
     async def answer_question(self, topic, model="gpt-3.5-turbo"):
         headers = {
             'Content-Type': 'application/json',
@@ -101,7 +93,7 @@ class ChatGPT(commands.Cog):
                 return response
 
         except Exception as error:
-            return await self.handle_error(error)
+            print("Error occurred in answer_question")
         
     @commands.command(
         description="Personality", 
@@ -222,7 +214,7 @@ class ChatGPT(commands.Cog):
             
 
         except Exception as error:
-            return await self.handle_error(error)
+            print("error occurred in looker")
         
         chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
         for chunk in chunks:
