@@ -257,6 +257,7 @@ class PhixxyCom(commands.Cog):
     
     @commands.command()
     async def force_blog(self, ctx):
+        await ctx.send("Forcing blog generation")
         await self.generate_blog()
 
     @commands.command(
