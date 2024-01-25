@@ -46,16 +46,7 @@ class StableDiffusion(commands.Cog):
                 response = response_data['choices'][0]['message']['content']
                 return response
         except Exception as error:
-            return await self.handle_error(error)
-
-    async def handle_error(self, error): # This needs to be deleted and replaced with logging
-        print(error)
-        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        log_line = current_time + ': ' + str(error) + '\n'
-        file_name = self.data_dir + "error_log.log"
-        with open(file_name, 'a') as f:
-            f.write(log_line)
-        return error
+            return "Error in answer question in stable_diffusion"
 
     def get_kv_from_ctx(self, ctx):
         try:
@@ -114,7 +105,7 @@ class StableDiffusion(commands.Cog):
                                 description = description.split(',')[0]
                                 metadata += f"<image:{description}>\n"
                         except self.bot.aiohttp.ClientError as error:
-                            await self.handle_error(error)
+                            print("ERROR: CLIP may not be running. Could not look at image.")
                             return "ERROR: CLIP may not be running. Could not look at image."
         return metadata
     
@@ -235,7 +226,7 @@ class StableDiffusion(commands.Cog):
                 r = await resp.json()
         except Exception as error:
             await ctx.send("My image generation service may not be running.")
-            await self.handle_error(error)
+            print("Error in imagine 1")
             
         for i in r['images']:
             image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))
@@ -246,7 +237,7 @@ class StableDiffusion(commands.Cog):
                     response2 = await resp.json()
             except Exception as error:
                 await ctx.send("My image generation service may not be running.")
-                await self.handle_error(self, error)
+                print("error in imagine 2")
 
             pnginfo = PngImagePlugin.PngInfo()
             pnginfo.add_text("parameters", response2.get("info"))
@@ -292,7 +283,6 @@ class StableDiffusion(commands.Cog):
                 print("No image linked or attached.")
                 return
         except Exception as error:
-            await self.handle_error(error)
             print("Couldn't find image.")
             return   
         async with self.bot.http_session.get(file_url) as response:
@@ -313,7 +303,7 @@ class StableDiffusion(commands.Cog):
             print(r)
             await ctx.send(r.get("caption"))
         except Exception as error:
-            await self.handle_error(error)
+            print("error in describe")
             await ctx.send("My image generation service may not be running.")
             
     @commands.command(
@@ -335,7 +325,6 @@ class StableDiffusion(commands.Cog):
                 await ctx.send("No image linked or attached.")
                 return
         except Exception as error:
-            await self.handle_error(error)
             print("Couldn't find image.")
             return
         prompt = self.get_prompt_from_ctx(ctx)
@@ -355,7 +344,7 @@ class StableDiffusion(commands.Cog):
                             
         except Exception as error:
             await ctx.send("My image generation service may not be running.")
-            await self.handle_error(error)
+            print("error in reimagine 1")
 
         img_link = await self.my_open_img_file(imageName)
 
@@ -386,7 +375,7 @@ class StableDiffusion(commands.Cog):
                         await ctx.send(file=f)
         except Exception as error:
             await ctx.send("My image generation service may not be running.")
-            await self.handle_error(error)
+            print("error in reimagine 2")
             
     @commands.command(
         description="Negative Prompt", 
