@@ -6,7 +6,7 @@ import aiohttp
 
 from discord.ext import commands
 
-async def answer_question(topic, model="gpt-3.5-turbo"): # Only needed for draw command
+async def answer_question(topic, model="gpt-3.5-turbo"):
     headers = {
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {os.getenv("openai.api_key")}',
@@ -26,17 +26,8 @@ async def answer_question(topic, model="gpt-3.5-turbo"): # Only needed for draw 
             response = response_data['choices'][0]['message']['content']
             await http_session.close()
             return response
-
     except Exception as error:
-        return await handle_error(error)
-
-async def handle_error(error):
-    print(error)
-    current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    log_line = current_time + ': ' + str(error) + '\n'
-    with open("databases/error_log.txt", 'a') as f:
-        f.write(log_line)
-    return error
+        return "error occurred in meme"
 
 @commands.command(
     description="Meme", 
@@ -89,7 +80,7 @@ async def meme(ctx):
             print(f"Generated Meme = {response['success']}\nImage Link = {response['data']['url']}\nPage Link = {response['data']['page_url']}")
             image_link = response['data']['url']
         except Exception as error:
-            await handle_error(error)
+            print("Error occurred in meme")
         try:
     #------------------------------------Saving Image Using Aiohttp---------------------------------#
             filename = memepics[id-1]['name']
@@ -104,8 +95,7 @@ async def meme(ctx):
                             break
                         file.write(chunk)
         except Exception as error:
-            await handle_error(error)
-            print("Something's Wrong with the urllib So try again")
+            print("Something's Wrong with the aiohttp in meme So try again")
         await http_session.close()
         return image_link, filename
     
@@ -115,7 +105,7 @@ async def meme(ctx):
         link, filepath = await generate_random_meme(topic)
         await ctx.send(link)
     except Exception as error:
-        await handle_error(error)
+        print("Error occurred in meme")
         await ctx.send('Something went wrong try again. Usage: !meme (topic)')
 
 async def setup(bot):
