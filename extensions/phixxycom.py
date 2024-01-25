@@ -311,7 +311,8 @@ class PhixxyCom(commands.Cog):
         try:
             message = await self.generate_blog()
             bot_stuff_channel = self.bot.get_channel(544408659174883328)
-            await bot_stuff_channel.send(message)
+            if message:
+                await bot_stuff_channel.send(message)
         except Exception as error:
             self.bot.logger.exception("Failed to generate blog")
 
