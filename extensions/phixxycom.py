@@ -207,7 +207,6 @@ class PhixxyCom(commands.Cog):
         current_struct_time = time.localtime(current_time)
         date = time.strftime("%B %d, %Y", current_struct_time)
         if date in html_data:
-            print("I already wrote a blog post today!")
             return
         blogpost_file = f"{self.data_dir}blog_topics.txt"
         if os.path.isfile(blogpost_file):
@@ -254,7 +253,7 @@ class PhixxyCom(commands.Cog):
         run_time = time.time() - start_time
         print("It took " + str(run_time) + " seconds to generate the blog post!")
         output = "Blog Updated! (" + str(run_time) + " seconds) https://ai.phixxy.com/ai-blog"
-        print(output)
+        return output
 
     @commands.command(
         description="Website", 
@@ -296,20 +295,20 @@ class PhixxyCom(commands.Cog):
             #await ctx.send("Failed, Try again.")
             print(error)
 
-    @tasks.loop(seconds=1)
+    @tasks.loop(seconds=60)
     async def phixxy_loop(self):
         current_time = time.localtime()
-        #Run every minute
-        if current_time.tm_sec == 0:
-            await self.meme_handler('tmp/meme/')
-            await self.upload_ftp_ai_images('tmp/stable_diffusion/sfw/')
-        if current_time.tm_hour == 17 and current_time.tm_min == 0 and current_time.tm_sec == 0:
+        await self.meme_handler('tmp/meme/')
+        await self.upload_ftp_ai_images('tmp/stable_diffusion/sfw/')
+
+    @tasks.loop(hours=1)
+    async def blog_loop(self):
+        try:
+            message = await self.generate_blog()
             bot_stuff_channel = self.bot.get_channel(544408659174883328)
-            await bot_stuff_channel.send("Running Daily Tasks")
-            try:
-                await self.generate_blog()
-            except Exception as error:
-                print("Failed to generate blog")
+            await bot_stuff_channel.send(message)
+        except Exception as error:
+            print("Failed to generate blog")
 
     @commands.command(
     description="Moderate", 

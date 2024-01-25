@@ -33,16 +33,15 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
     
 async def folder_setup():
-    # Only tmp, extensions and data are supported, all other folders only exist for backwards compatibility and will be removed soon!
-    folder_names = ["tmp", "extensions", "data", "channels","channels/config", "channels/logs"]
+    folder_names = ["tmp", "extensions", "data"]
     for folder_name in folder_names:
         if not os.path.exists(folder_name):
             os.mkdir(folder_name)
     return folder_names
             
-async def delete_all_files(path, safe_folders=None):
+async def delete_all_files(path):
     for filename in os.listdir(path):
-        if os.path.isdir(path+filename) and not path+filename in safe_folders:
+        if os.path.isdir(path+filename):
             shutil.rmtree(path+filename)
         elif os.path.isfile(path+filename):
             os.remove(path+filename)
@@ -78,8 +77,7 @@ async def on_disconnect():
             
 @bot.event
 async def on_ready():
-    folders_made = await folder_setup()
-    await delete_all_files("tmp/", folders_made)
+    await delete_all_files("tmp/")
     # Import plugins from extensions folder
     for plugin_file in os.listdir('extensions/'):
         if plugin_file[0] != '_' and plugin_file[-3:] == '.py':
