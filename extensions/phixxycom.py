@@ -28,7 +28,7 @@ class PhixxyCom(commands.Cog):
             if not os.path.exists(self.data_dir):
                 os.mkdir(self.data_dir)
         except:
-            print("PhixxyCom failed to make directories")
+            self.bot.logger.exception("PhixxyCom failed to make directories")
 
     def find_prompt_from_filename(self, sd_log, filename):
         with open(sd_log, 'r') as f:
@@ -57,10 +57,10 @@ class PhixxyCom(commands.Cog):
                 for filename in (await sftp.listdir(server_folder)):
                     if '.png' in filename:
                         try:
-                            print("Deleting", filename)
+                            self.bot.logger.debug("Deleting", filename)
                             await sftp.remove(server_folder+filename)
                         except:
-                            print("Couldn't delete", filename)
+                            self.bot.logger.exception("Couldn't delete", filename)
                         
     async def extract_image_tags(self,code):
         count = code.count("<img")
@@ -126,10 +126,10 @@ class PhixxyCom(commands.Cog):
                         pass
                     else:
                         try:
-                            print("Deleting", filename)
+                            self.bot.logger.debug("Deleting", filename)
                             await sftp.remove(server_folder+filename)
                         except:
-                            print("Couldn't delete", filename)
+                            self.bot.logger.exception("Couldn't delete", filename)
 
     async def meme_handler(self, folder):
         for file in os.listdir(folder):
@@ -140,7 +140,7 @@ class PhixxyCom(commands.Cog):
         server_folder = (os.getenv('ftp_public_html') + 'ai-memes/')
         new_file_name = str(time.time_ns()) + ".png"
         await self.upload_sftp(filename, server_folder, new_file_name)
-        print("Uploaded", new_file_name)
+        self.bot.logger.debug("Uploaded", new_file_name)
         with open(f"{self.data_dir}ai-memes/index.html", 'r') as f:
             html_data = f.read()
         html_insert = '<!--ADD IMG HERE-->\n        <img src="' + new_file_name + '" loading="lazy">'
@@ -164,7 +164,7 @@ class PhixxyCom(commands.Cog):
                 server_folder = (os.getenv('ftp_public_html') + 'ai-images/')
                 new_filename = str(time.time_ns()) + ".png"
                 await self.upload_sftp(filepath, server_folder, new_filename)
-                print("Uploaded", new_filename)
+                self.bot.logger.debug("Uploaded", new_filename)
                 with open(html_file, 'r') as f:
                     html_data = f.read()
                 html_insert = html_insert.replace("<!--filename-->", new_filename)
@@ -219,9 +219,9 @@ class PhixxyCom(commands.Cog):
             with open(blogpost_file, 'w') as f:
                 f.write(blogpost_topics)
         if topic != '':
-            print("Writing blogpost")
+            self.bot.logger.info("Writing blogpost")
         else:
-            print("No topic given for blogpost, generating one.")
+            self.bot.logger.info("No topic given for blogpost, generating one.")
             topic = await self.answer_question("Give me one topic for an absurd blogpost.")
             
         
@@ -252,7 +252,7 @@ class PhixxyCom(commands.Cog):
             f.write(html_data)
         await self.upload_sftp(filename, (os.getenv('ftp_public_html') + 'ai-blog/'), "index.html")
         run_time = time.time() - start_time
-        print("It took " + str(run_time) + " seconds to generate the blog post!")
+        self.bot.logger.debug("It took " + str(run_time) + " seconds to generate the blog post!")
         output = "Blog Updated! (" + str(run_time) + " seconds) https://ai.phixxy.com/ai-blog"
         return output
 
@@ -294,7 +294,7 @@ class PhixxyCom(commands.Cog):
             await ctx.send("Finished https://ai.phixxy.com/ai-webpage/")
         except Exception as error:
             #await ctx.send("Failed, Try again.")
-            print(error)
+            self.bot.logger.exception("Website Error")
 
     @tasks.loop(seconds=60)
     async def phixxy_loop(self):
@@ -309,7 +309,7 @@ class PhixxyCom(commands.Cog):
             bot_stuff_channel = self.bot.get_channel(544408659174883328)
             await bot_stuff_channel.send(message)
         except Exception as error:
-            print("Failed to generate blog")
+            self.bot.logger.exception("Failed to generate blog")
 
     @commands.command(
     description="Moderate", 
