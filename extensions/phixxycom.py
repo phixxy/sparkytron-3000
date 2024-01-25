@@ -197,7 +197,6 @@ class PhixxyCom(commands.Cog):
         except Exception as error:
             return None
 
-    @commands.command()
     async def generate_blog(self):
         start_time = time.time()
         topic = ''
@@ -255,6 +254,10 @@ class PhixxyCom(commands.Cog):
         self.bot.logger.debug("It took " + str(run_time) + " seconds to generate the blog post!")
         output = "Blog Updated! (" + str(run_time) + " seconds) https://ai.phixxy.com/ai-blog"
         return output
+    
+    @commands.command()
+    async def force_blog(self, ctx):
+        await self.generate_blog()
 
     @commands.command(
         description="Website", 
