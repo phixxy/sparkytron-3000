@@ -5,8 +5,11 @@ LOGGING_CONFIG = {
     "version": 1,
     "disabled_existing_loggers": False,
     "formatters": {
-        "standard": {"format": "%(asctime)s - %(levelname)-10s - %(module)-15s : %(message)s"},
-        "datefmt": "%Y-%m-%d %H:%M:%S",
+        "standard": {
+            "format": "%(asctime)s - %(levelname)-10s - %(module)-15s : %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+        
     },
     "handlers": {
         "console": {
