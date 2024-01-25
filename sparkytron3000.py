@@ -1,14 +1,16 @@
 import discord
 from discord.ext import commands, tasks
-from discord.utils import get
 import shutil
 import time
 import os
 from dotenv import load_dotenv
 import aiohttp
+import src.logger as logger
 
 load_dotenv()
 discord_token    = os.getenv('discord_token')
+
+logger = logger.logging.getLogger("bot")
 
 intents = discord.Intents.all()
 intents.message_content = True
@@ -35,8 +37,9 @@ async def task_loop():
     if current_time.tm_hour == 0 and current_time.tm_min == 0 and current_time.tm_sec == 0:
         try:
             await delete_all_files("tmp/")
+            logger.info("Deleted tmp/ files.")
         except Exception as error:
-            print("Failed to delete_all_files")
+            logger.exception("Failed to delete files!")
             
 async def create_session():
     return aiohttp.ClientSession()
@@ -63,11 +66,11 @@ async def on_ready():
     for plugin_file in os.listdir('extensions/'):
         if plugin_file[0] != '_' and plugin_file[-3:] == '.py':
             await bot.load_extension(f'extensions.{plugin_file[:-3]}')
-    print('We have logged in as {0.user}'.format(bot))
+    logger.info('We have logged in as {0.user}'.format(bot))
     task_loop.start()
 
 @bot.event
 async def on_message(ctx):    
     await bot.process_commands(ctx)
 
-bot.run(discord_token)
+bot.run(discord_token, root_logger=True)
