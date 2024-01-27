@@ -363,7 +363,7 @@ class ChatGPT(commands.Cog):
                 self.bot.logger.exception("Problem with chat_response in chatgpt")
 
     @commands.Cog.listener()
-    async def on_reaction_add(reaction, user):
+    async def on_reaction_add(self, reaction, user):
         if not random.randint(0,9):
             message = reaction.message
             emoji = reaction.emoji
