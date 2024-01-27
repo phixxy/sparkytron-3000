@@ -111,4 +111,4 @@ class Highscores(commands.Cog):
         await ctx.send(file=f)
 
 async def setup(bot):
-    bot.add_cog(Highscores(bot))
+    await bot.add_cog(Highscores(bot))
