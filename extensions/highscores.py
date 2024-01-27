@@ -39,7 +39,7 @@ class Highscores(commands.Cog):
                     if user not in user_message_counts and user != "" and len(user) <= 32:
                         user_message_counts[user] = 1
                     else:
-                        if user != "":
+                        if user != "" and len(user) <= 32:
                             user_message_counts[user] += 1
             except Exception as error:
                 self.bot.logger.exception("Error occurred in highscores")
@@ -91,7 +91,7 @@ class Highscores(commands.Cog):
                     if user not in user_message_counts and user != "" and len(user) <= 32:
                         user_message_counts[user] = 1
                     else:
-                        if user != "":
+                        if user != "" and len(user) <= 32:
                             user_message_counts[user] += 1
             except Exception as error:
                 self.bot.logger.exception("Error occurred in highscores_server")
