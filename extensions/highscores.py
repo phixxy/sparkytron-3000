@@ -14,7 +14,7 @@ from discord.ext import commands
     ) 
 async def highscores(ctx, limit=15):
     filename = str(ctx.channel.id) + ".log"
-    with open("channels/logs/" + filename, 'r', encoding="utf-8") as logfile:
+    with open("chatgpt/logs/" + filename, 'r', encoding="utf-8") as logfile:
         data = logfile.readlines()
         logfile.close()
     
@@ -73,8 +73,8 @@ async def highscores_server(ctx, limit=15):
 
     user_message_counts = {}
     data = []
-    for filename in os.listdir("channels/logs/"):
-        with open("channels/logs/" + filename, 'r', encoding="utf-8") as logfile:
+    for filename in os.listdir("chatgpt/logs/"):
+        with open("chatgpt/logs/" + filename, 'r', encoding="utf-8") as logfile:
             data += logfile.readlines()
             logfile.close()
     user_message_counts = {}    
