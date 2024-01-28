@@ -32,6 +32,8 @@ class ChatGPT(commands.Cog):
                 os.mkdir(self.data_dir + "logs")
             if not os.path.exists(self.data_dir + "dalle"):
                 os.mkdir(self.data_dir + "dalle")
+            if not os.path.exists(self.data_dir + "dalle2"):
+                os.mkdir(self.data_dir + "dalle2")
         except:
             self.bot.logger.exception("ChatGPT failed to make directories")
 
@@ -219,7 +221,7 @@ class ChatGPT(commands.Cog):
             prompt = ctx.message.content.split(" ", maxsplit=1)[1]
             img_url = await self.get_dalle(prompt)
             my_filename = str(time.time_ns()) + ".png"
-            filepath = f"{self.data_dir}dalle/{my_filename}"
+            filepath = f"{self.data_dir}dalle2/{my_filename}"
             await self.download_image(img_url, filepath)
             with open(filepath, "rb") as fh:
                 f = discord.File(fh, filename=filepath)
