@@ -151,30 +151,33 @@ class PhixxyCom(commands.Cog):
         os.rename(filename, 'tmp/' + new_file_name)
 
     async def upload_ftp_ai_images(self, ai_dict):
-        for folder in ai_dict:
-            for filename in os.listdir(folder):
-                if filename[-4:] == '.png':
-                    filepath = folder + filename
-                    prompt = self.find_prompt_from_filename(ai_dict[folder], filename)
-                    html_file = f"{self.data_dir}ai-images/index.html"
-                    html_insert = '''<!--REPLACE THIS COMMENT-->
-                        <div>
-                            <img src="<!--filename-->" loading="lazy">
-                            <p class="image-description"><!--description--></p>
-                        </div>'''
-                    server_folder = (os.getenv('ftp_public_html') + 'ai-images/')
-                    new_filename = str(time.time_ns()) + ".png"
-                    await self.upload_sftp(filepath, server_folder, new_filename)
-                    self.bot.logger.debug("Uploaded", new_filename)
-                    with open(html_file, 'r') as f:
-                        html_data = f.read()
-                    html_insert = html_insert.replace("<!--filename-->", new_filename)
-                    html_insert = html_insert.replace("<!--description-->", prompt)
-                    html_data = html_data.replace("<!--REPLACE THIS COMMENT-->", html_insert)
-                    with open(html_file, "w") as f:
-                        f.writelines(html_data)
-                    await self.upload_sftp(html_file, server_folder, "index.html")
-                    os.rename(filepath, f"tmp/{new_filename}")
+        try:
+            for folder in ai_dict:
+                for filename in os.listdir(folder):
+                    if filename[-4:] == '.png':
+                        filepath = folder + filename
+                        prompt = self.find_prompt_from_filename(ai_dict[folder], filename)
+                        html_file = f"{self.data_dir}ai-images/index.html"
+                        html_insert = '''<!--REPLACE THIS COMMENT-->
+                            <div>
+                                <img src="<!--filename-->" loading="lazy">
+                                <p class="image-description"><!--description--></p>
+                            </div>'''
+                        server_folder = (os.getenv('ftp_public_html') + 'ai-images/')
+                        new_filename = str(time.time_ns()) + ".png"
+                        await self.upload_sftp(filepath, server_folder, new_filename)
+                        self.bot.logger.debug("Uploaded", new_filename)
+                        with open(html_file, 'r') as f:
+                            html_data = f.read()
+                        html_insert = html_insert.replace("<!--filename-->", new_filename)
+                        html_insert = html_insert.replace("<!--description-->", prompt)
+                        html_data = html_data.replace("<!--REPLACE THIS COMMENT-->", html_insert)
+                        with open(html_file, "w") as f:
+                            f.writelines(html_data)
+                        await self.upload_sftp(html_file, server_folder, "index.html")
+                        os.rename(filepath, f"tmp/{new_filename}")
+        except:
+            self.bot.logger.exception("Something went wrong in upload_ftp_ai_images")
 
     async def answer_question(self, topic, model="gpt-3.5-turbo"):
         headers = {
@@ -326,7 +329,7 @@ class PhixxyCom(commands.Cog):
             "data/chatgpt/dalle2/":"data/chatgpt/logs/dalle2.log"
             }
         await self.meme_handler('tmp/meme/')
-        await self.upload_ftp_ai_images('tmp/stable_diffusion/sfw/')
+        await self.upload_ftp_ai_images(ai_images_dict)
 
     @tasks.loop(hours=1)
     async def blog_loop(self):
