@@ -115,7 +115,8 @@ class ChatGPT(commands.Cog):
         try:
             async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
                 response_data = await resp.json()
-                response = response_data[0]['url']
+                print(response_data)
+                response = response_data['data'][0]['url']
                 return response
 
         except Exception as error:
