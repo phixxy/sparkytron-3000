@@ -212,8 +212,7 @@ class ChatGPT(commands.Cog):
     @commands.command(
         description="Dalle 2", 
         help="Generate an image with Dalle 2 Usage: !dalle2 (prompt)", 
-        brief="Generate Image",
-        aliases = ['dalle']
+        brief="Generate Image"
         )         
     async def dalle2(self, ctx):
         if ctx.author.get_role(self.premium_role):
@@ -234,7 +233,8 @@ class ChatGPT(commands.Cog):
     @commands.command(
         description="Dalle 3", 
         help="Generate an image with Dalle 3 Usage: !dalle3 (prompt)", 
-        brief="Generate Image"
+        brief="Generate Image",
+        aliases = ['dalle']
         )           
     async def dalle3(self, ctx):
         if ctx.author.get_role(self.premium_role):
