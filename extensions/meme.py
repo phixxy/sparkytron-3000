@@ -10,6 +10,15 @@ class Meme(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.working_dir = "tmp/meme/"
+        self.folder_setup()
+        
+    def folder_setup(self):
+        try:
+            if not os.path.exists(self.working_dir):
+                os.mkdir(self.working_dir)
+        except:
+            self.bot.logger.exception("Meme failed to make directories")
 
     async def answer_question(self, topic, model="gpt-3.5-turbo"):
         headers = {
