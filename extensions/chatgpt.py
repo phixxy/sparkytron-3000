@@ -179,11 +179,14 @@ class ChatGPT(commands.Cog):
         brief="Get an answer"
         )         
     async def question_gpt4(self, ctx):
-        question = ctx.message.content.split(" ", maxsplit=1)[1]
-        answer = await self.answer_question(question, "gpt-4-vision-preview")
-        chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
-        for chunk in chunks:
-            await ctx.send(chunk)
+        if ctx.author.get_role(1200943915579228170):
+            question = ctx.message.content.split(" ", maxsplit=1)[1]
+            answer = await self.answer_question(question, "gpt-4-vision-preview")
+            chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
+            for chunk in chunks:
+                await ctx.send(chunk)
+        else:
+            ctx.send("Sorry you must be a premium member to use this command. (!donate)")
             
     @commands.command(
         description="Image GPT4", 
