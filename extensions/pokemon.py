@@ -248,7 +248,6 @@ class PokemonGame(commands.Cog):
                 pokemon = pokemon.replace('shiny ', '')
             url = "https://pokeapi.co/api/v2/pokemon/" + pokemon
             dex_url = "https://pokeapi.co/api/v2/pokemon-species/" + pokemon
-            #try:
             data = await self.get_json(url)
             name = data['name']
             height_str = str(int(data['height'])/10) + 'm'

@@ -36,8 +36,9 @@ async def task_loop():
     #Run daily tasks
     if current_time.tm_hour == 0 and current_time.tm_min == 0 and current_time.tm_sec == 0:
         try:
-            await delete_all_files("tmp/")
-            logger.info("Deleted tmp/ files.")
+            pass
+            #await delete_all_files("tmp/")
+            #logger.info("Deleted tmp/ files.")
         except Exception as error:
             logger.exception("Failed to delete files!")
             
