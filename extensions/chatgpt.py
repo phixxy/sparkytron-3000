@@ -14,8 +14,10 @@ class ChatGPT(commands.Cog):
         self.API_KEY = os.getenv("openai.api_key")
         self.working_dir = "tmp/chatgpt/"
         self.data_dir = "data/chatgpt/"
+        self.premium_role = 1200943915579228170
         self.folder_setup()
         self.remind_me_loop.start()
+
 
     def folder_setup(self):
         try:
@@ -163,7 +165,7 @@ class ChatGPT(commands.Cog):
         brief="Get an answer"
         )         
     async def question_gpt4(self, ctx):
-        if ctx.author.get_role(1200943915579228170):
+        if ctx.author.get_role(self.premium_role):
             question = ctx.message.content.split(" ", maxsplit=1)[1]
             answer = await self.answer_question(question, "gpt-4")
             chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
