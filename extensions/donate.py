@@ -47,4 +47,8 @@ class Donate(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(Donate(bot))
+    try:
+        await bot.add_cog(Donate(bot))
+        bot.logger.info("Successfully added Donate Cog")
+    except:
+        bot.logger.info("Failed to load Donate Cog")
