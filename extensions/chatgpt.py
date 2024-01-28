@@ -456,4 +456,8 @@ class ChatGPT(commands.Cog):
         
         
 async def setup(bot):
-    await bot.add_cog(ChatGPT(bot))
+    try:
+        await bot.add_cog(ChatGPT(bot))
+        bot.logger.info("Successfully added ChatGPT Cog")
+    except:
+        bot.logger.info("Failed to load ChatGPT Cog")
