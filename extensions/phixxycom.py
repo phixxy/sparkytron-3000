@@ -151,16 +151,16 @@ class PhixxyCom(commands.Cog):
         os.rename(filename, 'tmp/' + new_file_name)
 
     async def upload_ftp_ai_images(self, ai_dict):
-        self.bot.logger.debug("Entered upload_ftp...")
+        self.bot.logger.info("Entered upload_ftp...")
         try:
             for folder in ai_dict:
-                self.bot.logger.debug(f"Entered upload_ftp folder = {folder}")
+                self.bot.logger.info(f"Entered upload_ftp folder = {folder}")
                 for filename in os.listdir(folder):
                     if filename[-4:] == '.png':
                         filepath = folder + filename
-                        self.bot.logger.debug(f"Found file = {filename}")
+                        self.bot.logger.info(f"Found file = {filename}")
                         prompt = self.find_prompt_from_filename(ai_dict[folder], filename)
-                        self.bot.logger.debug(f"Found prompt = {prompt}")
+                        self.bot.logger.info(f"Found prompt = {prompt}")
                         html_file = f"{self.data_dir}ai-images/index.html"
                         html_insert = '''<!--REPLACE THIS COMMENT-->
                             <div>
@@ -170,7 +170,7 @@ class PhixxyCom(commands.Cog):
                         server_folder = (os.getenv('ftp_public_html') + 'ai-images/')
                         new_filename = str(time.time_ns()) + ".png"
                         await self.upload_sftp(filepath, server_folder, new_filename)
-                        self.bot.logger.debug("Uploaded", new_filename)
+                        self.bot.logger.info("Uploaded", new_filename)
                         with open(html_file, 'r') as f:
                             html_data = f.read()
                         html_insert = html_insert.replace("<!--filename-->", new_filename)
@@ -326,7 +326,7 @@ class PhixxyCom(commands.Cog):
 
     @tasks.loop(seconds=60)
     async def phixxy_loop(self):
-        self.bot.logger.debug("Entered phixxy loop")
+        self.bot.logger.info("Entered phixxy loop")
         ai_images_dict = {
             # Folder Path : Log Path
             "tmp/stable_diffusion/sfw/":self.stable_diffusion_log,
