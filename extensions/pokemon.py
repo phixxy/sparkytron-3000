@@ -290,4 +290,8 @@ class PokemonGame(commands.Cog):
             await ctx.channel.send(message)
 
 async def setup(bot):
-    await bot.add_cog(PokemonGame(bot))
+    try:
+        await bot.add_cog(PokemonGame(bot))
+        bot.logger.info("Successfully added PokemonGame Cog")
+    except:
+        bot.logger.info("Failed to load PokemonGame Cog")
