@@ -132,15 +132,15 @@ class PhixxyCom(commands.Cog):
                             self.bot.logger.exception("Couldn't delete", filename)
 
     async def meme_handler(self, folder):
-        for file in os.listdir(folder):
-            filepath = folder + file
+        for f in os.listdir(folder):
+            filepath = folder + f
             await self.update_meme_webpage(filepath)
 
     async def update_meme_webpage(self, filename):
         server_folder = (os.getenv('ftp_public_html') + 'ai-memes/')
         new_file_name = str(time.time_ns()) + ".png"
         await self.upload_sftp(filename, server_folder, new_file_name)
-        self.bot.logger.debug("Uploaded", new_file_name)
+        self.bot.logger.debug(f"Uploaded {new_file_name}")
         with open(f"{self.data_dir}ai-memes/index.html", 'r') as f:
             html_data = f.read()
         html_insert = '<!--ADD IMG HERE-->\n        <img src="' + new_file_name + '" loading="lazy">'
@@ -151,10 +151,8 @@ class PhixxyCom(commands.Cog):
         os.rename(filename, 'tmp/' + new_file_name)
 
     async def upload_ftp_ai_images(self, ai_dict):
-        self.bot.logger.info("Entered upload_ftp...")
         try:
             for folder in ai_dict:
-                self.bot.logger.info(f"Entered upload_ftp folder = {folder}")
                 for filename in os.listdir(folder):
                     if filename[-4:] == '.png':
                         filepath = folder + filename
@@ -326,16 +324,15 @@ class PhixxyCom(commands.Cog):
 
     @tasks.loop(seconds=60)
     async def phixxy_loop(self):
-        self.bot.logger.info("Entered phixxy loop")
         ai_images_dict = {
             # Folder Path : Log Path
             "tmp/stable_diffusion/sfw/":self.stable_diffusion_log,
             "data/chatgpt/dalle/":"data/chatgpt/logs/dalle3.log",
             "data/chatgpt/dalle2/":"data/chatgpt/logs/dalle2.log"
             }
-        await self.meme_handler('tmp/meme/')
         await self.upload_ftp_ai_images(ai_images_dict)
-        self.bot.logger.info(f"Exit phixxy loop {ai_images_dict}")
+        await self.meme_handler('tmp/meme/')
+        
 
     @tasks.loop(hours=1)
     async def blog_loop(self):
