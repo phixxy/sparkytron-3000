@@ -48,7 +48,7 @@ class Admin(commands.Cog):
         )           
     async def update(self, ctx):
         if ctx.author.id in self.admin_ids:
-            self.bot.logger.info(f"Reset command ran by {ctx.author.id}")
+            self.bot.logger.info(f"Update command ran by {ctx.author.id}")
             output = subprocess.run(["git","pull"],capture_output=True)
             if output.stderr:
                 await ctx.send("Update Attempted")
