@@ -196,6 +196,22 @@ class PhixxyCom(commands.Cog):
 
         except Exception as error:
             return None
+        
+    @commands.command(
+        description="Blog", 
+        help="Adds your topic to the list of possible future blog topics. Usage: !suggest_blog (topic)", 
+        brief="Suggest a blog topic"
+        )
+    async def blog(self, ctx, *args):
+        message = ' '.join(args)
+        if '\n' in message:
+            await ctx.send("Send only one topic at a time.")
+            return
+        else:
+            blogpost_file = f"{self.data_dir}blog_topics.txt"
+            with open(blogpost_file, 'a') as f:
+                f.writelines(message+'\n')
+            await ctx.send("Saved suggestion!")
 
     async def generate_blog(self):
         start_time = time.time()

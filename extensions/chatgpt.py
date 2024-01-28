@@ -146,22 +146,6 @@ class ChatGPT(commands.Cog):
             await ctx.send("Usage: !reactions (enable|disable)")
 
     @commands.command(
-        description="Blog", 
-        help="Adds your topic to the list of possible future blog topics. Usage: !suggest_blog (topic)", 
-        brief="Suggest a blog topic"
-        )
-    async def blog(self, ctx, *args):
-        message = ' '.join(args)
-        if '\n' in message:
-            await ctx.send("Send only one topic at a time.")
-            return
-        else:
-            blogpost_file = "databases/blog_topics.txt"
-            with open(blogpost_file, 'a') as f:
-                f.writelines(message+'\n')
-            await ctx.send("Saved suggestion!")
-
-    @commands.command(
         description="Question", 
         help="Ask a raw chatgpt question. Usage: !question (question)", 
         brief="Get an answer"
@@ -181,7 +165,7 @@ class ChatGPT(commands.Cog):
     async def question_gpt4(self, ctx):
         if ctx.author.get_role(1200943915579228170):
             question = ctx.message.content.split(" ", maxsplit=1)[1]
-            answer = await self.answer_question(question, "gpt-4-vision-preview")
+            answer = await self.answer_question(question, "gpt-4")
             chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
             for chunk in chunks:
                 await ctx.send(chunk)
