@@ -168,7 +168,7 @@ class PhixxyCom(commands.Cog):
                         server_folder = (os.getenv('ftp_public_html') + 'ai-images/')
                         new_filename = str(time.time_ns()) + ".png"
                         await self.upload_sftp(filepath, server_folder, new_filename)
-                        self.bot.logger.info("Uploaded", new_filename)
+                        self.bot.logger.info(f"Uploaded {new_filename}")
                         with open(html_file, 'r') as f:
                             html_data = f.read()
                         html_insert = html_insert.replace("<!--filename-->", new_filename)
