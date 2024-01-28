@@ -335,6 +335,7 @@ class PhixxyCom(commands.Cog):
             }
         await self.meme_handler('tmp/meme/')
         await self.upload_ftp_ai_images(ai_images_dict)
+        self.bot.logger.info(f"Exit phixxy loop {ai_images_dict}")
 
     @tasks.loop(hours=1)
     async def blog_loop(self):
