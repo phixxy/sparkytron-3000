@@ -170,7 +170,7 @@ class ChatGPT(commands.Cog):
             for chunk in chunks:
                 await ctx.send(chunk)
         else:
-            ctx.send("Sorry you must be a premium member to use this command. (!donate)")
+            await ctx.send("Sorry you must be a premium member to use this command. (!donate)")
             
     @commands.command(
         description="Image GPT4", 
