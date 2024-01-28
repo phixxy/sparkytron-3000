@@ -216,7 +216,7 @@ class ChatGPT(commands.Cog):
         aliases = ['dalle']
         )         
     async def dalle2(self, ctx):
-        if True:#ctx.author.get_role(self.premium_role):
+        if ctx.author.get_role(self.premium_role):
             prompt = ctx.message.content.split(" ", maxsplit=1)[1]
             img_url = await self.get_dalle(prompt)
             my_filename = str(time.time_ns()) + ".png"
@@ -237,7 +237,7 @@ class ChatGPT(commands.Cog):
         brief="Generate Image"
         )           
     async def dalle3(self, ctx):
-        if True:#ctx.author.get_role(self.premium_role):
+        if ctx.author.get_role(self.premium_role):
             prompt = ctx.message.content.split(" ", maxsplit=1)[1]
             img_url = await self.get_dalle(prompt, "dall-e-3")
             my_filename = str(time.time_ns()) + ".png"
