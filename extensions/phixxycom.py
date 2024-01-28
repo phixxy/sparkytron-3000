@@ -358,4 +358,8 @@ class PhixxyCom(commands.Cog):
         await ctx.send(output)
 
 async def setup(bot):
-    await bot.add_cog(PhixxyCom(bot))
+    try:
+        await bot.add_cog(PhixxyCom(bot))
+        bot.logger.info("Successfully added PhixxyCom Cog")
+    except:
+        bot.logger.info("Failed to load PhixxyCom Cog")
