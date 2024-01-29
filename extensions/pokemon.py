@@ -7,8 +7,20 @@ import json
 import math
 import time
 
+async def get_json(self, url):
+    async with self.bot.http_session.get(url) as resp:
+            json_data = await resp.json()
+    return json_data
+
 class Pokemon:
-    pass
+    async def __init__(self, id: int, generate: bool = True) -> None:
+        if generate: # Should I even do it this way?
+            self.json_data = await self.get_pkmn_from_id(id: int)
+
+    async def get_pkmn_from_id(id):
+        url = 'https://pokeapi.co/api/v2/pokemon/' + str(id)
+        json_data = await get_json(url)
+        return json_data
 
 class PokemonGame(commands.Cog):
 
@@ -27,11 +39,6 @@ class PokemonGame(commands.Cog):
         except:
             self.bot.logger.exception("PokemonGame failed to make directories")
 
-    async def get_json(self, url):
-        async with self.bot.http_session.get(url) as resp:
-                json_data = await resp.json()
-        return json_data
-
     @commands.command(
         description="Pokemon", 
         help="Pokemon game", 
@@ -42,7 +49,7 @@ class PokemonGame(commands.Cog):
     async def pokemon(self, ctx, *args):
         async def starter_picker(id): #id = pokedex number
             url = "https://pokeapi.co/api/v2/pokemon-species/" + str(id)
-            json_data = await self.get_json(url)
+            json_data = await get_json(url)
             if (json_data["evolves_from_species"] == None) and (not json_data['is_mythical']) and (not json_data['is_legendary']):
                 return True
             else:
@@ -69,7 +76,7 @@ class PokemonGame(commands.Cog):
 
         async def generate_starter(discord_id):
             random.seed(discord_id)
-            json_data = await self.get_json('https://pokeapi.co/api/v2/pokemon-species/')
+            json_data = await get_json('https://pokeapi.co/api/v2/pokemon-species/')
             pokemon_count = json_data['count']
             base_pokemon = False
             while not base_pokemon:
@@ -80,7 +87,7 @@ class PokemonGame(commands.Cog):
         
         async def get_pkmn_from_id(id):
             url = 'https://pokeapi.co/api/v2/pokemon/' + str(id)
-            json_data = await self.get_json(url)
+            json_data = await get_json(url)
             return json_data
         
         async def give_buddy_food(pkmn_data):
@@ -145,7 +152,7 @@ class PokemonGame(commands.Cog):
                     json_data = await get_pkmn_from_id(starter_id)
                     is_shiny = await shiny_roll()
                     nature = random.randint(0,19)
-                    nature_data = await self.get_json('https://pokeapi.co/api/v2/nature/')
+                    nature_data = await get_json('https://pokeapi.co/api/v2/nature/')
                     nature = nature_data['results'][nature]['name']
                     json_data['shiny'] = is_shiny
                     json_data['nickname'] = None
