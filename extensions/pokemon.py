@@ -15,7 +15,7 @@ async def get_json(self, url):
 class Pokemon:
     async def __init__(self, id: int, generate: bool = True) -> None:
         if generate: # Should I even do it this way?
-            self.json_data = await self.get_pkmn_from_id(id: int)
+            self.json_data = await self.get_pkmn_from_id(id)
 
     async def get_pkmn_from_id(id):
         url = 'https://pokeapi.co/api/v2/pokemon/' + str(id)
