@@ -220,6 +220,7 @@ class ChatGPT(commands.Cog):
     async def generate_dalle_image(self, ctx, model, quality="standard", size="1024x1024"):
         if ctx.author.get_role(self.premium_role):
             prompt = ctx.message.content.split(" ", maxsplit=1)[1]
+            await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.")
             image_url = await self.dalle_api_call(prompt, model=model, quality=quality, size=size)
             my_filename = str(time.time_ns()) + ".png"
             image_filepath = f"{self.data_dir}dalle/{my_filename}"
