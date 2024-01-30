@@ -20,22 +20,23 @@ class ChatGPT(commands.Cog):
         self.remind_me_loop.start()
 
 
-    def folder_setup(self):
+    async def folder_setup(self):
         try:
-            if not os.path.exists(self.working_dir):
-                os.mkdir(self.working_dir)
-            if not os.path.exists(self.data_dir):
-                os.mkdir(self.data_dir)
-            if not os.path.exists(self.data_dir + "config"):
-                os.mkdir(self.data_dir + "config")
-            if not os.path.exists(self.data_dir + "logs"):
-                os.mkdir(self.data_dir + "logs")
-            if not os.path.exists(self.data_dir + "dalle"):
-                os.mkdir(self.data_dir + "dalle")
-            if not os.path.exists(self.data_dir + "dalle2"):
-                os.mkdir(self.data_dir + "dalle2")
-        except:
-            self.bot.logger.exception("ChatGPT failed to make directories")
+            folders = [
+                self.working_dir, 
+                self.data_dir,
+                self.data_dir + "config",
+                self.data_dir + "logs",
+                self.data_dir + "dalle"
+            ]
+            
+            for folder in folders:
+                if not os.path.exists(folder):
+                    os.mkdir(folder)
+            
+        except Exception as e:
+            self.bot.logger.exception(f"ChatGPT failed to make directories: {e}")
+
 
     def create_channel_config(self, filepath):
         config_dict = {
@@ -159,6 +160,7 @@ class ChatGPT(commands.Cog):
         brief="Get an answer"
         )        
     async def question(self, ctx):
+        await ctx.send("One moment, let me think...")
         question = ctx.message.content.split(" ", maxsplit=1)[1]
         answer = await self.answer_question(question)
         chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
@@ -172,6 +174,7 @@ class ChatGPT(commands.Cog):
         )         
     async def question_gpt4(self, ctx):
         if ctx.author.get_role(self.premium_role):
+            await ctx.send("One moment, let me think...")
             question = ctx.message.content.split(" ", maxsplit=1)[1]
             answer = await self.answer_question(question, "gpt-4")
             chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
