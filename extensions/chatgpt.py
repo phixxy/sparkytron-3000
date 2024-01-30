@@ -106,14 +106,19 @@ class ChatGPT(commands.Cog):
         
         
     @commands.command(
-        description="Personality", 
-        help="Set the personality of the bot. Usage: !personality (personality)", 
+        description="Personality",
+        help="Set the personality of the bot. Usage: !personality (personality)",
         brief="Set the personality"
-        )         
-    async def personality(self, ctx):
-        personality_type = ctx.message.content.split(" ", maxsplit=1)[1]
-        self.edit_channel_config(ctx.channel.id, "personality", personality_type)
-        await ctx.send("Personality changed to " + personality_type)
+    )
+    async def personality(self, ctx, personality_type=None):
+        if personality_type:
+            self.edit_channel_config(ctx.channel.id, "personality", personality_type)
+            await ctx.send("Personality changed to " + personality_type)
+        else:
+            channel_config = await self.get_channel_config(ctx.channel.id)
+            current_personality = channel_config["personality"]
+            await ctx.send(f"Current personality is {current_personality}")
+
 
     @commands.command(
         description="Topic", 
