@@ -205,6 +205,8 @@ class ChatGPT(commands.Cog):
             return "Error occurred in dalle"
     
     async def download_image(self, url, destination):
+        if url == "Error occurred in dalle":
+            return 
         async with self.bot.http_session.get(url) as resp:
             if resp.status == 200:
                 f = await aiofiles.open(destination, mode='wb')
@@ -213,7 +215,7 @@ class ChatGPT(commands.Cog):
         return destination
 
     async def generate_dalle_image(self, ctx, model, quality="standard", size="1024x1024"):
-        if True:#ctx.author.get_role(self.premium_role):
+        if ctx.author.get_role(self.premium_role):
             prompt = ctx.message.content.split(" ", maxsplit=1)[1]
             image_url = await self.dalle_api_call(prompt, model=model, quality=quality, size=size)
             my_filename = str(time.time_ns()) + ".png"
