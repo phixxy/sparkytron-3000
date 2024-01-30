@@ -103,29 +103,6 @@ class ChatGPT(commands.Cog):
             self.bot.logger.exception("Error occurred in answer_question")
             return "Error occurred in answer_question"
         
-    async def get_dalle(self, prompt, model="dall-e-2", quality="standard", size="1024x1024"):
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {os.getenv("openai.api_key")}',
-        }
-        data = {
-            "model": model,
-            "prompt": prompt,
-            "size": size,
-            "quality": quality,
-            "n":1,
-        }
-        url = "https://api.openai.com/v1/images/generations"
-
-        try:
-            async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
-                response_data = await resp.json()
-                response = response_data['data'][0]['url']
-                return response
-
-        except Exception as error:
-            self.bot.logger.exception("Error occurred in dalle")
-            return "Error occurred in dalle"
         
     @commands.command(
         description="Personality", 
@@ -203,6 +180,30 @@ class ChatGPT(commands.Cog):
         else:
             await ctx.send("Sorry you must be a premium member to use this command. (!donate)")
     
+    async def dalle_api_call(self, prompt, model="dall-e-2", quality="standard", size="1024x1024"):
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {os.getenv("openai.api_key")}',
+        }
+        data = {
+            "model": model,
+            "prompt": prompt,
+            "size": size,
+            "quality": quality,
+            "n":1,
+        }
+        url = "https://api.openai.com/v1/images/generations"
+
+        try:
+            async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
+                response_data = await resp.json()
+                response = response_data['data'][0]['url']
+                return response
+
+        except Exception as error:
+            self.bot.logger.exception("Error occurred in dalle")
+            return "Error occurred in dalle"
+    
     async def download_image(self, url, destination):
         async with self.bot.http_session.get(url) as resp:
             if resp.status == 200:
@@ -211,10 +212,10 @@ class ChatGPT(commands.Cog):
                 await f.close()
         return destination
 
-    async def generate_dalle_image(self, ctx, model, quality=None, size=None):
-        if ctx.author.get_role(self.premium_role):
+    async def generate_dalle_image(self, ctx, model, quality="standard", size="1024x1024"):
+        if True:#ctx.author.get_role(self.premium_role):
             prompt = ctx.message.content.split(" ", maxsplit=1)[1]
-            image_url = await self.get_dalle(prompt, model=model, quality=quality, size=size)
+            image_url = await self.dalle_api_call(prompt, model=model, quality=quality, size=size)
             my_filename = str(time.time_ns()) + ".png"
             image_filepath = f"{self.data_dir}dalle/{my_filename}"
             await self.download_image(image_url, image_filepath)
