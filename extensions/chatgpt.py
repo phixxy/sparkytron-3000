@@ -20,7 +20,7 @@ class ChatGPT(commands.Cog):
         self.remind_me_loop.start()
 
 
-    async def folder_setup(self):
+    def folder_setup(self):
         try:
             folders = [
                 self.working_dir, 
