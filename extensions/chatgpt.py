@@ -113,7 +113,7 @@ class ChatGPT(commands.Cog):
     async def personality(self, ctx, personality_type=None):
         if personality_type:
             self.edit_channel_config(ctx.channel.id, "personality", personality_type)
-            await ctx.send("Personality changed to " + personality_type)
+            await ctx.send(f"Personality changed to {personality_type}")
         else:
             channel_config = await self.get_channel_config(ctx.channel.id)
             current_personality = channel_config["personality"]
@@ -121,13 +121,19 @@ class ChatGPT(commands.Cog):
 
 
     @commands.command(
-        description="Topic", 
-        help="Set the channel topic for the bot. Usage: !topic (topic)", 
+        description="Topic",
+        help="Set the channel topic for the bot. Usage: !topic (topic)",
         brief="Set channel topic"
-        )         
-    async def topic(self, ctx, channel_topic):
-        self.edit_channel_config(ctx.channel.id, "channel_topic", channel_topic)
-        await ctx.send("Topic changed to " + channel_topic)
+    )
+    async def topic(self, ctx, channel_topic=None):
+        if channel_topic:
+            self.edit_channel_config(ctx.channel.id, "channel_topic", channel_topic)
+            await ctx.send(f"Topic changed to {channel_topic}")
+        else:
+            channel_config = await self.get_channel_config(ctx.channel.id)
+            current_topic = channel_config["channel_topic"]
+            await ctx.send(f"Current topic is {current_topic}")
+
 
     @commands.command(
         description="Chat", 
