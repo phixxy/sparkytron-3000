@@ -35,15 +35,16 @@ class InkyScreen(commands.Cog):
         if text is not self.old_message:
             image = Image.new("P", (self.display.WIDTH, self.display.HEIGHT))
             draw = ImageDraw.Draw(image)
+            width = self.display.WIDTH
             height = self.display.HEIGHT
             lines = len(text)
             height_diff = height/lines
             x = 0
             y = 0
             for line in text:
-                if x <= height:
-                    draw.text((x, y), line, self.display.YELLOW)
-                    x += height_diff
+                if y <= width:
+                    draw.text((x, y), line, self.display.BLACK)
+                    y += height_diff
                 else:
                     self.bot.logger.warning("InkyScreen: Text too long to fit on image.")
             self.display.set_image(image)
