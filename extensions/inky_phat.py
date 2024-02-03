@@ -22,18 +22,19 @@ class InkyScreen(commands.Cog):
         self.display = self.setup()
         self.start_time = time.time()
         self.admin_ids = [242018983241318410]
+        self.message_loop.start()
         
     def setup(self):
         if self.enabled:
             display = inky.auto()
-            display.set_border(inky.BLACK)
+            display.set_border(inky.YELLOW)
             return display
         else:
             return None
 
     async def write_to_display(self, text: list):
         if text is not self.old_message:
-            image = Image.new("P", (self.display.WIDTH, self.display.HEIGHT))
+            image = Image.new("P", (self.display.WIDTH, self.display.HEIGHT) (self.display.BLACK))
             draw = ImageDraw.Draw(image)
             width = self.display.WIDTH
             height = self.display.HEIGHT
@@ -79,7 +80,6 @@ class InkyScreen(commands.Cog):
             message_list.append(f"Memory: {memory_info.used}/{memory_info.total}")
         except Exception as e:
             self.bot.logger.error(f"Error generating InkyScreen message: {e}")
-        print(message_list)
         return message_list
 
     
