@@ -1,10 +1,17 @@
 import socket # used to get local IP
 import time
+import os
 import datetime
 import psutil
 from PIL import Image, ImageFont, ImageDraw
 from discord.ext import commands, tasks
 import inky
+
+def is_enabled():
+    if os.getenv("inky").lower() == "enabled":
+        return True
+    else:
+        return False
 
 class InkyScreen(commands.Cog):
 
