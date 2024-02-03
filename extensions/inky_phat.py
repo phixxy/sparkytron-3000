@@ -37,6 +37,7 @@ class InkyScreen(commands.Cog):
             try:
                 image = Image.open("data/inky/bg.png")
             except:
+                self.bot.logger.exception("InkyScreen: Failed to load background image.")
                 image = Image.new("P", (self.display.WIDTH, self.display.HEIGHT), (self.display.BLACK))
             draw = ImageDraw.Draw(image)
             width = self.display.WIDTH
