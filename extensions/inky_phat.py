@@ -34,11 +34,11 @@ class InkyScreen(commands.Cog):
 
     async def write_to_display(self, text: list):
         if text is not self.old_message:
-            try:
-                image = Image.open("data/inky/bg.png")
-            except:
-                self.bot.logger.exception("InkyScreen: Failed to load background image.")
-                image = Image.new("P", (self.display.WIDTH, self.display.HEIGHT), (self.display.BLACK))
+            #try:
+            #    image = Image.open("data/inky/bg.png")
+            #except:
+            #    self.bot.logger.exception("InkyScreen: Failed to load background image.")
+            image = Image.new("P", (self.display.WIDTH, self.display.HEIGHT), (self.display.BLACK))
             draw = ImageDraw.Draw(image)
             width = self.display.WIDTH
             height = self.display.HEIGHT
