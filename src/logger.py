@@ -1,4 +1,5 @@
 import logging
+import os
 from logging.config import dictConfig
 
 LOGGING_CONFIG = {
@@ -40,4 +41,8 @@ LOGGING_CONFIG = {
     },
 }
 
+if not os.path.isdir("logs"):
+    os.mkdir("logs")
+with open("logs/info.log", "a") as f:
+    pass
 dictConfig(LOGGING_CONFIG)
