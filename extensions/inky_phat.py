@@ -90,7 +90,7 @@ class InkyScreen(commands.Cog):
             await ctx.send("You do not have permission to use this command.")
     
     @tasks.loop(minutes=10)
-    async def generate_message(self):
+    async def message_loop(self):
         if self.enabled:
             message = await self.generate_message()
             await self.write_to_display(message)
