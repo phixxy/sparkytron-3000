@@ -34,7 +34,7 @@ class InkyScreen(commands.Cog):
 
     async def write_to_display(self, text: list):
         if text is not self.old_message:
-            image = Image.new("P", (self.display.WIDTH, self.display.HEIGHT) (self.display.BLACK))
+            image = Image.new("P", (self.display.WIDTH, self.display.HEIGHT), (self.display.BLACK))
             draw = ImageDraw.Draw(image)
             width = self.display.WIDTH
             height = self.display.HEIGHT
