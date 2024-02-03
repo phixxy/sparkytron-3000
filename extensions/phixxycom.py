@@ -222,8 +222,18 @@ class PhixxyCom(commands.Cog):
                 f.writelines(message+'\n')
             await ctx.send("Saved suggestion!")
 
+    def get_last_5_messages(self):
+        with open(f"data/chatgpt/logs/346102473993355267.log", 'r') as f:
+            lines = f.readlines()
+        last_5_messages = ""
+        for i in range(5,1,-1):
+            last_5_messages += lines[-i]
+            last_5_messages += "\n"
+        print(last_5_messages)
+        return last_5_messages
+
     async def generate_blog(self):
-        if self.upload_enabled.lower() == "true":
+        if True:#self.upload_enabled.lower() == "true":
             start_time = time.time()
             topic = ''
             filename = f"{self.data_dir}ai-blog/index.html"
@@ -246,8 +256,10 @@ class PhixxyCom(commands.Cog):
             if topic != '':
                 self.bot.logger.info("Writing blogpost")
             else:
+                messages = self.get_last_5_messages()
+                question = f"you have a blog and you are inspired based on this short text chat interaction:\n{messages}\nwhat will the topic of your next blog be? just tell me the topic and a one sentence description"
                 self.bot.logger.info("No topic given for blogpost, generating one.")
-                topic = await self.answer_question("Give me one topic for an absurd blogpost.")
+                topic = await self.answer_question(question)
             post_div = '''<!--replace this with a post-->
                     <div class="post">
                         <h2 class="post-title"><!--POST_TITLE--></h2>
