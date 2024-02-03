@@ -44,7 +44,7 @@ class InkyScreen(commands.Cog):
             y = 0
             for line in text:
                 if y <= width:
-                    draw.text((x, y), line, self.display.YELLOW, size=18)
+                    draw.text((x, y), line, self.display.YELLOW)
                     y -= height_diff
                 else:
                     self.bot.logger.warning("InkyScreen: Text too long to fit on image.")
