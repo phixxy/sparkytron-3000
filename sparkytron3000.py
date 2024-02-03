@@ -92,7 +92,9 @@ async def on_message(ctx):
     try:
         await bot.process_commands(ctx)
     except commands.CommandNotFound:
-        pass
+        bot.logger.info("Command not found.")
+    except discord.ext.commands.errors.CommandNotFound:
+        bot.logger.info("Command not found.")
     except Exception as e:
         bot.logger.warning(f"Error processing commands: {e}")
 
