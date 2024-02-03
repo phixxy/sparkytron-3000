@@ -76,7 +76,7 @@ class InkyScreen(commands.Cog):
             message_list.append(f"Memory: {memory_info.used}/{memory_info.total}")
         except Exception as e:
             self.bot.logger.error(f"Error generating InkyScreen message: {e}")
-        
+        print(message_list)
         return message_list
 
     
@@ -92,8 +92,8 @@ class InkyScreen(commands.Cog):
     @tasks.loop(minutes=10)
     async def generate_message(self):
         if self.enabled:
-            message = self.generate_message()
-            self.write_to_display(message)
+            message = await self.generate_message()
+            await self.write_to_display(message)
 
 
         
