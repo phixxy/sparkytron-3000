@@ -17,7 +17,7 @@ class InkyScreen(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.enabled = False
+        self.enabled = is_enabled()
         self.old_message = None
         self.display = self.setup()
         self.start_time = time.time()
