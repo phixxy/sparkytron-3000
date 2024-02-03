@@ -14,13 +14,14 @@ class InkyScreen(commands.Cog):
         self.old_message = None
         self.display = self.setup()
         self.start_time = time.time()
+        self.admin_ids = [242018983241318410]
         
     def setup(self):
         display = inky.auto()
         display.set_border(inky.BLACK)
         return display
 
-    def write_to_image(self, text: list):
+    def write_to_display(self, text: list):
         if text is not self.old_message:
             image = Image.new("P", (self.display.WIDTH, self.display.HEIGHT))
             draw = ImageDraw.Draw(image)
@@ -52,21 +53,37 @@ class InkyScreen(commands.Cog):
         sparky_uptime = time.time() - self.start_time
         return str(datetime.timedelta(seconds=sparky_uptime))
     
-    @tasks.loop(minutes=10)
-    async def update_screen(self):
+    def generate_message(self):
         message_list = []
-        if self.enabled:
+        try:
             message_list.append(f"IP: {self.get_ip_address()}")
-            message_list.append(f"Time: {time.strftime('%H:%M:%S')}") 
+            message_list.append(f"Time: {time.strftime('%H:%M:%S')}")
             message_list.append(f"Uptime: {self.get_uptime()}")
             message_list.append(f"Servers: {len(self.bot.guilds)}")
             cpu_percent = psutil.cpu_percent()
             memory_info = psutil.virtual_memory()
-            message_list.append(f"CPU: {cpu_percent}%")  
+            message_list.append(f"CPU: {cpu_percent}%")
             message_list.append(f"Memory: {memory_info.used}/{memory_info.total}")
+        except Exception as e:
+            self.bot.logger.error(f"Error generating InkyScreen message: {e}")
+        
+        return message_list
 
-            
-
+    
+    @commands.command()
+    async def inkyscreen_update(self, ctx):
+        if ctx.author.id in self.admin_ids:
+            message = self.generate_message()
+            self.write_to_display(message)
+            await ctx.send("InkyScreen updated.")
+        else:
+            await ctx.send("You do not have permission to use this command.")
+    
+    @tasks.loop(minutes=10)
+    async def generate_message(self):
+        if self.enabled:
+            message = self.generate_message()
+            self.write_to_display(message)
 
 
         
