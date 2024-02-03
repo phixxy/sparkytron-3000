@@ -44,7 +44,7 @@ class InkyScreen(commands.Cog):
             y = 0
             for line in text:
                 if y <= width:
-                    draw.text((x, y), line, self.display.YELLOW, font=ImageFont.load_default(size=24))
+                    draw.text((x, y), line, self.display.YELLOW, font=ImageFont.load_default(size=22))
                     y += height_diff
                 else:
                     self.bot.logger.warning("InkyScreen: Text too long to fit on image.")
@@ -65,7 +65,20 @@ class InkyScreen(commands.Cog):
     
     def get_uptime(self):
         sparky_uptime = time.time() - self.start_time
-        return str(datetime.timedelta(seconds=sparky_uptime))
+        return str(datetime.timedelta(seconds=sparky_uptime))[0:-7]
+    
+    def get_memory_usage(self):
+        memory_info = psutil.virtual_memory()
+        used_memory = memory_info.used
+        if used_memory >= 1000000000:
+            used_memory = round(used_memory/1000000000,2)
+            used_memory = f"{used_memory}GB"
+        else:
+            used_memory = round(used_memory/1000000,0)
+            used_memory = f"{used_memory}MB"
+        total_memory = round(memory_info.total/1000000000,2)
+        return f"Memory: {used_memory}/{total_memory}GB"
+
     
     async def generate_message(self):
         message_list = []
@@ -75,17 +88,9 @@ class InkyScreen(commands.Cog):
             message_list.append(f"Uptime: {self.get_uptime()}")
             #message_list.append(f"Servers: {len(self.bot.guilds)}")
             cpu_percent = psutil.cpu_percent()
-            memory_info = psutil.virtual_memory()
             message_list.append(f"CPU: {cpu_percent}%")
-            used_memory = memory_info.used
-            if used_memory >= 1000000000:
-                used_memory = round(used_memory/1000000000,2)
-                used_memory = f"{used_memory}GB"
-            else:
-                used_memory = round(used_memory/1000000,0)
-                used_memory = f"{used_memory}MB"
-            total_memory = round(memory_info.total/1000000000,2)
-            message_list.append(f"Memory: {used_memory}/{total_memory}GB")
+            message_list.append(self.get_memory_usage())
+
         except Exception as e:
             self.bot.logger.error(f"Error generating InkyScreen message: {e}")
         return message_list
