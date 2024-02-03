@@ -36,9 +36,6 @@ class InkyScreen(commands.Cog):
         if text is not self.old_message:
             try:
                 image = Image.open("data/inky/bg.png")
-                image.convert("P", palette=Image.ADAPTIVE, colors=2, dither=Image.FLOYDSTEINBERG)
-                palette = [255,255,255, 0, 0, 0]
-                image.putpalette(palette)
             except:
                 self.bot.logger.exception("InkyScreen: Failed to load background image.")
                 image = Image.new("P", (self.display.WIDTH, self.display.HEIGHT), (self.display.BLACK))
