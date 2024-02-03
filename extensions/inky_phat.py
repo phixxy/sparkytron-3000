@@ -71,12 +71,12 @@ class InkyScreen(commands.Cog):
         memory_info = psutil.virtual_memory()
         used_memory = memory_info.used
         if used_memory >= 1000000000:
-            used_memory = round(used_memory/1000000000,2)
+            used_memory = round(used_memory/1000000000,1)
             used_memory = f"{used_memory}GB"
         else:
-            used_memory = round(used_memory/1000000,0)
+            used_memory = round(used_memory/1000000)
             used_memory = f"{used_memory}MB"
-        total_memory = round(memory_info.total/1000000000,2)
+        total_memory = round(memory_info.total/1000000000,1)
         return f"Memory: {used_memory}/{total_memory}GB"
 
     
