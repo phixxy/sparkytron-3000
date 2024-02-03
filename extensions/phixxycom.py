@@ -228,8 +228,6 @@ class PhixxyCom(commands.Cog):
         last_5_messages = ""
         for i in range(5,1,-1):
             last_5_messages += lines[-i]
-            last_5_messages += "\n"
-        print(last_5_messages)
         return last_5_messages
 
     async def generate_blog(self):
