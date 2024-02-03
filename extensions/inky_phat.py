@@ -98,4 +98,8 @@ class InkyScreen(commands.Cog):
 
         
 async def setup(bot):
-    await bot.add_cog(InkyScreen(bot))
+    try:
+        await bot.add_cog(InkyScreen(bot))
+        bot.logger.info("InkyScreen cog loaded")
+    except:
+        bot.logger.exception("Error loading InkyScreen cog")
