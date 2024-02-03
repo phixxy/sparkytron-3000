@@ -44,8 +44,8 @@ class InkyScreen(commands.Cog):
             y = 0
             for line in text:
                 if y <= width:
-                    draw.text((x, y), line, self.display.YELLOW)
-                    y -= height_diff
+                    draw.text((x, y), line, self.display.YELLOW, font=ImageFont.load_default(size=24))
+                    y += height_diff
                 else:
                     self.bot.logger.warning("InkyScreen: Text too long to fit on image.")
             image = image.rotate(180)
@@ -73,11 +73,11 @@ class InkyScreen(commands.Cog):
             message_list.append(f"IP: {self.get_ip_address()}")
             message_list.append(f"Time: {time.strftime('%H:%M:%S')}")
             message_list.append(f"Uptime: {self.get_uptime()}")
-            message_list.append(f"Servers: {len(self.bot.guilds)}")
+            #message_list.append(f"Servers: {len(self.bot.guilds)}")
             cpu_percent = psutil.cpu_percent()
             memory_info = psutil.virtual_memory()
             message_list.append(f"CPU: {cpu_percent}%")
-            message_list.append(f"Memory: {memory_info.used}/{memory_info.total}")
+            message_list.append(f"Memory: {memory_info.used/100000}/{memory_info.total/100000}GB")
         except Exception as e:
             self.bot.logger.error(f"Error generating InkyScreen message: {e}")
         return message_list
