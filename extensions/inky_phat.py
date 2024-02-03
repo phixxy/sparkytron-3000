@@ -38,7 +38,8 @@ class InkyScreen(commands.Cog):
             height = self.display.HEIGHT
             lines = len(text)
             height_diff = height/lines
-            x, y = 0
+            x = 0
+            y = 0
             for line in text:
                 if x <= height:
                     draw.text((x, y), line, self.display.YELLOW)
