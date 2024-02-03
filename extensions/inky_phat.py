@@ -77,7 +77,7 @@ class InkyScreen(commands.Cog):
             cpu_percent = psutil.cpu_percent()
             memory_info = psutil.virtual_memory()
             message_list.append(f"CPU: {cpu_percent}%")
-            message_list.append(f"Memory: {memory_info.used/100000}/{memory_info.total/100000}GB")
+            message_list.append(f"Memory: {round(memory_info.used/100000000,2)}/{round(memory_info.total/100000000,2)}GB")
         except Exception as e:
             self.bot.logger.error(f"Error generating InkyScreen message: {e}")
         return message_list
