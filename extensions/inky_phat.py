@@ -17,9 +17,12 @@ class InkyScreen(commands.Cog):
         self.admin_ids = [242018983241318410]
         
     def setup(self):
-        display = inky.auto()
-        display.set_border(inky.BLACK)
-        return display
+        if self.enabled:
+            display = inky.auto()
+            display.set_border(inky.BLACK)
+            return display
+        else:
+            return None
 
     def write_to_display(self, text: list):
         if text is not self.old_message:
