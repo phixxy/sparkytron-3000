@@ -43,10 +43,11 @@ class InkyScreen(commands.Cog):
             y = 0
             for line in text:
                 if y <= width:
-                    draw.text((x, y), line, self.display.BLACK)
-                    y += height_diff
+                    draw.text((x, y), line, self.display.YELLOW, size=18)
+                    y -= height_diff
                 else:
                     self.bot.logger.warning("InkyScreen: Text too long to fit on image.")
+            image = image.rotate()
             self.display.set_image(image)
             self.display.show()
             self.bot.logger.info("InkyScreen: Text successfully written to image.")
