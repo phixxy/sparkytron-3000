@@ -31,7 +31,7 @@ class InkyScreen(commands.Cog):
         else:
             return None
 
-    def write_to_display(self, text: list):
+    async def write_to_display(self, text: list):
         if text is not self.old_message:
             image = Image.new("P", (self.display.WIDTH, self.display.HEIGHT))
             draw = ImageDraw.Draw(image)
@@ -63,7 +63,7 @@ class InkyScreen(commands.Cog):
         sparky_uptime = time.time() - self.start_time
         return str(datetime.timedelta(seconds=sparky_uptime))
     
-    def generate_message(self):
+    async def generate_message(self):
         message_list = []
         try:
             message_list.append(f"IP: {self.get_ip_address()}")
@@ -83,8 +83,8 @@ class InkyScreen(commands.Cog):
     @commands.command()
     async def inkyscreen_update(self, ctx):
         if ctx.author.id in self.admin_ids:
-            message = self.generate_message()
-            self.write_to_display(message)
+            message = await self.generate_message()
+            await self.write_to_display(message)
             await ctx.send("InkyScreen updated.")
         else:
             await ctx.send("You do not have permission to use this command.")
