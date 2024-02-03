@@ -47,7 +47,7 @@ class InkyScreen(commands.Cog):
                     y -= height_diff
                 else:
                     self.bot.logger.warning("InkyScreen: Text too long to fit on image.")
-            image = image.rotate()
+            image = image.rotate(180)
             self.display.set_image(image)
             self.display.show()
             self.bot.logger.info("InkyScreen: Text successfully written to image.")
