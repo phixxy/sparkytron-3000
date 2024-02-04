@@ -7,10 +7,7 @@ import json
 import math
 import time
 
-async def get_json(self, url):
-    async with self.bot.http_session.get(url) as resp:
-            json_data = await resp.json()
-    return json_data
+
 
 #@commands.cooldown(1, 60, commands.BucketType.user) Cooldowns....
 
@@ -21,7 +18,7 @@ class Pokemon:
 
     async def get_pkmn_from_id(id):
         url = 'https://pokeapi.co/api/v2/pokemon/' + str(id)
-        json_data = await get_json(url)
+        json_data = await self.get_json(url)
         return json_data
 
 class PokemonGame(commands.Cog):
@@ -31,6 +28,11 @@ class PokemonGame(commands.Cog):
         self.working_dir = "tmp/pokemon/"
         self.data_dir = "data/pokemon/"
         self.folder_setup()
+
+    async def get_json(self, url):
+        async with self.bot.http_session.get(url) as resp:
+                json_data = await resp.json()
+        return json_data
 
     def folder_setup(self):
         try:
@@ -70,7 +72,7 @@ class PokemonGame(commands.Cog):
 
     async def generate_starter(self, discord_id):
         random.seed(discord_id)
-        json_data = await get_json('https://pokeapi.co/api/v2/pokemon-species/')
+        json_data = await self.get_json('https://pokeapi.co/api/v2/pokemon-species/')
         pokemon_count = json_data['count']
         base_pokemon = False
         while not base_pokemon:
@@ -81,7 +83,7 @@ class PokemonGame(commands.Cog):
     
     async def get_pkmn_from_id(self, id):
         url = 'https://pokeapi.co/api/v2/pokemon/' + str(id)
-        json_data = await get_json(url)
+        json_data = await self.get_json(url)
         return json_data
     
     async def give_buddy_food(self, pkmn_data):
@@ -138,7 +140,43 @@ class PokemonGame(commands.Cog):
         embed.add_field(name="Buddy XP", value=buddy_xp, inline=True)
         embed.add_field(name="Types", value=type_str, inline=False)
         return embed
+    
+    async def get_pokemon_evolve_data(self, pkmn_data):
+        pkmn_id = pkmn_data['id']
+        url = f"https://pokeapi.co/api/v2/pokemon-species/{pkmn_id}/"
+        json_data = await self.get_json(url)
+        evolution_url = json_data['evolution_chain']['url']
+        evolution_data = await self.get_json(evolution_url)
+        evolution_level = evolution_data['chain']['evolves_to'][0]['evolution_details'][0]['min_level']
+        evolution_type = evolution_data['chain']['evolves_to'][0]['evolution_details'][0]['trigger']['name']
+        new_pokemon_url = evolution_data['chain']['evolves_to'][0]['species']['url']
+        new_pokemon_url = new_pokemon_url.replace("pokemon-species/","pokemon/")
+        return evolution_level, evolution_type, new_pokemon_url
 
+    # Some bug in this that doesn't allow middle evolution to evolve
+    '''@commands.command()
+    async def pkmn_evolve(self, ctx):
+        if os.path.isfile(self.data_dir+str(ctx.author.id)+'.json'):
+            pkmn_data = await self.load_pokemon(ctx.author.id)
+            evolution_level, evolution_type, new_pokemon_url = await self.get_pokemon_evolve_data(pkmn_data)
+            buddy_level = await self.calc_pkmn_buddy_level(pkmn_data)
+            if buddy_level > evolution_level and evolution_type == 'level-up':
+                new_pokemon_json = await self.get_json(new_pokemon_url)
+                new_pokemon_json['shiny'] = pkmn_data['shiny']
+                new_pokemon_json['nickname'] = pkmn_data['nickname']
+                new_pokemon_json['unique_id'] = pkmn_data['unique_id']
+                new_pokemon_json['nature'] = pkmn_data['nature']
+                new_pokemon_json['buddy_level'] = pkmn_data['buddy_level']
+                new_pokemon_json['buddy_xp'] = pkmn_data['buddy_xp']
+                new_pokemon_json['last_food'] = pkmn_data['last_food']
+                new_pokemon_json['last_hug'] = pkmn_data['last_hug']
+                await self.save_pokemon(ctx.author.id, new_pokemon_json)
+                embed = await self.make_pmkn_embed(new_pokemon_json)
+                await ctx.send(embed=embed)
+            else:
+                await ctx.send("You don't have enough buddy xp to evolve this pokemon.")'''
+
+        
     @commands.command()
     async def pkmn_start(self, ctx):
         if not os.path.isfile(self.data_dir+str(ctx.author.id)+'.json'):
@@ -147,7 +185,7 @@ class PokemonGame(commands.Cog):
             json_data = await self.get_pkmn_from_id(starter_id)
             is_shiny = await self.shiny_roll()
             nature = random.randint(0,19)
-            nature_data = await get_json('https://pokeapi.co/api/v2/nature/')
+            nature_data = await self.get_json('https://pokeapi.co/api/v2/nature/')
             nature = nature_data['results'][nature]['name']
             json_data['shiny'] = is_shiny
             json_data['nickname'] = None
@@ -233,8 +271,4 @@ class PokemonGame(commands.Cog):
         await self.pkmn_msg(message.author.id)
 
 async def setup(bot):
-    try:
-        await bot.add_cog(PokemonGame(bot))
-        bot.logger.info("Successfully added PokemonGame Cog")
-    except:
-        bot.logger.exception("Failed to load PokemonGame Cog")
+    await bot.add_cog(PokemonGame(bot))
