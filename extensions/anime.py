@@ -71,8 +71,4 @@ class Anime(commands.Cog):
             
 
 async def setup(bot):
-    try:
-        await bot.add_cog(Anime(bot))
-        bot.logger.info("Successfully added Anime Cog")
-    except:
-        bot.logger.info("Failed to load Anime Cog")
+    await bot.add_cog(Anime(bot))

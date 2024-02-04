@@ -367,10 +367,6 @@ class PhixxyCom(commands.Cog):
         await ctx.send(output)
 
 async def setup(bot):
-    try:
-        asyncssh.set_log_level(30)
-        asyncssh.set_sftp_log_level(30)
-        await bot.add_cog(PhixxyCom(bot))
-        bot.logger.info("Successfully added PhixxyCom Cog")
-    except:
-        bot.logger.info("Failed to load PhixxyCom Cog")
+    asyncssh.set_log_level(30)
+    asyncssh.set_sftp_log_level(30)
+    await bot.add_cog(PhixxyCom(bot))

@@ -392,9 +392,5 @@ class StableDiffusion(commands.Cog):
 
 
 async def setup(bot):
-    try:
-        await bot.add_cog(StableDiffusion(bot))
-        bot.logger.info("Successfully added StableDiffusion Cog")
-    except:
-        bot.logger.info("Failed to load StableDiffusion Cog")
+    await bot.add_cog(StableDiffusion(bot))
     

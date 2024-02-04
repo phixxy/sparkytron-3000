@@ -69,8 +69,4 @@ class Pokedex(commands.Cog):
             await ctx.channel.send(message)
 
 async def setup(bot):
-    try:
-        await bot.add_cog(Pokedex(bot))
-        bot.logger.info("Successfully added Pokedex Cog")
-    except:
-        bot.logger.info("Failed to load Pokedex Cog")
+    await bot.add_cog(Pokedex(bot))

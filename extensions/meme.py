@@ -113,8 +113,4 @@ class Meme(commands.Cog):
             await ctx.send('Something went wrong try again. Usage: !meme (topic)')
 
 async def setup(bot):
-    try:
-        await bot.add_cog(Meme(bot))
-        bot.logger.info("Successfully added Meme Cog")
-    except:
-        bot.logger.info("Failed to load Meme Cog")
+    await bot.add_cog(Meme(bot))

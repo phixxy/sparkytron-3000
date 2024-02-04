@@ -60,8 +60,4 @@ class Admin(commands.Cog):
             self.bot.logger.info(f"Update command attempted by {ctx.author.id}")
 
 async def setup(bot):
-    try:
-        await bot.add_cog(Admin(bot))
-        bot.logger.info("Successfully added Admin cog")
-    except:
-        bot.logger.exception("Failed to add Admin cog")
+    await bot.add_cog(Admin(bot))

@@ -113,8 +113,4 @@ class Highscores(commands.Cog):
         await ctx.send(file=f)
 
 async def setup(bot):
-    try:
-        await bot.add_cog(Highscores(bot))
-        bot.logger.info("Successfully added Highscores Cog")
-    except:
-        bot.logger.info("Failed to load Highscores Cog")
+    await bot.add_cog(Highscores(bot))
