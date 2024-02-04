@@ -80,7 +80,11 @@ async def on_ready():
         # Import plugins from extensions folder
         for plugin_file in os.listdir('extensions/'):
             if plugin_file[0] != '_' and plugin_file[-3:] == '.py':
-                await bot.load_extension(f'extensions.{plugin_file[:-3]}')
+                try:
+                    await bot.load_extension(f'extensions.{plugin_file[:-3]}')
+                    bot.logger.info(f"Successfully loaded plugin {plugin_file}")
+                except:
+                    bot.logger.exception(f"Failed to load plugin {plugin_file}")
         bot.logger.info('We have logged in as {0.user}'.format(bot))
         task_loop.start()
     except Exception as e:
