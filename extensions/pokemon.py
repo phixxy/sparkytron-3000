@@ -8,19 +8,6 @@ import math
 import time
 
 
-
-#@commands.cooldown(1, 60, commands.BucketType.user) Cooldowns....
-
-class Pokemon:
-    async def __init__(self, id: int, generate: bool = True) -> None:
-        if generate: # Should I even do it this way?
-            self.json_data = await self.get_pkmn_from_id(id)
-
-    async def get_pkmn_from_id(id):
-        url = 'https://pokeapi.co/api/v2/pokemon/' + str(id)
-        json_data = await self.get_json(url)
-        return json_data
-
 class PokemonGame(commands.Cog):
 
     def __init__(self, bot):
@@ -45,7 +32,7 @@ class PokemonGame(commands.Cog):
 
     async def starter_picker(self, id): #id = pokedex number
         url = "https://pokeapi.co/api/v2/pokemon-species/" + str(id)
-        json_data = await get_json(url)
+        json_data = await self.get_json(url)
         if (json_data["evolves_from_species"] == None) and (not json_data['is_mythical']) and (not json_data['is_legendary']):
             return True
         else:
