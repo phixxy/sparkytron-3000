@@ -5,3 +5,6 @@ pillow
 matplotlib
 aioftp
 asyncssh
+psutil
+aiofiles
+inky
