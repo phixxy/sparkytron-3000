@@ -43,7 +43,12 @@ class InkyScreen(commands.Cog):
             width = self.display.WIDTH
             height = self.display.HEIGHT
             lines = len(text)
-            height_diff = height/lines
+            try:
+                height_diff = height/lines
+            except:
+                self.bot.logger.exception("InkyScreen: Failed to calculate height_diff.")
+                self.bot.logger.info(f"InkyScreen: Text: {text}")
+                return
             x = 0
             y = 0
             for line in text:
