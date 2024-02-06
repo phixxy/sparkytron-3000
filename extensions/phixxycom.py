@@ -36,9 +36,13 @@ class PhixxyCom(commands.Cog):
             lines = f.readlines()
             for line in reversed(lines):
                 if filename in line:
-                    prompt = line[line.index("Prompt: ") + 7:line.index("Filename: ")]
-                    prompt = ''.join(prompt.rsplit(',', 1)) # Remove the last comma
-                    return html.escape(prompt)
+                    try:
+                        prompt = line[line.index("Prompt: ") + 7:line.index("Filename: ")]
+                        prompt = ''.join(prompt.rsplit(',', 1)) # Remove the last comma
+                        return html.escape(prompt)
+                    except:
+                        self.bot.logger.exception("PhixxyCom failed to find prompt from filename")
+                        return "Unknown Prompt"
         return "Unknown Prompt"
 
     async def upload_sftp(self, local_filename, server_folder, server_filename):
