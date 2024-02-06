@@ -254,8 +254,8 @@ class StableDiffusion(commands.Cog):
             
             with open(filepath, "rb") as fh:
                 f = discord.File(fh, filename=filepath)
-
-            log_data = f'Author: {ctx.author.name}, Prompt: {prompt.replace('\n',' ')}, Filename: {my_filename}\n'
+            prompt = prompt.replace('\n',' ')
+            log_data = f'Author: {ctx.author.name}, Prompt: {prompt}, Filename: {my_filename}\n'
             with open(f"{self.data_dir}stable_diffusion.log", 'a') as log_file:
                 log_file.writelines(log_data)
 
