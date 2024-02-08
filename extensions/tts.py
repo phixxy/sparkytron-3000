@@ -46,6 +46,29 @@ class TextToSpeech(commands.Cog):
                 if chunk:
                     f.write(chunk)
         return filepath
+    
+    async def open_text_to_speech(self, prompt):
+        CHUNK_SIZE = 1024
+        url = "https://api.openai.com/v1/audio/speech"
+        api_key = os.getenv("openai.api_key")
+        headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+        }
+
+        data = {
+        "input": prompt,
+        "model": "tts-1",
+        "voice": "alloy"
+        }
+        filename = f"{time.time_ns()}.mp3"
+        filepath = f"{self.data_dir}{filename}"
+        response = await self.bot.http_session.post(url, json=data, headers=headers)
+        with open(filepath, 'wb') as f:
+            async for chunk in response.content.iter_chunked(CHUNK_SIZE):
+                if chunk:
+                    f.write(chunk)
+        return filepath
 
 
     
@@ -67,6 +90,21 @@ class TextToSpeech(commands.Cog):
             await ctx.send("Generating...")
         try:
             filepath = await self.text_to_speech(prompt)
+            await ctx.send(file=discord.File(filepath))
+        except:
+            await ctx.send("Error in tts")
+            self.bot.logger.exception("Error in tts")
+
+    @commands.command()
+    async def opentts(self, ctx):
+        prompt = self.get_prompt_from_ctx(ctx)
+        if prompt is None:
+            await ctx.send("Please provide a prompt")
+            return
+        else:
+            await ctx.send("Generating...")
+        try:
+            filepath = await self.open_text_to_speech(prompt)
             await ctx.send(file=discord.File(filepath))
         except:
             await ctx.send("Error in tts")
