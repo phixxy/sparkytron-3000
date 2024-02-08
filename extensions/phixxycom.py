@@ -273,7 +273,7 @@ class PhixxyCom(commands.Cog):
             title_prompt = 'generate an absurd essay title about ' + topic
             title = await self.answer_question(title_prompt, model="gpt-3.5-turbo")
             prompt = 'Write a satirical essay with a serious tone titled: "' + title + '". Do not label parts of the essay.'
-            content = await self.answer_question(prompt, model="gpt-4")
+            content = await self.answer_question(prompt, model="gpt-4-turbo-preview")
             if title in content[:len(title)]:
                 content = content.replace(title, '', 1)
             content = f"<p>{content}</p>"

@@ -187,7 +187,7 @@ class ChatGPT(commands.Cog):
         if ctx.author.get_role(self.premium_role):
             await ctx.send("One moment, let me think...")
             question = ctx.message.content.split(" ", maxsplit=1)[1]
-            answer = await self.answer_question(question, "gpt-4")
+            answer = await self.answer_question(question, "gpt-4-turbo-preview")
             chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
             for chunk in chunks:
                 await ctx.send(chunk)
