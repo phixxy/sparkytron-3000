@@ -226,7 +226,8 @@ class StableDiffusion(commands.Cog):
                 r = await resp.json()
         except Exception as error:
             await ctx.send("My image generation service may not be running.")
-            self.bot.logger.exception("Error in imagine")
+            self.bot.logger.exception("Error with connection to image generation service")
+            return
             
         for i in r['images']:
             image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))
