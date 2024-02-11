@@ -11,7 +11,6 @@ class PhixxyCom(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.upload_enabled = os.getenv('upload_phixxy')
         self.SERVER = os.getenv('ftp_server')
         self.USERNAME = os.getenv('ftp_username')
         self.PASSWORD = os.getenv('ftp_password')
@@ -46,11 +45,10 @@ class PhixxyCom(commands.Cog):
         return "Unknown Prompt"
 
     async def upload_sftp(self, local_filename, server_folder, server_filename):
-        if self.upload_enabled.lower() == "true":
-            remotepath = server_folder + server_filename
-            async with asyncssh.connect(self.SERVER, username=self.USERNAME, password=self.PASSWORD) as conn:
-                async with conn.start_sftp_client() as sftp:
-                    await sftp.put(local_filename, remotepath=remotepath)
+        remotepath = server_folder + server_filename
+        async with asyncssh.connect(self.SERVER, username=self.USERNAME, password=self.PASSWORD) as conn:
+            async with conn.start_sftp_client() as sftp:
+                await sftp.put(local_filename, remotepath=remotepath)
 
     async def delete_local_pngs(self, local_folder):
         for filename in os.listdir(local_folder):
@@ -158,33 +156,32 @@ class PhixxyCom(commands.Cog):
 
     async def upload_ftp_ai_images(self, ai_dict):
         try:
-            if self.upload_enabled.lower() == "true":
-                for folder in ai_dict:
-                    for filename in os.listdir(folder):
-                        if filename[-4:] == '.png':
-                            filepath = folder + filename
-                            self.bot.logger.info(f"Found file = {filename}")
-                            prompt = self.find_prompt_from_filename(ai_dict[folder], filename)
-                            self.bot.logger.info(f"Found prompt = {prompt}")
-                            html_file = f"{self.data_dir}ai-images/index.html"
-                            html_insert = '''<!--REPLACE THIS COMMENT-->
-                                <div>
-                                    <img src="<!--filename-->" loading="lazy">
-                                    <p class="image-description"><!--description--></p>
-                                </div>'''
-                            server_folder = (os.getenv('ftp_public_html') + 'ai-images/')
-                            new_filename = str(time.time_ns()) + ".png"
-                            await self.upload_sftp(filepath, server_folder, new_filename)
-                            self.bot.logger.info(f"Uploaded {new_filename}")
-                            with open(html_file, 'r') as f:
-                                html_data = f.read()
-                            html_insert = html_insert.replace("<!--filename-->", new_filename)
-                            html_insert = html_insert.replace("<!--description-->", prompt)
-                            html_data = html_data.replace("<!--REPLACE THIS COMMENT-->", html_insert)
-                            with open(html_file, "w") as f:
-                                f.writelines(html_data)
-                            await self.upload_sftp(html_file, server_folder, "index.html")
-                            os.rename(filepath, f"tmp/{new_filename}")
+            for folder in ai_dict:
+                for filename in os.listdir(folder):
+                    if filename[-4:] == '.png':
+                        filepath = folder + filename
+                        self.bot.logger.info(f"Found file = {filename}")
+                        prompt = self.find_prompt_from_filename(ai_dict[folder], filename)
+                        self.bot.logger.info(f"Found prompt = {prompt}")
+                        html_file = f"{self.data_dir}ai-images/index.html"
+                        html_insert = '''<!--REPLACE THIS COMMENT-->
+                            <div>
+                                <img src="<!--filename-->" loading="lazy">
+                                <p class="image-description"><!--description--></p>
+                            </div>'''
+                        server_folder = (os.getenv('ftp_public_html') + 'ai-images/')
+                        new_filename = str(time.time_ns()) + ".png"
+                        await self.upload_sftp(filepath, server_folder, new_filename)
+                        self.bot.logger.info(f"Uploaded {new_filename}")
+                        with open(html_file, 'r') as f:
+                            html_data = f.read()
+                        html_insert = html_insert.replace("<!--filename-->", new_filename)
+                        html_insert = html_insert.replace("<!--description-->", prompt)
+                        html_data = html_data.replace("<!--REPLACE THIS COMMENT-->", html_insert)
+                        with open(html_file, "w") as f:
+                            f.writelines(html_data)
+                        await self.upload_sftp(html_file, server_folder, "index.html")
+                        os.rename(filepath, f"tmp/{new_filename}")
         except:
             self.bot.logger.exception("Something went wrong in upload_ftp_ai_images")
 
@@ -235,63 +232,62 @@ class PhixxyCom(commands.Cog):
         return last_5_messages
 
     async def generate_blog(self):
-        if True:#self.upload_enabled.lower() == "true":
-            start_time = time.time()
-            topic = ''
-            filename = f"{self.data_dir}ai-blog/index.html"
-            with open(filename, 'r', encoding="utf-8") as f:
-                html_data = f.read()
-            current_time = time.time()
-            current_struct_time = time.localtime(current_time)
-            date = time.strftime("%B %d, %Y", current_struct_time)
-            if date in html_data:
-                return
-            blogpost_file = f"{self.data_dir}blog_topics.txt"
-            if os.path.isfile(blogpost_file):
-                with open(blogpost_file, 'r') as f:
-                    blogpost_topics = f.read()
-                    f.seek(0)
-                    topic = f.readline()
-                    blogpost_topics = blogpost_topics.replace(topic, '')
-                with open(blogpost_file, 'w') as f:
-                    f.write(blogpost_topics)
-            if topic != '':
-                self.bot.logger.info("Writing blogpost")
-            else:
-                messages = self.get_last_5_messages()
-                question = f"you have a blog and you are inspired based on this short text chat interaction:\n{messages}\nwhat will the topic of your next blog be? just tell me the topic and a one sentence description"
-                self.bot.logger.info("No topic given for blogpost, generating one.")
-                topic = await self.answer_question(question)
-            post_div = '''<!--replace this with a post-->
-                    <div class="post">
-                        <h2 class="post-title"><!--POST_TITLE--></h2>
-                        <p class="post-date"><!--POST_DATE--></p>
-                        <div class="post-content">
-                            <!--POST_CONTENT-->
-                        </div>
-                    </div>'''
-            title_prompt = 'generate an absurd essay title about ' + topic
-            title = await self.answer_question(title_prompt, model="gpt-3.5-turbo")
-            prompt = 'Write a satirical essay with a serious tone titled: "' + title + '". Do not label parts of the essay.'
-            content = await self.answer_question(prompt, model="gpt-4-turbo-preview")
-            if title in content[:len(title)]:
-                content = content.replace(title, '', 1)
-            content = f"<p>{content}</p>"
-            content = content.replace('\n\n', "</p><p>")
-            content = content.replace("<p></p>", '')
+        start_time = time.time()
+        topic = ''
+        filename = f"{self.data_dir}ai-blog/index.html"
+        with open(filename, 'r', encoding="utf-8") as f:
+            html_data = f.read()
+        current_time = time.time()
+        current_struct_time = time.localtime(current_time)
+        date = time.strftime("%B %d, %Y", current_struct_time)
+        if date in html_data:
+            return
+        blogpost_file = f"{self.data_dir}blog_topics.txt"
+        if os.path.isfile(blogpost_file):
+            with open(blogpost_file, 'r') as f:
+                blogpost_topics = f.read()
+                f.seek(0)
+                topic = f.readline()
+                blogpost_topics = blogpost_topics.replace(topic, '')
+            with open(blogpost_file, 'w') as f:
+                f.write(blogpost_topics)
+        if topic != '':
+            self.bot.logger.info("Writing blogpost")
+        else:
+            messages = self.get_last_5_messages()
+            question = f"you have a blog and you are inspired based on this short text chat interaction:\n{messages}\nwhat will the topic of your next blog be? just tell me the topic and a one sentence description"
+            self.bot.logger.info("No topic given for blogpost, generating one.")
+            topic = await self.answer_question(question)
+        post_div = '''<!--replace this with a post-->
+                <div class="post">
+                    <h2 class="post-title"><!--POST_TITLE--></h2>
+                    <p class="post-date"><!--POST_DATE--></p>
+                    <div class="post-content">
+                        <!--POST_CONTENT-->
+                    </div>
+                </div>'''
+        title_prompt = 'generate an absurd essay title about ' + topic
+        title = await self.answer_question(title_prompt, model="gpt-3.5-turbo")
+        prompt = 'Write a satirical essay with a serious tone titled: "' + title + '". Do not label parts of the essay.'
+        content = await self.answer_question(prompt, model="gpt-4-turbo-preview")
+        if title in content[:len(title)]:
+            content = content.replace(title, '', 1)
+        content = f"<p>{content}</p>"
+        content = content.replace('\n\n', "</p><p>")
+        content = content.replace("<p></p>", '')
 
-            post_div = post_div.replace("<!--POST_TITLE-->", title)
-            post_div = post_div.replace("<!--POST_DATE-->", date)
-            post_div = post_div.replace("<!--POST_CONTENT-->", content)
-            
-            html_data = html_data.replace("<!--replace this with a post-->", post_div)
-            with open(filename, 'w', encoding="utf-8") as f:
-                f.write(html_data)
-            await self.upload_sftp(filename, (os.getenv('ftp_public_html') + 'ai-blog/'), "index.html")
-            run_time = time.time() - start_time
-            self.bot.logger.debug("It took " + str(run_time) + " seconds to generate the blog post!")
-            output = "Blog Updated! (" + str(run_time) + " seconds) https://ai.phixxy.com/ai-blog"
-            return output
+        post_div = post_div.replace("<!--POST_TITLE-->", title)
+        post_div = post_div.replace("<!--POST_DATE-->", date)
+        post_div = post_div.replace("<!--POST_CONTENT-->", content)
+        
+        html_data = html_data.replace("<!--replace this with a post-->", post_div)
+        with open(filename, 'w', encoding="utf-8") as f:
+            f.write(html_data)
+        await self.upload_sftp(filename, (os.getenv('ftp_public_html') + 'ai-blog/'), "index.html")
+        run_time = time.time() - start_time
+        self.bot.logger.debug("It took " + str(run_time) + " seconds to generate the blog post!")
+        output = "Blog Updated! (" + str(run_time) + " seconds) https://ai.phixxy.com/ai-blog"
+        return output
     
     @commands.command()
     async def force_blog(self, ctx):
@@ -371,6 +367,9 @@ class PhixxyCom(commands.Cog):
         await ctx.send(output)
 
 async def setup(bot):
-    asyncssh.set_log_level(30)
-    asyncssh.set_sftp_log_level(30)
-    await bot.add_cog(PhixxyCom(bot))
+    if os.getenv("upload_phixxy") == "true":
+        asyncssh.set_log_level(30)
+        asyncssh.set_sftp_log_level(30)
+        await bot.add_cog(PhixxyCom(bot))
+    else:
+        pass
