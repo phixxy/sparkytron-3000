@@ -22,6 +22,7 @@ class InkyScreen(commands.Cog):
         self.display = self.setup()
         self.start_time = time.time()
         self.admin_ids = [242018983241318410]
+        self.font_size = 18
         self.message_loop.start()
         
     def setup(self):
@@ -53,7 +54,7 @@ class InkyScreen(commands.Cog):
             y = 0
             for line in text:
                 if y <= width:
-                    draw.text((x, y), line, self.display.YELLOW, font=ImageFont.load_default(size=22))
+                    draw.text((x, y), line, self.display.YELLOW, font=ImageFont.load_default(size=self.font_size))
                     y += height_diff
                 else:
                     self.bot.logger.warning("InkyScreen: Text too long to fit on image.")
@@ -113,9 +114,9 @@ class InkyScreen(commands.Cog):
         message_list = []
         try:
             message_list.append(f"IP: {self.get_ip_address()}")
-            message_list.append(f"System Uptime: {self.get_system_uptime()}")
-            #message_list.append(f"Bot Uptime: {self.get_bot_uptime()}")
-            #message_list.append(f"Current Time: {time.strftime('%H:%M:%S')}")
+            message_list.append(f"Sys Uptime: {self.get_system_uptime()}")
+            message_list.append(f"Bot Uptime: {self.get_bot_uptime()}")
+            #message_list.append(f"Last Screen Update: {time.strftime('%H:%M:%S')}")
             #message_list.append(f"Servers: {len(self.bot.guilds)}")
             message_list.append(self.get_cpu_usage())
             message_list.append(self.get_memory_usage())
