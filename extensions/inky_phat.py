@@ -72,9 +72,13 @@ class InkyScreen(commands.Cog):
         s.close()
         return ip
     
-    def get_uptime(self):
+    def get_bot_uptime(self):
         sparky_uptime = time.time() - self.start_time
         return str(datetime.timedelta(seconds=sparky_uptime))[0:-7]
+    
+    def get_system_uptime(self):
+        system_uptime = time.time() - psutil.boot_time()
+        return str(datetime.timedelta(seconds=system_uptime))[0:-7]
     
     def get_memory_usage(self):
         memory_info = psutil.virtual_memory()
@@ -87,18 +91,35 @@ class InkyScreen(commands.Cog):
             used_memory = f"{used_memory}MB"
         total_memory = round(memory_info.total/1000000000,1)
         return f"Memory: {used_memory}/{total_memory}GB"
+    
+    def get_disk_usage(self):
+        disk_info = psutil.disk_usage('/')
+        used_disk = disk_info.used
+        if used_disk >= 1000000000:
+            used_disk = round(used_disk/1000000000,1)
+            used_disk = f"{used_disk}GB"
+        else:
+            used_disk = round(used_disk/1000000)
+            used_disk = f"{used_disk}MB"
+        total_disk = round(disk_info.total/1000000000,1)
+        return f"Disk: {used_disk}/{total_disk}GB"
+    
+    def get_cpu_usage(self):
+        cpu_percent = psutil.cpu_percent()
+        return f"CPU: {cpu_percent}%"
 
     
     async def generate_message(self):
         message_list = []
         try:
             message_list.append(f"IP: {self.get_ip_address()}")
-            message_list.append(f"Time: {time.strftime('%H:%M:%S')}")
-            message_list.append(f"Uptime: {self.get_uptime()}")
+            message_list.append(f"System Uptime: {self.get_system_uptime()}")
+            #message_list.append(f"Bot Uptime: {self.get_bot_uptime()}")
+            #message_list.append(f"Current Time: {time.strftime('%H:%M:%S')}")
             #message_list.append(f"Servers: {len(self.bot.guilds)}")
-            cpu_percent = psutil.cpu_percent()
-            message_list.append(f"CPU: {cpu_percent}%")
+            message_list.append(self.get_cpu_usage())
             message_list.append(self.get_memory_usage())
+            message_list.append(self.get_disk_usage())
 
         except Exception as e:
             self.bot.logger.error(f"Error generating InkyScreen message: {e}")
