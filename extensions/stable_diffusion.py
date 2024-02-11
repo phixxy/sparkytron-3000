@@ -17,6 +17,7 @@ class StableDiffusion(commands.Cog):
         self.stable_diffusion_url = os.getenv("stablediffusion_url") # Change this to stable_diffusion_url
         self.working_dir = "tmp/stable_diffusion/"
         self.data_dir = "data/stable_diffusion/"
+        self.default_neg_prompt = "easynegative, badhandv4, verybadimagenegative_v1.3"
         self.folder_setup()
 
     def folder_setup(self):
@@ -208,8 +209,8 @@ class StableDiffusion(commands.Cog):
         except:
             neg_prompt_file = f"{self.data_dir}negative_prompt.txt"
             with open(neg_prompt_file, 'w') as f:
-                f.writelines("")
-                negative_prompt = ""
+                f.writelines(self.default_neg_prompt)
+                negative_prompt = self.default_neg_prompt
         await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.")
         payload = {
             "prompt": prompt,
@@ -224,24 +225,17 @@ class StableDiffusion(commands.Cog):
         try:
             async with self.bot.http_session.post(url, headers=headers, json=payload) as resp:
                 r = await resp.json()
-        except Exception as error:
-            await ctx.send("My image generation service may not be running.")
-            self.bot.logger.exception("Error with connection to image generation service")
+        except ConnectionRefusedError:
+            await ctx.send("Failed to conenct to image generation service")
+            self.bot.logger.exception("Failed to connect to image generation service")
+            return
+        except:
+            await ctx.send("Failed to generate image")
+            self.bot.logger.exception("Failed to generate image")
             return
             
         for i in r['images']:
             image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))
-            png_payload = {"image": "data:image/png;base64," + i}
-            
-            try:
-                async with self.bot.http_session.post(url, json=png_payload) as resp:
-                    response2 = await resp.json()
-            except Exception as error:
-                await ctx.send("My image generation service may not be running.")
-                self.bot.logger.exception("error in imagine")
-
-            pnginfo = PngImagePlugin.PngInfo()
-            pnginfo.add_text("parameters", response2.get("info"))
             try:
                 if ctx.channel.is_nsfw():
                     folder = self.working_dir + "nsfw/"
@@ -251,7 +245,7 @@ class StableDiffusion(commands.Cog):
                 folder = self.working_dir
             my_filename = str(time.time_ns()) + ".png"
             filepath = folder + my_filename
-            image.save(filepath, pnginfo=pnginfo)
+            image.save(filepath)
             
             with open(filepath, "rb") as fh:
                 f = discord.File(fh, filename=filepath)
@@ -283,7 +277,7 @@ class StableDiffusion(commands.Cog):
             else:
                 self.bot.logger.debug("No image linked or attached.")
                 return
-        except Exception as error:
+        except:
             self.bot.logger.exception("Couldn't find image.")
             return   
         async with self.bot.http_session.get(file_url) as response:
@@ -302,7 +296,7 @@ class StableDiffusion(commands.Cog):
             async with self.bot.http_session.post(url, json=payload) as response:
                 r = await response.json()
             await ctx.send(r.get("caption"))
-        except Exception as error:
+        except:
             self.bot.logger.exception("error in describe")
             await ctx.send("My image generation service may not be running.")
             
@@ -324,7 +318,7 @@ class StableDiffusion(commands.Cog):
             else:
                 await ctx.send("No image linked or attached.")
                 return
-        except Exception as error:
+        except:
             self.bot.logger.exception("Couldn't find image.")
             return
         prompt = self.get_prompt_from_ctx(ctx)
@@ -342,9 +336,13 @@ class StableDiffusion(commands.Cog):
                             break
                         out_file.write(chunk)
                             
-        except Exception as error:
+        except ConnectionRefusedError:
             await ctx.send("My image generation service may not be running.")
-            self.bot.logger.exception("error in reimagine 1")
+            self.bot.logger.exception("Couldn't connect to image generation service")
+        except:
+            await ctx.send("Failed to download image")
+            self.bot.logger.exception("Failed to download image")
+            return
 
         img_link = await self.my_open_img_file(imageName)
 
@@ -363,19 +361,14 @@ class StableDiffusion(commands.Cog):
                     if not os.path.isdir(f"{self.working_dir}reimagined/"+ str(ctx.author.id)):
                         os.makedirs(f"{self.working_dir}reimagined/"+ str(ctx.author.id))
                     image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
-                    png_payload = {"image": "data:image/png;base64," + i}
-                    async with self.bot.http_session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload) as resp2:
-                        response2 = await resp2.json()
-                        pnginfo = PngImagePlugin.PngInfo()
-                        pnginfo.add_text("parameters", response2.get("info"))
-                        my_filename = self.working_dir + str(time.time_ns()) + ".png"
-                        image.save(my_filename, pnginfo=pnginfo)
-                        with open(my_filename, "rb") as fh:
-                            f = discord.File(fh, filename=my_filename)
-                        await ctx.send(file=f)
-        except Exception as error:
+                    my_filename = self.working_dir + str(time.time_ns()) + ".png"
+                    image.save(my_filename)
+                    with open(my_filename, "rb") as fh:
+                        f = discord.File(fh, filename=my_filename)
+                    await ctx.send(file=f)
+        except ConnectionRefusedError:
             await ctx.send("My image generation service may not be running.")
-            self.bot.logger.exception("error in reimagine 2")
+            self.bot.logger.exception("Couldn't connect to image generation service")
             
     @commands.command(
         description="Negative Prompt", 
@@ -385,7 +378,7 @@ class StableDiffusion(commands.Cog):
     async def negative_prompt(self, ctx, *args):
         message = ' '.join(args)
         if not message:
-            message = "easynegative, badhandv4, verybadimagenegative_v1.3"
+            message = self.default_neg_prompt
         neg_prompt_file = f"{self.data_dir}negative_prompt.txt"
         with open(neg_prompt_file, 'w') as f:
             f.writelines(message)
