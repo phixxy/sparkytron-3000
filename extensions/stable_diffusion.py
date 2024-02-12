@@ -186,55 +186,95 @@ class StableDiffusion(commands.Cog):
         output += lora_options
         await ctx.send(output)
 
-    @commands.command(
-        description="Imagine", 
-        help="Generate an image using stable diffusion. You can add keyword arguments to your prompt and they will be treated as stable diffusion options. Usage !imagine (topic)", 
-        brief="Generate an image"
-        ) 
-    async def imagine(self, ctx):
-        url = self.stable_diffusion_url
-        if url == "disabled":
-            await ctx.send("Command is currently disabled.")
-            return
-        else:
-            url=f"{url}/sdapi/v1/txt2img"
-        prompt = self.get_prompt_from_ctx(ctx)
-        key_value_pairs = self.get_kv_from_ctx(ctx)
-        if prompt == None:
-            prompt = await self.generate_prompt()
+    async def get_image_from_ctx(self, ctx):
+        if ctx.message.attachments:
+            file_url = ctx.message.attachments[0].url
+            return file_url
         try:
-            neg_prompt_file = f"{self.data_dir}negative_prompt.txt"
-            with open(neg_prompt_file, 'r') as f:
-                negative_prompt = f.readline()
+            file_url = ctx.message.content.split(" ", maxsplit=1)[1]
+            return file_url
         except:
-            neg_prompt_file = f"{self.data_dir}negative_prompt.txt"
-            with open(neg_prompt_file, 'w') as f:
-                f.writelines(self.default_neg_prompt)
-                negative_prompt = self.default_neg_prompt
-        await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.")
+            self.bot.logger.info("Couldn't find image.")
+            return None
+
+    async def txt2img(self, ctx, prompt):
+        url = f"{self.stable_diffusion_url}/sdapi/v1/txt2img"
+        key_value_pairs = self.get_kv_from_ctx(ctx)
+        headers = {'Content-Type': 'application/json'}  
         payload = {
             "prompt": prompt,
             "steps": 25,
-            "negative_prompt": negative_prompt
-        }
-        headers = {
-            'Content-Type': 'application/json'
+            "negative_prompt": self.get_negative_prompt() 
         }
         if key_value_pairs:
             payload.update(key_value_pairs)
         try:
             async with self.bot.http_session.post(url, headers=headers, json=payload) as resp:
+                if resp.status != 200:
+                    await ctx.send(f"{resp.status} {resp.reason}")
+                    self.bot.logger.exception(f"{resp.status} {resp.reason}")
+                    return
                 r = await resp.json()
         except ConnectionRefusedError:
-            await ctx.send("Failed to conenct to image generation service")
+            await ctx.send("Failed to connect to image generation service")
             self.bot.logger.exception("Failed to connect to image generation service")
             return
         except:
             await ctx.send("Failed to generate image")
             self.bot.logger.exception("Failed to generate image")
             return
-            
-        for i in r['images']:
+        
+        await self.send_generated_image(ctx, r['images'], prompt)
+    
+    async def save_image(self, url):
+        async with self.bot.http_session.get(url) as response:
+            image_name = self.working_dir + str(time.time_ns()) + ".png"
+            with open(image_name, 'wb') as out_file:
+                self.bot.logger.debug(f"Saving image: {image_name}")
+                while True:
+                    chunk = await response.content.read(1024)
+                    if not chunk:
+                        break
+                    out_file.write(chunk)
+        return image_name
+
+    async def img2img(self, ctx, prompt):
+        url = f"{self.stable_diffusion_url}/sdapi/v1/img2img"
+        file_url = await self.get_image_from_ctx(ctx)
+        image_name = await self.save_image(file_url)
+        file_url = await self.my_open_img_file(image_name)
+        key_value_pairs = self.get_kv_from_ctx(ctx)
+        headers = {'Content-Type': 'application/json'}  
+        payload = {
+            "init_images": [file_url],
+            "prompt": prompt,
+            "steps": 40,
+            "negative_prompt": self.get_negative_prompt(),
+            "denoising_strength": 0.5,
+        }
+        if key_value_pairs:
+            payload.update(key_value_pairs)
+        try:
+            async with self.bot.http_session.post(url, headers=headers, json=payload) as resp:
+                if resp.status != 200:
+                    await ctx.send(f"{resp.status} {resp.reason}")
+                    self.bot.logger.error(f"{resp.status} {resp.reason}")
+                    return
+                r = await resp.json()
+        except ConnectionRefusedError:
+            await ctx.send("Failed to connect to image generation service")
+            self.bot.logger.exception("Failed to connect to image generation service")
+            return
+        except:
+            await ctx.send("Failed to generate image")
+            self.bot.logger.exception("Failed to generate image")
+            return
+        
+        await self.send_generated_image(ctx, r['images'], prompt)
+
+
+    async def send_generated_image(self, ctx, images, prompt):
+        for i in images:
             image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))
             try:
                 if ctx.channel.is_nsfw():
@@ -246,16 +286,49 @@ class StableDiffusion(commands.Cog):
             my_filename = str(time.time_ns()) + ".png"
             filepath = folder + my_filename
             image.save(filepath)
-            
+                    
             with open(filepath, "rb") as fh:
                 f = discord.File(fh, filename=filepath)
+            
             prompt = prompt.replace('\n',' ')
             log_data = f'Author: {ctx.author.name}, Prompt: {prompt}, Filename: {my_filename}\n'
             with open(f"{self.data_dir}stable_diffusion.log", 'a') as log_file:
                 log_file.writelines(log_data)
 
             await ctx.send(f'Generated by: {ctx.author.name}\nPrompt: {prompt}', file=f)
-                
+
+
+    def get_negative_prompt(self):
+        try:
+            neg_prompt_file = f"{self.data_dir}negative_prompt.txt"
+            with open(neg_prompt_file, 'r') as f:
+                negative_prompt = f.readline()
+        except:
+            neg_prompt_file = f"{self.data_dir}negative_prompt.txt"
+            with open(neg_prompt_file, 'w') as f:
+                f.writelines(self.default_neg_prompt)
+                negative_prompt = self.default_neg_prompt
+        return negative_prompt
+
+
+    @commands.command(
+    description="Imagine",
+    help="Generate an image using stable diffusion. You can add keyword arguments to your prompt and they will be treated as stable diffusion options. Usage !imagine (topic)",
+    brief="Generate an image"
+    )
+    async def imagine(self, ctx):
+        url = self.stable_diffusion_url
+        if url == "disabled":
+            await ctx.send("Command is currently disabled")
+            return
+        prompt = self.get_prompt_from_ctx(ctx)
+        if prompt == None:
+            prompt = await self.generate_prompt()
+        
+        await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.")
+
+        await self.txt2img(ctx, prompt)
+
         
     @commands.command(
         description="Describe", 
@@ -269,28 +342,9 @@ class StableDiffusion(commands.Cog):
             return
         else:
             url=f"{url}/sdapi/v1/interrogate"
-        try:
-            if ctx.message.content.startswith("!describe "):
-                file_url = ctx.message.content.split(" ", maxsplit=1)[1]
-            elif ctx.message.attachments:
-                file_url = ctx.message.attachments[0].url
-            else:
-                self.bot.logger.debug("No image linked or attached.")
-                return
-        except:
-            self.bot.logger.exception("Couldn't find image.")
-            return   
-        async with self.bot.http_session.get(file_url) as response:
-            imageName = self.working_dir + str(time.time_ns()) + ".png"
-            with open(imageName, 'wb') as out_file:
-                self.bot.logger.debug(f"Saving image: {imageName}")
-                while True:
-                    chunk = await response.content.read(1024)
-                    if not chunk:
-                        break
-                    out_file.write(chunk)
-
-        img_link = await self.my_open_img_file(imageName)
+        file_url = await self.get_image_from_ctx(ctx)
+        image_name = await self.save_image(file_url)
+        img_link = await self.my_open_img_file(image_name)
         try:
             payload = {"image": img_link}
             async with self.bot.http_session.post(url, json=payload) as response:
@@ -299,7 +353,7 @@ class StableDiffusion(commands.Cog):
         except:
             self.bot.logger.exception("error in describe")
             await ctx.send("My image generation service may not be running.")
-            
+
     @commands.command(
         description="Reimagine", 
         help="Reimagine an image as something else. One example is reimagining a picture as anime. This command can be hard to use. \nUsage: !reimagine (image link) (topic)\nExample: !reimagine (image link) anime", 
@@ -310,65 +364,11 @@ class StableDiffusion(commands.Cog):
         if url == "disabled":
             await ctx.send("Command is currently disabled")
             return
-        try:
-            if ctx.message.attachments:
-                file_url = ctx.message.attachments[0].url
-            elif ctx.message.content.startswith("!reimagine "):
-                file_url = ctx.message.content.split(" ", maxsplit=2)[1]
-            else:
-                await ctx.send("No image linked or attached.")
-                return
-        except:
-            self.bot.logger.exception("Couldn't find image.")
-            return
         prompt = self.get_prompt_from_ctx(ctx)
         if not prompt:
             prompt = ""
-        key_value_pairs = self.get_kv_from_ctx(ctx)
-        try:
-            async with self.bot.http_session.get(file_url) as response:
-                imageName = self.working_dir + str(time.time_ns()) + ".png"
-                with open(imageName, 'wb') as out_file:
-                    self.bot.logger.debug(f"Saving image: {imageName}")
-                    while True:
-                        chunk = await response.content.read(1024)
-                        if not chunk:
-                            break
-                        out_file.write(chunk)
-                            
-        except ConnectionRefusedError:
-            await ctx.send("My image generation service may not be running.")
-            self.bot.logger.exception("Couldn't connect to image generation service")
-        except:
-            await ctx.send("Failed to download image")
-            self.bot.logger.exception("Failed to download image")
-            return
-
-        img_link = await self.my_open_img_file(imageName)
-
-        negative_prompt = "badhandsv4, worst quality, lowres, EasyNegative, hermaphrodite, cropped, not in the frame, additional faces, jpeg large artifacts, jpeg small artifacts, ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft, not finished drawing, unfinished image, bad eyes, doll, 3d, cartoon, (bad eyes:1.2), (worst quality:1.2), (low quality:1.2), bad-image-v2-39000, (bad_prompt_version2:0.8), nude, badhandv4 By bad artist -neg easynegative ng_deepnegative_v1_75t verybadimagenegative_v1.3, (Worst Quality, Low Quality:1.4), Poorly Made Bad 3D, Lousy Bad Realistic, nsfw,(worst quality, low quality:1.4), (lip, nose, tooth, rouge, lipstick, eyeshadow:1.4), ( jpeg artifacts:1.4), (depth of field, bokeh, blurry, film grain, chromatic aberration, lens flare:1.0), (1boy, abs, muscular, rib:1.0), greyscale, monochrome, dusty sunbeams, trembling, motion lines, motion blur, emphasis lines, text, title, logo, signature, child, childlike, young, easynegative, (bad-hands-5:0.8), plain background, monochrome, poorly drawn face, poorly drawn hands, watermark, censored, (mutated hands and fingers), ugly, worst quality, low quality,, nsfw,(worst quality, low quality:1.4), (lip, nose, tooth, rouge, lipstick, eyeshadow:1.4), ( jpeg artifacts:1.4), (depth of field, bokeh, blurry, film grain, chromatic aberration, lens flare:1.0), (1boy, abs, muscular, rib:1.0), greyscale, monochrome, dusty sunbeams, trembling, motion lines, motion blur, emphasis lines, text, title, logo, signature, child, childlike, young"
-
-        await ctx.send("Please be patient this may take some time! Generating: " + prompt + ".")
-
-        payload = {"init_images": [img_link], "prompt": prompt, "steps": 40, "negative_prompt": negative_prompt, "denoising_strength": 0.5}
-        if key_value_pairs:
-            payload.update(key_value_pairs)
-
-        try:
-            async with self.bot.http_session.post(url=f'{url}/sdapi/v1/img2img', json=payload) as response:
-                data = await response.json()
-                for i in data['images']:
-                    if not os.path.isdir(f"{self.working_dir}reimagined/"+ str(ctx.author.id)):
-                        os.makedirs(f"{self.working_dir}reimagined/"+ str(ctx.author.id))
-                    image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
-                    my_filename = self.working_dir + str(time.time_ns()) + ".png"
-                    image.save(my_filename)
-                    with open(my_filename, "rb") as fh:
-                        f = discord.File(fh, filename=my_filename)
-                    await ctx.send(file=f)
-        except ConnectionRefusedError:
-            await ctx.send("My image generation service may not be running.")
-            self.bot.logger.exception("Couldn't connect to image generation service")
+        await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.")
+        await self.img2img(ctx, prompt)
             
     @commands.command(
         description="Negative Prompt", 
