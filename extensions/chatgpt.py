@@ -1,10 +1,10 @@
-#sparkytron 3000 plugin
 import os
 import time
 import json
 import random
 import asyncio
 import aiofiles
+import aiohttp
 import discord
 from discord.ext import commands, tasks
 
@@ -18,7 +18,15 @@ class ChatGPT(commands.Cog):
         self.premium_role = 1200943915579228170
         self.folder_setup()
         self.remind_me_loop.start()
+        self.http_session = self.create_aiohttp_session()
 
+    def create_aiohttp_session(self):
+        return aiohttp.ClientSession(
+            headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {os.getenv("openai.api_key")}',
+            }
+        )
 
     def folder_setup(self):
         try:
@@ -82,11 +90,6 @@ class ChatGPT(commands.Cog):
         return await user.send(reminder_dict["response"])
 
     async def answer_question(self, topic, model="gpt-3.5-turbo"):
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {os.getenv("openai.api_key")}',
-        }
-
         data = {
             "model": model,
             "messages": [{"role": "user", "content": topic}]
@@ -95,7 +98,7 @@ class ChatGPT(commands.Cog):
         url = "https://api.openai.com/v1/chat/completions"
 
         try:
-            async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
+            async with self.http_session.post(url, json=data) as resp:
                 response_data = await resp.json()
                 response = response_data['choices'][0]['message']['content']
                 return response
@@ -195,10 +198,6 @@ class ChatGPT(commands.Cog):
             await ctx.send("Sorry you must be a premium member to use this command. (!donate)")
     
     async def dalle_api_call(self, prompt, model="dall-e-2", quality="standard", size="1024x1024"):
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {os.getenv("openai.api_key")}',
-        }
         data = {
             "model": model,
             "prompt": prompt,
@@ -209,7 +208,7 @@ class ChatGPT(commands.Cog):
         url = "https://api.openai.com/v1/images/generations"
 
         try:
-            async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
+            async with self.http_session.post(url, json=data) as resp:
                 response_data = await resp.json()
                 response = response_data['data'][0]['url']
                 return response
@@ -221,7 +220,7 @@ class ChatGPT(commands.Cog):
     async def download_image(self, url, destination):
         if url == "Error occurred in dalle":
             return 
-        async with self.bot.http_session.get(url) as resp:
+        async with self.http_session.get(url) as resp:
             if resp.status == 200:
                 f = await aiofiles.open(destination, mode='wb')
                 await f.write(await resp.read())
@@ -282,11 +281,6 @@ class ChatGPT(commands.Cog):
     async def looker(self, ctx):
         image_link = ctx.message.content.split(" ", maxsplit=2)[1]
         question = ctx.message.content.split(" ", maxsplit=2)[2]
-        
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {os.getenv("openai.api_key")}',
-        }
 
         data = {
             "model": "gpt-4-vision-preview",
@@ -297,7 +291,7 @@ class ChatGPT(commands.Cog):
         url = "https://api.openai.com/v1/chat/completions"
 
         try:
-            async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
+            async with self.http_session.post(url, json=data) as resp:
                 response_data = await resp.json()
                 self.bot.logger.debug(response_data)
                 answer = response_data['choices'][0]['message']['content']
@@ -395,10 +389,6 @@ class ChatGPT(commands.Cog):
                 #todo above line is do not react to self, make this work programatically
                 system_msg = "Send only an emoji as a discord reaction to the following chat message"
                 message = ctx.content[0]
-                headers = { 
-                    'Content-Type': 'application/json', 
-                    'Authorization': f'Bearer {os.getenv("openai.api_key")}',
-                }
                 
                 data = { 
                     "model": "gpt-3.5-turbo", 
@@ -408,7 +398,7 @@ class ChatGPT(commands.Cog):
                 url = "https://api.openai.com/v1/chat/completions"
                 
                 try:
-                    async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
+                    async with self.http_session.post(url, json=data) as resp:
                         response_data = await resp.json()
                         reaction = response_data['choices'][0]['message']['content'].strip()
                     if is_emoji(reaction):
@@ -422,10 +412,6 @@ class ChatGPT(commands.Cog):
         async with ctx.channel.typing(): 
             await asyncio.sleep(1)
             prompt = f"You are a {channel_vars['personality']} chat bot named Sparkytron 3000 created by @phixxy.com. Your personality should be {channel_vars['personality']}. You are currently in a {channel_vars['channel_topic']} chatroom. The message history is: {chat_history_string}"
-            headers = { 
-                'Content-Type': 'application/json', 
-                'Authorization': f'Bearer {os.getenv("openai.api_key")}',
-            }
             
             data = { 
                 "model": "gpt-3.5-turbo", 
@@ -435,7 +421,7 @@ class ChatGPT(commands.Cog):
             url = "https://api.openai.com/v1/chat/completions"
 
             try: 
-                async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
+                async with self.http_session.post(url, json=data) as resp:
                     response_data = await resp.json() 
                     response = response_data['choices'][0]['message']['content']
                     if "Sparkytron 3000:" in response[0:17]:
