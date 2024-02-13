@@ -6,6 +6,7 @@ import os
 import time
 import random
 from PIL import Image, PngImagePlugin
+import aiohttp
 import discord
 from discord.ext import commands
 
@@ -19,6 +20,10 @@ class StableDiffusion(commands.Cog):
         self.data_dir = "data/stable_diffusion/"
         self.default_neg_prompt = "easynegative, badhandv4, verybadimagenegative_v1.3"
         self.folder_setup()
+        self.http_session = self.create_aiohttp_session()
+
+    def create_aiohttp_session(self):
+        return aiohttp.ClientSession()
 
     def folder_setup(self) -> None:
         try:
@@ -55,7 +60,7 @@ class StableDiffusion(commands.Cog):
             }
             url = "https://api.openai.com/v1/chat/completions"
             try:
-                async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
+                async with self.http_session.post(url, headers=headers, json=data) as resp:
                     response_data = await resp.json()
                     response = response_data['choices'][0]['message']['content']
                     return response
@@ -149,7 +154,7 @@ class StableDiffusion(commands.Cog):
             for attachment in ctx.attachments:
                 if attachment.url.endswith(('.jpg', '.png')):
                     self.bot.logger.debug("image seen")
-                    async with self.bot.http_session.get(attachment.url) as response:
+                    async with self.http_session.get(attachment.url) as response:
                         imageName = self.working_dir + str(time.time_ns()) + '.png'
                         
                         with open(imageName, 'wb') as out_file:
@@ -164,12 +169,12 @@ class StableDiffusion(commands.Cog):
                         
                         try:
                             payload = {"image": img_link}
-                            async with self.bot.http_session.post(f'{url}/sdapi/v1/interrogate', json=payload) as response:
+                            async with self.http_session.post(f'{url}/sdapi/v1/interrogate', json=payload) as response:
                                 data = await response.json()
                                 description = data.get("caption")
                                 description = description.split(',')[0]
                                 metadata += f"<image:{description}>\n"
-                        except self.bot.aiohttp.ClientError as error:
+                        except aiohttp.ClientError:
                             self.bot.logger.exception("ERROR: CLIP may not be running. Could not look at image.")
                             return "ERROR: CLIP may not be running. Could not look at image."
         return metadata
@@ -218,7 +223,7 @@ class StableDiffusion(commands.Cog):
         if url == "disabled":
             await ctx.send("This command is currently disabled")
         else:
-            async with self.bot.http_session.get(url=f'{url}/sdapi/v1/options') as response:
+            async with self.http_session.get(url=f'{url}/sdapi/v1/options') as response:
                 config_json = await response.json()
 
             current_model = config_json["sd_model_checkpoint"]
@@ -228,7 +233,7 @@ class StableDiffusion(commands.Cog):
                 model_id, model_name = model_choices[model_choice]
                 if current_model != model_id:
                     payload = {"sd_model_checkpoint": model_id}
-                    async with self.bot.http_session.post(url=f'{url}/sdapi/v1/options', json=payload) as response:
+                    async with self.http_session.post(url=f'{url}/sdapi/v1/options', json=payload) as response:
                         output = "Changed model to: " + model_name
                         await ctx.send(output)
                         return
@@ -301,7 +306,7 @@ class StableDiffusion(commands.Cog):
         if key_value_pairs:
             payload.update(key_value_pairs)
         try:
-            async with self.bot.http_session.post(url, headers=headers, json=payload) as resp:
+            async with self.http_session.post(url, headers=headers, json=payload) as resp:
                 if resp.status != 200:
                     await ctx.send(f"{resp.status} {resp.reason}")
                     self.bot.logger.exception(f"{resp.status} {resp.reason}")
@@ -328,7 +333,7 @@ class StableDiffusion(commands.Cog):
       The path to the saved image file.
     """
     async def save_image(self, url: str) -> str:
-        async with self.bot.http_session.get(url) as response:
+        async with self.http_session.get(url) as response:
             image_name = self.working_dir + str(time.time_ns()) + ".png"
             with open(image_name, 'wb') as out_file:
                 self.bot.logger.debug(f"Saving image: {image_name}")
@@ -371,7 +376,7 @@ class StableDiffusion(commands.Cog):
         if key_value_pairs:
             payload.update(key_value_pairs)
         try:
-            async with self.bot.http_session.post(url, headers=headers, json=payload) as resp:
+            async with self.http_session.post(url, headers=headers, json=payload) as resp:
                 if resp.status != 200:
                     await ctx.send(f"{resp.status} {resp.reason}")
                     self.bot.logger.error(f"{resp.status} {resp.reason}")
@@ -484,7 +489,7 @@ class StableDiffusion(commands.Cog):
         img_link = await self.my_open_img_file(image_name)
         try:
             payload = {"image": img_link}
-            async with self.bot.http_session.post(url, json=payload) as response:
+            async with self.http_session.post(url, json=payload) as response:
                 r = await response.json()
             await ctx.send(r.get("caption"))
         except:
