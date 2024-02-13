@@ -3,6 +3,7 @@ import io
 import base64
 import time
 import html
+import aiohttp
 import asyncssh
 from PIL import Image, PngImagePlugin
 from discord.ext import commands, tasks
@@ -20,6 +21,10 @@ class PhixxyCom(commands.Cog):
         self.stable_diffusion_log = "data/stable_diffusion/stable_diffusion.log"
         self.phixxy_loop.start()
         self.blog_loop.start()
+        self.http_session = self.create_aiohttp_session()
+
+    def create_aiohttp_session(self):
+        return aiohttp.ClientSession()
 
     def folder_setup(self):
         try:
@@ -94,7 +99,7 @@ class PhixxyCom(commands.Cog):
         for image in image_list:
             filename = image.replace(" ", "").lower() + ".png"
             payload = {"prompt": image, "steps": 25}
-            response = await self.bot.http_session.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
+            response = await self.http_session.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
             r = await response.json()
             for i in r['images']:
                 image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))

@@ -1,3 +1,4 @@
+import aiohttp
 from discord.ext import commands
 import discord
 
@@ -5,9 +6,13 @@ class Pokedex(commands.Cog):
 
     def __init__(self, bot) -> None:
         self.bot = bot
+        self.http_session = self.create_aiohttp_session()
+
+    def create_aiohttp_session(self):
+        return aiohttp.ClientSession()
 
     async def get_json(self, url):
-        async with self.bot.http_session.get(url) as resp:
+        async with self.http_session.get(url) as resp:
                 json_data = await resp.json()
         return json_data
     

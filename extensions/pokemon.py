@@ -1,11 +1,11 @@
-#plugin file for sparkytron 3000
-from discord.ext import commands
-import discord
 import random
 import os
 import json
 import math
 import time
+import aiohttp
+from discord.ext import commands
+import discord
 
 
 class PokemonGame(commands.Cog):
@@ -15,9 +15,13 @@ class PokemonGame(commands.Cog):
         self.working_dir = "tmp/pokemon/"
         self.data_dir = "data/pokemon/"
         self.folder_setup()
+        self.http_session = self.create_aiohttp_session()
+
+    def create_aiohttp_session(self):
+        return aiohttp.ClientSession()
 
     async def get_json(self, url):
-        async with self.bot.http_session.get(url) as resp:
+        async with self.http_session.get(url) as resp:
                 json_data = await resp.json()
         return json_data
 

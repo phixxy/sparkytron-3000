@@ -1,4 +1,5 @@
 import random
+import aiohttp
 from discord.ext import commands
 import discord
 
@@ -7,13 +8,17 @@ class Anime(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.url = "https://api.waifu.im/search"
+        self.http_session = self.create_aiohttp_session()
+
+    def create_aiohttp_session(self):
+        return aiohttp.ClientSession()
 
     async def get_waifu(self, tags):
         params = {
             'included_tags': tags,
             'height': '>=1000'
         }
-        async with self.bot.http_session.get(self.url,  params=params) as resp:
+        async with self.http_session.get(self.url,  params=params) as resp:
                 resp_data = await resp.json()
         try:
             image = random.choice(resp_data['images'])
@@ -27,7 +32,7 @@ class Anime(commands.Cog):
                 return "Something went wrong"
 
     async def get_anime_from_img(self, img_url):
-        async with self.bot.http_session.get(f"https://api.trace.moe/search?anilistInfo&url={img_url}") as resp:
+        async with self.http_session.get(f"https://api.trace.moe/search?anilistInfo&url={img_url}") as resp:
             resp_data = await resp.json()
         title = resp_data["result"][0]["anilist"]["title"]
         video = resp_data["result"][0]["video"]

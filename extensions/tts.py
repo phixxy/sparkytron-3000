@@ -1,5 +1,6 @@
 import time
 import os
+import aiohttp
 import discord
 from discord.ext import commands
 
@@ -10,6 +11,10 @@ class TextToSpeech(commands.Cog):
         self.working_dir = "tmp/tts/"
         self.data_dir = "data/tts/"
         self.folder_setup()
+        self.http_session = self.create_aiohttp_session()
+
+    def create_aiohttp_session(self):
+        return aiohttp.ClientSession()
 
     def folder_setup(self):
         try:
@@ -40,7 +45,7 @@ class TextToSpeech(commands.Cog):
         }
         filename = f"{time.time_ns()}.mp3"
         filepath = f"{self.data_dir}{filename}"
-        response = await self.bot.http_session.post(url, json=data, headers=headers)
+        response = await self.http_session.post(url, json=data, headers=headers)
         with open(filepath, 'wb') as f:
             async for chunk in response.content.iter_chunked(CHUNK_SIZE):
                 if chunk:
@@ -63,7 +68,7 @@ class TextToSpeech(commands.Cog):
         }
         filename = f"{time.time_ns()}.mp3"
         filepath = f"{self.data_dir}{filename}"
-        response = await self.bot.http_session.post(url, json=data, headers=headers)
+        response = await self.http_session.post(url, json=data, headers=headers)
         with open(filepath, 'wb') as f:
             async for chunk in response.content.iter_chunked(CHUNK_SIZE):
                 if chunk:

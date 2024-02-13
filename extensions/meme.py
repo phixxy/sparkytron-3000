@@ -9,6 +9,10 @@ class Meme(commands.Cog):
         self.bot = bot
         self.working_dir = "tmp/meme/"
         self.folder_setup()
+        self.http_session = self.create_aiohttp_session()
+
+    def create_aiohttp_session(self):
+        return aiohttp.ClientSession()
         
     def folder_setup(self):
         try:
@@ -31,7 +35,7 @@ class Meme(commands.Cog):
         url = "https://api.openai.com/v1/chat/completions"
 
         try:
-            async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
+            async with self.http_session.post(url, headers=headers, json=data) as resp:
                 response_data = await resp.json()
                 response = response_data['choices'][0]['message']['content']
                 return response
@@ -45,7 +49,7 @@ class Meme(commands.Cog):
         )       
     async def meme(self, ctx):
         async def generate_random_meme(topic):
-            async with self.bot.http_session.get('https://api.imgflip.com/get_memes') as resp:
+            async with self.http_session.get('https://api.imgflip.com/get_memes') as resp:
                 response_data = await resp.json()
                 response = response_data['data']['memes']
             memepics = [{'name':image['name'],'url':image['url'],'id':image['id']} for image in response]
@@ -81,7 +85,7 @@ class Meme(commands.Cog):
             URL = 'https://api.imgflip.com/caption_image'
 
             try:
-                async with self.bot.http_session.post(URL, params=params) as resp:
+                async with self.http_session.post(URL, params=params) as resp:
                     response = await resp.json()
                 image_link = response['data']['url']
             except Exception as error:
@@ -89,7 +93,7 @@ class Meme(commands.Cog):
             try:
         #------------------------------------Saving Image Using Aiohttp---------------------------------#
                 filename = memepics[id-1]['name']
-                async with self.bot.http_session.get(image_link) as response:
+                async with self.http_session.get(image_link) as response:
                     folder = "tmp/meme/"
                     filename = folder + topic + str(len(os.listdir(folder))) + ".jpg"
                     
