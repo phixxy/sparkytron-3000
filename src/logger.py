@@ -2,6 +2,15 @@ import logging
 import os
 from logging.config import dictConfig
 
+def logger_setup():
+    if not os.path.isdir("logs"):
+        os.mkdir("logs")
+    with open("logs/info.log", "a") as f:
+        pass
+    logger = logging.getLogger("bot")
+    return logger
+
+
 LOGGING_CONFIG = {
     "version": 1,
     "disabled_existing_loggers": False,
@@ -41,8 +50,4 @@ LOGGING_CONFIG = {
     },
 }
 
-if not os.path.isdir("logs"):
-    os.mkdir("logs")
-with open("logs/info.log", "a") as f:
-    pass
 dictConfig(LOGGING_CONFIG)
