@@ -12,13 +12,13 @@ logger = src.logger.logger_setup()
 
 
 async def load_cogs(bot: commands.Bot, cog_path: str) -> None:
-    for plugin_file in os.listdir(cog_path):
-        if plugin_file[-3:] == '.py':
+    for cog_file in os.listdir(cog_path):
+        if cog_file[-3:] == '.py':
             try:
-                await bot.load_extension(f'extensions.{plugin_file[:-3]}')
-                logger.info(f"Successfully loaded plugin {plugin_file}")
+                await bot.load_extension(f'extensions.{cog_file[:-3]}')
+                logger.info(f"Successfully loaded cog {cog_file}")
             except:
-                logger.exception(f"Failed to load plugin {plugin_file}")
+                logger.exception(f"Failed to load cog {cog_file}")
             
 @bot.event
 async def on_ready():
