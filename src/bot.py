@@ -15,7 +15,7 @@ async def load_cogs(bot: commands.Bot, cog_path: str) -> None:
     for cog_file in os.listdir(cog_path):
         if cog_file[-3:] == '.py':
             try:
-                await bot.load_extension(f'extensions.{cog_file[:-3]}')
+                await bot.load_extension(f'{cog_path[:-1]}.{cog_file[:-3]}')
                 logger.info(f"Successfully loaded cog {cog_file}")
             except:
                 logger.exception(f"Failed to load cog {cog_file}")
@@ -25,7 +25,7 @@ async def on_ready():
     try:
         await utils.delete_all_files("tmp/")
         await utils.folder_setup()
-        await load_cogs(bot, 'extensions/')
+        await load_cogs(bot, 'cogs/')
         logger.info('We have logged in as {0.user}'.format(bot))
     except:
         logger.warning(f"Error in on_ready")
