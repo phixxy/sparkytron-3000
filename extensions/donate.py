@@ -1,4 +1,4 @@
-#plugin to show message count as a graph
+import logging
 import os
 import time
 import matplotlib.pyplot as plt
@@ -14,13 +14,14 @@ class Donate(commands.Cog):
         self.data_dir = "data/donate/"
         self.donor_file = "data/donate/supporters.txt"
         self.folder_setup()
+        self.logger = logging.getLogger("bot")
 
     def folder_setup(self):
         try:
             if not os.path.exists(self.data_dir):
                 os.mkdir(self.data_dir)
         except:
-            self.bot.logger.exception("Donate failed to make directories")
+            self.logger.exception("Donate failed to make directories")
 
     @commands.command(
         description="Donate", 

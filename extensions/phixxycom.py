@@ -1,6 +1,7 @@
 import os
 import io
 import base64
+import logging
 import time
 import html
 import aiohttp
@@ -19,6 +20,7 @@ class PhixxyCom(commands.Cog):
         self.data_dir = "data/phixxy.com/"
         self.folder_setup()
         self.stable_diffusion_log = "data/stable_diffusion/stable_diffusion.log"
+        self.logger = logging.getLogger("bot")
         self.phixxy_loop.start()
         self.blog_loop.start()
         self.http_session = self.create_aiohttp_session()
@@ -33,7 +35,7 @@ class PhixxyCom(commands.Cog):
             if not os.path.exists(self.data_dir):
                 os.mkdir(self.data_dir)
         except:
-            self.bot.logger.exception("PhixxyCom failed to make directories")
+            self.logger.exception("PhixxyCom failed to make directories")
 
     def find_prompt_from_filename(self, sd_log, filename):
         with open(sd_log, 'r') as f:
@@ -45,7 +47,7 @@ class PhixxyCom(commands.Cog):
                         prompt = ''.join(prompt.rsplit(',', 1)) # Remove the last comma
                         return html.escape(prompt)
                     except:
-                        self.bot.logger.exception("PhixxyCom failed to find prompt from filename")
+                        self.logger.exception("PhixxyCom failed to find prompt from filename")
                         return "Unknown Prompt"
         return "Unknown Prompt"
 
@@ -66,10 +68,10 @@ class PhixxyCom(commands.Cog):
                 for filename in (await sftp.listdir(server_folder)):
                     if '.png' in filename:
                         try:
-                            self.bot.logger.debug("Deleting", filename)
+                            self.logger.debug("Deleting", filename)
                             await sftp.remove(server_folder+filename)
                         except:
-                            self.bot.logger.exception("Couldn't delete", filename)
+                            self.logger.exception("Couldn't delete", filename)
                         
     async def extract_image_tags(self,code):
         count = code.count("<img")
@@ -135,10 +137,10 @@ class PhixxyCom(commands.Cog):
                         pass
                     else:
                         try:
-                            self.bot.logger.debug("Deleting", filename)
+                            self.logger.debug("Deleting", filename)
                             await sftp.remove(server_folder+filename)
                         except:
-                            self.bot.logger.exception("Couldn't delete", filename)
+                            self.logger.exception("Couldn't delete", filename)
 
     async def meme_handler(self, folder):
         for f in os.listdir(folder):
@@ -149,7 +151,7 @@ class PhixxyCom(commands.Cog):
         server_folder = (os.getenv('ftp_public_html') + 'ai-memes/')
         new_file_name = str(time.time_ns()) + ".png"
         await self.upload_sftp(filename, server_folder, new_file_name)
-        self.bot.logger.debug(f"Uploaded {new_file_name}")
+        self.logger.debug(f"Uploaded {new_file_name}")
         with open(f"{self.data_dir}ai-memes/index.html", 'r') as f:
             html_data = f.read()
         html_insert = '<!--ADD IMG HERE-->\n        <img src="' + new_file_name + '" loading="lazy">'
@@ -165,9 +167,9 @@ class PhixxyCom(commands.Cog):
                 for filename in os.listdir(folder):
                     if filename[-4:] == '.png':
                         filepath = folder + filename
-                        self.bot.logger.info(f"Found file = {filename}")
+                        self.logger.info(f"Found file = {filename}")
                         prompt = self.find_prompt_from_filename(ai_dict[folder], filename)
-                        self.bot.logger.info(f"Found prompt = {prompt}")
+                        self.logger.info(f"Found prompt = {prompt}")
                         html_file = f"{self.data_dir}ai-images/index.html"
                         html_insert = '''<!--REPLACE THIS COMMENT-->
                             <div>
@@ -177,7 +179,7 @@ class PhixxyCom(commands.Cog):
                         server_folder = (os.getenv('ftp_public_html') + 'ai-images/')
                         new_filename = str(time.time_ns()) + ".png"
                         await self.upload_sftp(filepath, server_folder, new_filename)
-                        self.bot.logger.info(f"Uploaded {new_filename}")
+                        self.logger.info(f"Uploaded {new_filename}")
                         with open(html_file, 'r') as f:
                             html_data = f.read()
                         html_insert = html_insert.replace("<!--filename-->", new_filename)
@@ -188,7 +190,7 @@ class PhixxyCom(commands.Cog):
                         await self.upload_sftp(html_file, server_folder, "index.html")
                         os.rename(filepath, f"tmp/{new_filename}")
         except:
-            self.bot.logger.exception("Something went wrong in upload_ftp_ai_images")
+            self.logger.exception("Something went wrong in upload_ftp_ai_images")
 
     async def answer_question(self, topic, model="gpt-3.5-turbo"):
         headers = {
@@ -257,11 +259,11 @@ class PhixxyCom(commands.Cog):
             with open(blogpost_file, 'w') as f:
                 f.write(blogpost_topics)
         if topic != '':
-            self.bot.logger.info("Writing blogpost")
+            self.logger.info("Writing blogpost")
         else:
             messages = self.get_last_5_messages()
             question = f"you have a blog and you are inspired based on this short text chat interaction:\n{messages}\nwhat will the topic of your next blog be? just tell me the topic and a one sentence description"
-            self.bot.logger.info("No topic given for blogpost, generating one.")
+            self.logger.info("No topic given for blogpost, generating one.")
             topic = await self.answer_question(question)
         post_div = '''<!--replace this with a post-->
                 <div class="post">
@@ -290,7 +292,7 @@ class PhixxyCom(commands.Cog):
             f.write(html_data)
         await self.upload_sftp(filename, (os.getenv('ftp_public_html') + 'ai-blog/'), "index.html")
         run_time = time.time() - start_time
-        self.bot.logger.debug("It took " + str(run_time) + " seconds to generate the blog post!")
+        self.logger.debug("It took " + str(run_time) + " seconds to generate the blog post!")
         output = "Blog Updated! (" + str(run_time) + " seconds) https://ai.phixxy.com/ai-blog"
         return output
     
@@ -337,7 +339,7 @@ class PhixxyCom(commands.Cog):
             await ctx.send("Finished https://ai.phixxy.com/ai-webpage/")
         except Exception as error:
             #await ctx.send("Failed, Try again.")
-            self.bot.logger.exception("Website Error")
+            self.logger.exception("Website Error")
 
     @tasks.loop(seconds=60)
     async def phixxy_loop(self):
@@ -359,7 +361,7 @@ class PhixxyCom(commands.Cog):
             if message:
                 await bot_stuff_channel.send(message)
         except Exception as error:
-            self.bot.logger.exception("Failed to generate blog")
+            self.logger.exception("Failed to generate blog")
 
     @commands.command(
     description="Moderate", 

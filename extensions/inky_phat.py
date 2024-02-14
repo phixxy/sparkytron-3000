@@ -1,5 +1,6 @@
 import socket # used to get local IP
 import time
+import logging
 import os
 import datetime
 import psutil
@@ -23,6 +24,7 @@ class InkyScreen(commands.Cog):
         self.start_time = time.time()
         self.admin_ids = [242018983241318410]
         self.font_size = 18
+        self.logger = logging.getLogger("bot")
         self.message_loop.start()
         
     def setup(self):
@@ -38,7 +40,7 @@ class InkyScreen(commands.Cog):
             #try:
             #    image = Image.open("data/inky/bg.png")
             #except:
-            #    self.bot.logger.exception("InkyScreen: Failed to load background image.")
+            #    self.logger.exception("InkyScreen: Failed to load background image.")
             image = Image.new("P", (self.display.WIDTH, self.display.HEIGHT), (self.display.BLACK))
             draw = ImageDraw.Draw(image)
             width = self.display.WIDTH
@@ -47,8 +49,8 @@ class InkyScreen(commands.Cog):
             try:
                 height_diff = height/lines
             except:
-                self.bot.logger.exception("InkyScreen: Failed to calculate height_diff.")
-                self.bot.logger.info(f"InkyScreen: Text: {text}")
+                self.logger.exception("InkyScreen: Failed to calculate height_diff.")
+                self.logger.info(f"InkyScreen: Text: {text}")
                 return
             x = 0
             y = 0
@@ -57,14 +59,14 @@ class InkyScreen(commands.Cog):
                     draw.text((x, y), line, self.display.YELLOW, font=ImageFont.load_default(size=self.font_size))
                     y += height_diff
                 else:
-                    self.bot.logger.warning("InkyScreen: Text too long to fit on image.")
+                    self.logger.warning("InkyScreen: Text too long to fit on image.")
             image = image.rotate(180)
             self.display.set_image(image)
             self.display.show()
-            self.bot.logger.info("InkyScreen: Text successfully written to image.")
+            self.logger.info("InkyScreen: Text successfully written to image.")
             self.old_message = text
         else:
-            self.bot.logger.info("InkyScreen: Text is the same as the previous message, not writing to image.")
+            self.logger.info("InkyScreen: Text is the same as the previous message, not writing to image.")
     
     def get_ip_address(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -123,7 +125,7 @@ class InkyScreen(commands.Cog):
             message_list.append(self.get_disk_usage())
 
         except Exception as e:
-            self.bot.logger.error(f"Error generating InkyScreen message: {e}")
+            self.logger.error(f"Error generating InkyScreen message: {e}")
         return message_list
 
     

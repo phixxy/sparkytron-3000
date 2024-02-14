@@ -1,6 +1,7 @@
 import os
 import time
 import json
+import logging
 import random
 import asyncio
 import aiofiles
@@ -19,6 +20,7 @@ class ChatGPT(commands.Cog):
         self.folder_setup()
         self.remind_me_loop.start()
         self.http_session = self.create_aiohttp_session()
+        self.logger = logging.getLogger("bot")
 
     def create_aiohttp_session(self):
         return aiohttp.ClientSession(
@@ -43,7 +45,7 @@ class ChatGPT(commands.Cog):
                     os.mkdir(folder)
             
         except Exception as e:
-            self.bot.logger.exception(f"ChatGPT failed to make directories: {e}")
+            self.logger.exception(f"ChatGPT failed to make directories: {e}")
 
 
     def create_channel_config(self, filepath):
@@ -57,7 +59,7 @@ class ChatGPT(commands.Cog):
 
         with open(filepath,"w") as f:
             json.dump(config_dict,f)
-        self.bot.logger.debug("Wrote ChatGPT config variables to file.")
+        self.logger.debug("Wrote ChatGPT config variables to file.")
 
     async def get_channel_config(self, channel_id):
         filepath = f"{self.data_dir}config/{channel_id}.json"
@@ -104,7 +106,7 @@ class ChatGPT(commands.Cog):
                 return response
 
         except Exception as error:
-            self.bot.logger.exception("Error occurred in answer_question")
+            self.logger.exception("Error occurred in answer_question")
             return "Error occurred in answer_question"
         
         
@@ -214,7 +216,7 @@ class ChatGPT(commands.Cog):
                 return response
 
         except Exception as error:
-            self.bot.logger.exception("Error occurred in dalle")
+            self.logger.exception("Error occurred in dalle")
             return "Error occurred in dalle"
     
     async def download_image(self, url, destination):
@@ -293,12 +295,12 @@ class ChatGPT(commands.Cog):
         try:
             async with self.http_session.post(url, json=data) as resp:
                 response_data = await resp.json()
-                self.bot.logger.debug(response_data)
+                self.logger.debug(response_data)
                 answer = response_data['choices'][0]['message']['content']
             
 
         except Exception as error:
-            self.bot.logger.exception("error occurred in looker")
+            self.logger.exception("error occurred in looker")
         
         chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
         for chunk in chunks:
@@ -336,7 +338,7 @@ class ChatGPT(commands.Cog):
         #CREATE FILEDUMP
         reminder_data[target_time] = {"user_id":user_id,"response":response}
 
-        self.bot.logger.info(f"Reminding user {ctx.author.id} in {duration_s} seconds || Target time (ns): {target_time}")
+        self.logger.info(f"Reminding user {ctx.author.id} in {duration_s} seconds || Target time (ns): {target_time}")
         self.save_to_db(reminders_path,reminder_data)
 
     @tasks.loop(seconds=60) # THIS ONE NEEDS TO POP AND THEN CALL THE REMIND FUNC
@@ -352,12 +354,12 @@ class ChatGPT(commands.Cog):
                 reminder_dict = data[remind_time]
                 sent = await self.remind(reminder_dict) #THIS SENDS THE REMINDER DICT TO REMIND FUNC
                 if sent:
-                    self.bot.logger.info(f"Reminder sent successfully to {reminder_dict['user_id']}")
+                    self.logger.info(f"Reminder sent successfully to {reminder_dict['user_id']}")
                     trash.append(remind_time) #NEED TO POP OR THEY WILL GET REMINDED AD INFINITUM
 
         for key in trash:
             if data.pop(key):
-                self.bot.logger.debug("Fulfilled reminders successfully purged")
+                self.logger.debug("Fulfilled reminders successfully purged")
 
         self.save_to_db(reminders_path,data)
     
@@ -367,7 +369,7 @@ class ChatGPT(commands.Cog):
         log_line += ctx.content
         log_line =  ctx.author.name + ": " + log_line  +"\n"
         chat_history = ""
-        self.bot.logger.debug("Logging: " + log_line, end="")
+        self.logger.debug("Logging: " + log_line, end="")
         with open(logfile, "a", encoding="utf-8") as f:
             f.write(log_line)
         with open(logfile, "r", encoding="utf-8") as f:
@@ -406,7 +408,7 @@ class ChatGPT(commands.Cog):
                     else:
                         await ctx.add_reaction("😓")
                 except Exception as error:
-                    self.bot.logger.exception("Some error happened while trying to react to a message")
+                    self.logger.exception("Some error happened while trying to react to a message")
 
     async def chat_response(self, ctx, channel_vars, chat_history_string): 
         async with ctx.channel.typing(): 
@@ -435,7 +437,7 @@ class ChatGPT(commands.Cog):
                         await ctx.channel.send(message)
 
             except Exception as error: 
-                self.bot.logger.exception("Problem with chat_response in chatgpt")
+                self.logger.exception("Problem with chat_response in chatgpt")
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):

@@ -3,6 +3,7 @@ import os
 import random
 import aiohttp
 from discord.ext import commands
+import logging
 
 class Meme(commands.Cog):
 
@@ -11,6 +12,7 @@ class Meme(commands.Cog):
         self.working_dir = "tmp/meme/"
         self.folder_setup()
         self.http_session = self.create_aiohttp_session()
+        self.logger = logging.getLogger("bot")
 
     def create_aiohttp_session(self):
         return aiohttp.ClientSession()
@@ -20,7 +22,7 @@ class Meme(commands.Cog):
             if not os.path.exists(self.working_dir):
                 os.mkdir(self.working_dir)
         except:
-            self.bot.logger.exception("Meme failed to make directories")
+            self.logger.exception("Meme failed to make directories")
 
     async def answer_question(self, topic, model="gpt-3.5-turbo"):
         headers = {
@@ -40,7 +42,7 @@ class Meme(commands.Cog):
                 response_data = await resp.json()
                 response = response_data['choices'][0]['message']['content']
                 return response
-        except Exception as error:
+        except:
             return "error occurred in meme"
 
     @commands.command(
@@ -89,8 +91,8 @@ class Meme(commands.Cog):
                 async with self.http_session.post(URL, params=params) as resp:
                     response = await resp.json()
                 image_link = response['data']['url']
-            except Exception as error:
-                self.bot.logger.exception("Error occurred in meme")
+            except:
+                self.logger.exception("Error occurred in meme")
             try:
         #------------------------------------Saving Image Using Aiohttp---------------------------------#
                 filename = memepics[id-1]['name']
@@ -105,7 +107,7 @@ class Meme(commands.Cog):
                                 break
                             file.write(chunk)
             except:
-                self.bot.logger.exception("Something's Wrong with the aiohttp in meme So try again")
+                self.logger.exception("Something's Wrong with the aiohttp in meme So try again")
             return image_link, filename
         
         try:
@@ -113,8 +115,8 @@ class Meme(commands.Cog):
             await ctx.send(f'Generating {topic} meme')
             link, filepath = await generate_random_meme(topic)
             await ctx.send(link)
-        except Exception as error:
-            self.bot.logger.exception("Error occurred in meme")
+        except:
+            self.logger.exception("Error occurred in meme")
             await ctx.send('Something went wrong try again. Usage: !meme (topic)')
 
 async def setup(bot):

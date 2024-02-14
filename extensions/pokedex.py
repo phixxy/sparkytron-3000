@@ -1,3 +1,4 @@
+import logging
 import aiohttp
 from discord.ext import commands
 import discord
@@ -69,7 +70,7 @@ class Pokedex(commands.Cog):
             embed.set_footer(text=footer)
             await ctx.send(embed=embed)
         except:
-            self.bot.logger.exception("Something went wrong in pokedex")
+            self.logger.exception("Something went wrong in pokedex")
             message = "No data for " + str(pokemon)
             await ctx.channel.send(message)
 

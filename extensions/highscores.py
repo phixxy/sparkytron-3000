@@ -1,4 +1,5 @@
-#plugin to show message count as a graph
+#cog to show message count as a graph
+import logging
 import os
 import time
 import matplotlib.pyplot as plt
@@ -10,6 +11,7 @@ class Highscores(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.logger = logging.getLogger("bot")
 
     @commands.command(
         description="Highscores", 
@@ -42,7 +44,7 @@ class Highscores(commands.Cog):
                         if user != "" and len(user) <= 32:
                             user_message_counts[user] += 1
             except Exception as error:
-                self.bot.logger.exception("Error occurred in highscores")
+                self.logger.exception("Error occurred in highscores")
         
         sorted_message_counts = sorted(user_message_counts.items(), key=lambda x:x[1])
         sorted_dict = dict(sorted_message_counts[-limit::])
@@ -94,7 +96,7 @@ class Highscores(commands.Cog):
                         if user != "" and len(user) <= 32:
                             user_message_counts[user] += 1
             except Exception as error:
-                self.bot.logger.exception("Error occurred in highscores_server")
+                self.logger.exception("Error occurred in highscores_server")
 
         sorted_message_counts = sorted(user_message_counts.items(), key=lambda x:x[1])
         sorted_dict = dict(sorted_message_counts[-limit::])

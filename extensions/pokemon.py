@@ -1,4 +1,5 @@
 import random
+import logging
 import os
 import json
 import math
@@ -16,6 +17,7 @@ class PokemonGame(commands.Cog):
         self.data_dir = "data/pokemon/"
         self.folder_setup()
         self.http_session = self.create_aiohttp_session()
+        self.logger = logging.getLogger("bot")
 
     def create_aiohttp_session(self):
         return aiohttp.ClientSession()
@@ -32,7 +34,7 @@ class PokemonGame(commands.Cog):
             if not os.path.exists(self.data_dir):
                 os.mkdir(self.data_dir)
         except:
-            self.bot.logger.exception("PokemonGame failed to make directories")
+            self.logger.exception("PokemonGame failed to make directories")
 
     async def starter_picker(self, id): #id = pokedex number
         url = "https://pokeapi.co/api/v2/pokemon-species/" + str(id)

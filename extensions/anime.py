@@ -1,4 +1,5 @@
 import random
+import logging
 import aiohttp
 from discord.ext import commands
 import discord
@@ -9,6 +10,7 @@ class Anime(commands.Cog):
         self.bot = bot
         self.url = "https://api.waifu.im/search"
         self.http_session = self.create_aiohttp_session()
+        self.logger = logging.getLogger("bot")
 
     def create_aiohttp_session(self):
         return aiohttp.ClientSession()
@@ -25,10 +27,10 @@ class Anime(commands.Cog):
             return image['url']
         except:
             if resp_data['detail'] == "No image found matching the criteria given.":
-                self.bot.logger.info("No image found matching the criteria given.")
+                self.logger.info("No image found matching the criteria given.")
                 return "No image found matching the criteria given."
             else:
-                self.bot.logger.exception("Something went wrong")
+                self.logger.exception("Something went wrong")
                 return "Something went wrong"
 
     async def get_anime_from_img(self, img_url):

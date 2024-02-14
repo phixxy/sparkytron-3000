@@ -1,6 +1,6 @@
-# Extension for sparkytron 3000
 # This extension enables the ability to generate AI artwork using the AUTOMATIC1111 API
 import io
+import logging
 import base64
 import os
 import time
@@ -21,6 +21,7 @@ class StableDiffusion(commands.Cog):
         self.default_neg_prompt = "easynegative, badhandv4, verybadimagenegative_v1.3"
         self.folder_setup()
         self.http_session = self.create_aiohttp_session()
+        self.logger = logging.getLogger("bot")
 
     def create_aiohttp_session(self):
         return aiohttp.ClientSession()
@@ -34,7 +35,7 @@ class StableDiffusion(commands.Cog):
             if not os.path.exists(self.data_dir):
                 os.mkdir(self.data_dir)
         except:
-            self.bot.logger.exception("StableDiffusion failed to make directories")
+            self.logger.exception("StableDiffusion failed to make directories")
 
     """
     answer_question asynchronously calls the OpenAI API to get a response for the given question/topic using the specified model.
@@ -153,12 +154,12 @@ class StableDiffusion(commands.Cog):
                 return "Stable Diffusion is disabled, could not look at image"
             for attachment in ctx.attachments:
                 if attachment.url.endswith(('.jpg', '.png')):
-                    self.bot.logger.debug("image seen")
+                    self.logger.debug("image seen")
                     async with self.http_session.get(attachment.url) as response:
                         imageName = self.working_dir + str(time.time_ns()) + '.png'
                         
                         with open(imageName, 'wb') as out_file:
-                            self.bot.logger.debug('Saving image: ' + imageName)
+                            self.logger.debug('Saving image: ' + imageName)
                             while True:
                                 chunk = await response.content.read(1024)
                                 if not chunk:
@@ -175,7 +176,7 @@ class StableDiffusion(commands.Cog):
                                 description = description.split(',')[0]
                                 metadata += f"<image:{description}>\n"
                         except aiohttp.ClientError:
-                            self.bot.logger.exception("ERROR: CLIP may not be running. Could not look at image.")
+                            self.logger.exception("ERROR: CLIP may not be running. Could not look at image.")
                             return "ERROR: CLIP may not be running. Could not look at image."
         return metadata
     
@@ -281,7 +282,7 @@ class StableDiffusion(commands.Cog):
             file_url = ctx.message.content.split(" ", maxsplit=1)[1]
             return file_url
         except:
-            self.bot.logger.info("Couldn't find image.")
+            self.logger.info("Couldn't find image.")
             return None
 
     """
@@ -309,16 +310,16 @@ class StableDiffusion(commands.Cog):
             async with self.http_session.post(url, headers=headers, json=payload) as resp:
                 if resp.status != 200:
                     await ctx.send(f"{resp.status} {resp.reason}")
-                    self.bot.logger.exception(f"{resp.status} {resp.reason}")
+                    self.logger.exception(f"{resp.status} {resp.reason}")
                     return
                 r = await resp.json()
         except ConnectionRefusedError:
             await ctx.send("Failed to connect to image generation service")
-            self.bot.logger.exception("Failed to connect to image generation service")
+            self.logger.exception("Failed to connect to image generation service")
             return
         except:
             await ctx.send("Failed to generate image")
-            self.bot.logger.exception("Failed to generate image")
+            self.logger.exception("Failed to generate image")
             return
         
         await self.send_generated_image(ctx, r['images'], prompt)
@@ -336,7 +337,7 @@ class StableDiffusion(commands.Cog):
         async with self.http_session.get(url) as response:
             image_name = self.working_dir + str(time.time_ns()) + ".png"
             with open(image_name, 'wb') as out_file:
-                self.bot.logger.debug(f"Saving image: {image_name}")
+                self.logger.debug(f"Saving image: {image_name}")
                 while True:
                     chunk = await response.content.read(1024)
                     if not chunk:
@@ -379,16 +380,16 @@ class StableDiffusion(commands.Cog):
             async with self.http_session.post(url, headers=headers, json=payload) as resp:
                 if resp.status != 200:
                     await ctx.send(f"{resp.status} {resp.reason}")
-                    self.bot.logger.error(f"{resp.status} {resp.reason}")
+                    self.logger.error(f"{resp.status} {resp.reason}")
                     return
                 r = await resp.json()
         except ConnectionRefusedError:
             await ctx.send("Failed to connect to image generation service")
-            self.bot.logger.exception("Failed to connect to image generation service")
+            self.logger.exception("Failed to connect to image generation service")
             return
         except:
             await ctx.send("Failed to generate image")
-            self.bot.logger.exception("Failed to generate image")
+            self.logger.exception("Failed to generate image")
             return
         
         await self.send_generated_image(ctx, r['images'], prompt)
@@ -493,7 +494,7 @@ class StableDiffusion(commands.Cog):
                 r = await response.json()
             await ctx.send(r.get("caption"))
         except:
-            self.bot.logger.exception("error in describe")
+            self.logger.exception("error in describe")
             await ctx.send("My image generation service may not be running.")
 
     @commands.command(

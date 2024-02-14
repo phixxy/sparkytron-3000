@@ -1,6 +1,7 @@
 #Adds administrative commands to the bot
 import os
 import sys
+import logging
 import subprocess
 from discord.ext import commands
 
@@ -10,6 +11,7 @@ class Admin(commands.Cog):
         self.bot = bot
         self.admin_ids = [242018983241318410]
         self.log_file = "logs/info.log"
+        self.logger = logging.getLogger("bot")
 
     @commands.command(
         description="Kill", 
@@ -20,11 +22,11 @@ class Admin(commands.Cog):
     async def kill(self, ctx):
         "Kills the bot"
         if ctx.author.id in self.admin_ids:
-            self.bot.logger.info(f"Kill command ran by {ctx.author.id}")
+            self.logger.info(f"Kill command ran by {ctx.author.id}")
             exit()
         else:
             await ctx.channel.send("You don't have permission to do that.")
-            self.bot.logger.info(f"Kill command attempted by {ctx.author.id}")
+            self.logger.info(f"Kill command attempted by {ctx.author.id}")
             
     @commands.command(
         description="Reset", 
@@ -34,12 +36,12 @@ class Admin(commands.Cog):
         )  
     async def reset(self, ctx):
         if ctx.author.id in self.admin_ids:
-            self.bot.logger.info(f"Reset command ran by {ctx.author.id}")
+            self.logger.info(f"Reset command ran by {ctx.author.id}")
             python = sys.executable
             os.execl(python, python, *sys.argv)
         else:
             await ctx.channel.send("You don't have permission to do that.")
-            self.bot.logger.info(f"Reset command attempted by {ctx.author.id}")
+            self.logger.info(f"Reset command attempted by {ctx.author.id}")
 
     @commands.command(
         description="Update", 
@@ -49,7 +51,7 @@ class Admin(commands.Cog):
         )           
     async def update(self, ctx):
         if ctx.author.id in self.admin_ids:
-            self.bot.logger.info(f"Update command ran by {ctx.author.id}")
+            self.logger.info(f"Update command ran by {ctx.author.id}")
             output = subprocess.run(["git","pull"],capture_output=True)
             if output.stderr:
                 await ctx.send("Update Attempted")
@@ -58,7 +60,7 @@ class Admin(commands.Cog):
                 await ctx.send(output.stdout.decode('utf-8'))
         else:
             await ctx.send("You don't have permission to do this.")
-            self.bot.logger.info(f"Update command attempted by {ctx.author.id}")
+            self.logger.info(f"Update command attempted by {ctx.author.id}")
 
     def is_error(self, log_line):
         if "ERROR" in log_line:
@@ -74,7 +76,7 @@ class Admin(commands.Cog):
         )           
     async def errors(self, ctx, amount=5):
         if ctx.author.id in self.admin_ids:
-            self.bot.logger.info(f"Errors command ran by {ctx.author.id}")
+            self.logger.info(f"Errors command ran by {ctx.author.id}")
             with open(self.log_file, 'r', encoding="utf-8") as log:
                 data = log.readlines()
                 log.close()
@@ -87,7 +89,7 @@ class Admin(commands.Cog):
             await ctx.send("```\n" + "\n".join(errors[::-1]) + "```")
         else:
             await ctx.send("You don't have permission to do this.")
-            self.bot.logger.info(f"Update command attempted by {ctx.author.id}")
+            self.logger.info(f"Update command attempted by {ctx.author.id}")
 
 async def setup(bot):
     await bot.add_cog(Admin(bot))

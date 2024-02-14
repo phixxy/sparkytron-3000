@@ -1,5 +1,6 @@
 import time
 import os
+import logging
 import aiohttp
 import discord
 from discord.ext import commands
@@ -12,6 +13,7 @@ class TextToSpeech(commands.Cog):
         self.data_dir = "data/tts/"
         self.folder_setup()
         self.http_session = self.create_aiohttp_session()
+        self.logger = logging.getLogger("bot")
 
     def create_aiohttp_session(self):
         return aiohttp.ClientSession()
@@ -23,7 +25,7 @@ class TextToSpeech(commands.Cog):
             if not os.path.exists(self.data_dir):
                 os.mkdir(self.data_dir)
         except:
-            self.bot.logger.exception("TextToSpeech failed to make directories")
+            self.logger.exception("TextToSpeech failed to make directories")
 
     async def text_to_speech(self, prompt):
         CHUNK_SIZE = 1024
@@ -98,7 +100,7 @@ class TextToSpeech(commands.Cog):
             await ctx.send(file=discord.File(filepath))
         except:
             await ctx.send("Error in tts")
-            self.bot.logger.exception("Error in tts")
+            self.logger.exception("Error in tts")
 
     @commands.command()
     async def opentts(self, ctx):
@@ -113,7 +115,7 @@ class TextToSpeech(commands.Cog):
             await ctx.send(file=discord.File(filepath))
         except:
             await ctx.send("Error in tts")
-            self.bot.logger.exception("Error in tts")
+            self.logger.exception("Error in tts")
 
 async def setup(bot):
     await bot.add_cog(TextToSpeech(bot))
