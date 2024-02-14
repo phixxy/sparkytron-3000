@@ -37,6 +37,7 @@ class Meme(BotBaseCog):
         brief="Generate a meme"
         )       
     async def meme(self, ctx):
+        self.logger.info(f"Meme command called by {ctx.author.name}")
         async def generate_random_meme(topic):
             async with self.http_session.get('https://api.imgflip.com/get_memes') as resp:
                 response_data = await resp.json()
