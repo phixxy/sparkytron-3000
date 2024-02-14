@@ -1,28 +1,14 @@
 #plugin for sparkytron3000
 import os
 import random
-import aiohttp
 from discord.ext import commands
-import logging
+from cogs.base_cog.bot_base_cog import BotBaseCog
 
-class Meme(commands.Cog):
+
+class Meme(BotBaseCog):
 
     def __init__(self, bot):
-        self.bot = bot
-        self.working_dir = "tmp/meme/"
-        self.folder_setup()
-        self.http_session = self.create_aiohttp_session()
-        self.logger = logging.getLogger("bot")
-
-    def create_aiohttp_session(self):
-        return aiohttp.ClientSession()
-        
-    def folder_setup(self):
-        try:
-            if not os.path.exists(self.working_dir):
-                os.mkdir(self.working_dir)
-        except:
-            self.logger.exception("Meme failed to make directories")
+        super().__init__(bot)
 
     async def answer_question(self, topic, model="gpt-3.5-turbo"):
         headers = {

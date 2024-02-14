@@ -4,3 +4,4 @@ data/
 logs/
 src/__pycache__/
 tmp/
+cogs/base_cog/__pycache__/
