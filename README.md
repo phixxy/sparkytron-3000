@@ -61,7 +61,7 @@ Sparkytron 3000 provides several cogs that can be enabled or disabled based on y
 -   Usage: `!chat enable` to enable the bot to chat in a channel.
 -   Usage: `!dalle2 <prompt>` or `!dalle3 <prompt>` to generate an image using Dalle.
 -   Example: `!dalle3 cute grim reaper profile pic`
-- ![cute grim reaper profile pic](examples/grim_reaper.png)
+- ![cute grim reaper profile pic (Scaled Down)](examples/grim_reaper.png)
 
 
 ### Meme Maker
