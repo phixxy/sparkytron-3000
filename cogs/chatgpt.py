@@ -115,8 +115,9 @@ class ChatGPT(commands.Cog):
         help="Set the personality of the bot. Usage: !personality (personality)",
         brief="Set the personality"
     )
-    async def personality(self, ctx, personality_type=None):
+    async def personality(self, ctx, *personality_type):
         if personality_type:
+            personality_type = ' '.join(personality_type)
             self.edit_channel_config(ctx.channel.id, "personality", personality_type)
             await ctx.send(f"Personality changed to {personality_type}")
         else:
