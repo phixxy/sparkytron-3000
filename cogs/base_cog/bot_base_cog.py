@@ -6,12 +6,14 @@ import logging
 class BotBaseCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.cog_name = __name__
+        self.http_session = self.create_aiohttp_session()
+        self.logger = logging.getLogger("bot")
+
+    def setup(self, name):
+        self.cog_name = name.lower()
         self.working_dir = f"tmp/{self.cog_name}"
         self.data_dir = f"data/{self.cog_name}"
         self.folder_setup()
-        self.http_session = self.create_aiohttp_session()
-        self.logger = logging.getLogger("bot")
 
     def create_aiohttp_session(self):
         return aiohttp.ClientSession()
