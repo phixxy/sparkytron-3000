@@ -101,7 +101,7 @@ class Meme(BotBaseCog):
         if topic:
             topic = ' '.join(topic)
         else:
-            topic = await self.answer_question("What topic would you like to generate a meme for?")
+            topic = await self.answer_question("Respond with a topic that will be used to generate a meme. Be brief.")
         await ctx.send(f'Generating {topic} meme')
         link = await self.generate_random_meme(topic)
         await ctx.send(link)
