@@ -106,7 +106,7 @@ class PhixxyCom(commands.Cog):
             for i in r['images']:
                 image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))
                 png_payload = {"image": "data:image/png;base64," + i}
-                response2 = await self.bot.http_session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
+                response2 = await self.http_session.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
                 pnginfo = PngImagePlugin.PngInfo()
                 json_response = await response2.json()
                 pnginfo.add_text("parameters", json_response.get("info"))
@@ -206,7 +206,7 @@ class PhixxyCom(commands.Cog):
         url = "https://api.openai.com/v1/chat/completions"
 
         try:
-            async with self.bot.http_session.post(url, headers=headers, json=data) as resp:
+            async with self.http_session.post(url, headers=headers, json=data) as resp:
                 response_data = await resp.json()
                 response = response_data['choices'][0]['message']['content']
                 return response
