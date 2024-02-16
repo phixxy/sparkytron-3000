@@ -10,6 +10,7 @@ class Meme(BotBaseCog):
 
     def __init__(self, bot):
         super().__init__(bot)
+        super().setup(__class__.__name__)
 
     async def answer_question(self, topic, model="gpt-3.5-turbo"):
         headers = {
