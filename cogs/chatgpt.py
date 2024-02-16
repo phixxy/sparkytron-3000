@@ -131,8 +131,9 @@ class ChatGPT(commands.Cog):
         help="Set the channel topic for the bot. Usage: !topic (topic)",
         brief="Set channel topic"
     )
-    async def topic(self, ctx, channel_topic=None):
+    async def topic(self, ctx, *channel_topic):
         if channel_topic:
+            channel_topic = ' '.join(channel_topic)
             self.edit_channel_config(ctx.channel.id, "channel_topic", channel_topic)
             await ctx.send(f"Topic changed to {channel_topic}")
         else:
