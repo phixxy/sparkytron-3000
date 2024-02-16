@@ -211,7 +211,8 @@ class PhixxyCom(commands.Cog):
                 response = response_data['choices'][0]['message']['content']
                 return response
 
-        except Exception as error:
+        except:
+            self.logger.exception("Error in answer_question")
             return None
         
     @commands.command(
@@ -258,13 +259,12 @@ class PhixxyCom(commands.Cog):
                 blogpost_topics = blogpost_topics.replace(topic, '')
             with open(blogpost_file, 'w') as f:
                 f.write(blogpost_topics)
-        if topic != '':
-            self.logger.info("Writing blogpost")
-        else:
+        if topic == '':
             messages = self.get_last_5_messages()
             question = f"you have a blog and you are inspired based on this short text chat interaction:\n{messages}\nwhat will the topic of your next blog be? just tell me the topic and a one sentence description"
             self.logger.info("No topic given for blogpost, generating one.")
             topic = await self.answer_question(question)
+        self.logger.info("Writing blogpost")
         post_div = '''<!--replace this with a post-->
                 <div class="post">
                     <h2 class="post-title"><!--POST_TITLE--></h2>
