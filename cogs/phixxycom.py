@@ -216,7 +216,7 @@ class PhixxyCom(commands.Cog):
         
     @commands.command(
         description="Blog", 
-        help="Adds your topic to the list of possible future blog topics. Usage: !suggest_blog (topic)", 
+        help="Adds your topic to the list of possible future blog topics. Usage: !blog (topic)", 
         brief="Suggest a blog topic"
         )
     async def blog(self, ctx, *args):
@@ -360,7 +360,7 @@ class PhixxyCom(commands.Cog):
             bot_stuff_channel = self.bot.get_channel(544408659174883328)
             if message:
                 await bot_stuff_channel.send(message)
-        except Exception as error:
+        except:
             self.logger.exception("Failed to generate blog")
 
     @commands.command(
@@ -374,7 +374,7 @@ class PhixxyCom(commands.Cog):
         await ctx.send(output)
 
 async def setup(bot):
-    if os.getenv("upload_phixxy") == "true":
+    if os.getenv("upload_phixxy").lower() == "true":
         asyncssh.set_log_level(30)
         asyncssh.set_sftp_log_level(30)
         await bot.add_cog(PhixxyCom(bot))
