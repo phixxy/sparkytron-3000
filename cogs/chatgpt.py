@@ -21,14 +21,13 @@ class ChatGPT(commands.Cog):
         self.remind_me_loop.start()
         self.http_session = self.create_aiohttp_session()
         self.logger = logging.getLogger("bot")
-
-    def create_aiohttp_session(self):
-        return aiohttp.ClientSession(
-            headers = {
+        self.headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {os.getenv("openai.api_key")}',
             }
-        )
+
+    def create_aiohttp_session(self):
+        return aiohttp.ClientSession()
 
     def folder_setup(self):
         try:
@@ -100,7 +99,7 @@ class ChatGPT(commands.Cog):
         url = "https://api.openai.com/v1/chat/completions"
 
         try:
-            async with self.http_session.post(url, json=data) as resp:
+            async with self.http_session.post(url, json=data, headers=self.headers) as resp:
                 response_data = await resp.json()
                 response = response_data['choices'][0]['message']['content']
                 return response
@@ -212,7 +211,7 @@ class ChatGPT(commands.Cog):
         url = "https://api.openai.com/v1/images/generations"
 
         try:
-            async with self.http_session.post(url, json=data) as resp:
+            async with self.http_session.post(url, json=data, headers=self.headers) as resp:
                 response_data = await resp.json()
                 response = response_data['data'][0]['url']
                 return response
@@ -295,7 +294,7 @@ class ChatGPT(commands.Cog):
         url = "https://api.openai.com/v1/chat/completions"
 
         try:
-            async with self.http_session.post(url, json=data) as resp:
+            async with self.http_session.post(url, json=data, headers=self.headers) as resp:
                 response_data = await resp.json()
                 self.logger.debug(response_data)
                 answer = response_data['choices'][0]['message']['content']
@@ -402,7 +401,7 @@ class ChatGPT(commands.Cog):
                 url = "https://api.openai.com/v1/chat/completions"
                 
                 try:
-                    async with self.http_session.post(url, json=data) as resp:
+                    async with self.http_session.post(url, json=data, headers=self.headers) as resp:
                         response_data = await resp.json()
                         reaction = response_data['choices'][0]['message']['content'].strip()
                     if is_emoji(reaction):
@@ -425,7 +424,7 @@ class ChatGPT(commands.Cog):
             url = "https://api.openai.com/v1/chat/completions"
 
             try: 
-                async with self.http_session.post(url, json=data) as resp:
+                async with self.http_session.post(url, json=data, headers=self.headers) as resp:
                     response_data = await resp.json() 
                     response = response_data['choices'][0]['message']['content']
                     if "Sparkytron 3000:" in response[0:17]:

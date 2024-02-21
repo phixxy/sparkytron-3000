@@ -32,6 +32,10 @@ async def on_ready():
 
 @bot.event
 async def on_message(ctx):
+    if ctx.channel.type == discord.ChannelType.private:
+        return
+    if ctx.author.bot:
+        return
     try:
         await bot.process_commands(ctx)
     except commands.CommandNotFound:
