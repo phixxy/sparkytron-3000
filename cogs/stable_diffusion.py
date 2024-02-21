@@ -298,11 +298,14 @@ class StableDiffusion(commands.Cog):
     async def txt2img(self, ctx: commands.Context, prompt: str) -> None:
         url = f"{self.stable_diffusion_url}/sdapi/v1/txt2img"
         key_value_pairs = self.get_kv_from_ctx(ctx)
+        negative_prompt = self.get_negative_prompt()
+        if negative_prompt != self.default_neg_prompt:
+            ctx.send(f"Using non-default negative prompt: {negative_prompt}")
         headers = {'Content-Type': 'application/json'}  
         payload = {
             "prompt": prompt,
             "steps": 25,
-            "negative_prompt": self.get_negative_prompt() 
+            "negative_prompt": negative_prompt 
         }
         if key_value_pairs:
             payload.update(key_value_pairs)
@@ -465,6 +468,7 @@ class StableDiffusion(commands.Cog):
             await ctx.send("Command is currently disabled")
             return
         prompt = self.get_prompt_from_ctx(ctx)
+        self.logger.info(f"{ctx.author.name} used imagine. Prompt: {prompt}")
         if prompt == None:
             prompt = await self.generate_prompt()
         
@@ -518,7 +522,7 @@ class StableDiffusion(commands.Cog):
         help="Changes the negative prompt for imagine across all channels", 
         brief="Change the negative prompt for imagine"
         )
-    async def negative_prompt(self, ctx: commands.Context, *args: list) -> None:
+    async def negative_prompt(self, ctx: commands.Context, *args: tuple) -> None:
         message = ' '.join(args)
         if not message:
             message = self.default_neg_prompt
