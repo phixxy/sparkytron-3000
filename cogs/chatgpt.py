@@ -8,6 +8,7 @@ import aiofiles
 import aiohttp
 import discord
 from discord.ext import commands, tasks
+import matplotlib.pyplot as plt
 
 class ChatGPT(commands.Cog):
 
@@ -16,7 +17,6 @@ class ChatGPT(commands.Cog):
         self.API_KEY = os.getenv("openai.api_key")
         self.working_dir = "tmp/chatgpt/"
         self.data_dir = "data/chatgpt/"
-        self.premium_role = 1200943915579228170
         self.folder_setup()
         self.remind_me_loop.start()
         self.http_session = self.create_aiohttp_session()
@@ -36,7 +36,8 @@ class ChatGPT(commands.Cog):
                 self.data_dir,
                 self.data_dir + "config",
                 self.data_dir + "logs",
-                self.data_dir + "dalle"
+                self.data_dir + "dalle",
+                self.data_dir + "costs"
             ]
             
             for folder in folders:
@@ -46,6 +47,116 @@ class ChatGPT(commands.Cog):
         except Exception as e:
             self.logger.exception(f"ChatGPT failed to make directories: {e}")
 
+    def text_cost_calc(self, model, input_tokens, output_tokens):
+        cost_table = {"gpt-3.5-turbo":{"input_tokens":0.0000005,"output_tokens":0.0000015},
+                      "gpt-4-turbo-preview":{"input_tokens":0.00001,"output_tokens":0.00003},
+                      "gpt-4-vision-preview":{"input_tokens":0.00001,"output_tokens":0.00003}
+        }
+        input_cost = cost_table[model]["input_tokens"] * input_tokens
+        output_cost = cost_table[model]["output_tokens"] * output_tokens
+        cost = input_cost + output_cost
+        return cost
+
+    def add_cost(self, category: str, cost: float):
+        day = time.strftime("%d")
+        month = time.strftime("%B")
+        year = time.strftime("%Y")
+        filepath = f"{self.data_dir}costs/{month}_{day}_{year}.json"
+        if not os.path.exists(filepath):
+            with open(filepath, "w") as f:
+                json.dump({},f)
+        with open(filepath, "r") as f:
+            costs_dict = json.loads(f.readline())
+        if category not in costs_dict:
+            costs_dict[category] = cost
+        else:
+            costs_dict[category] += cost
+        with open(filepath, "w") as f:
+            json.dump(costs_dict,f)
+
+    async def graph_cost(self, graph_title, costs_per_day):
+        plt.plot(costs_per_day.values())
+        plt.title(f"{graph_title} Costs")
+        plt.xlabel("Day")
+        plt.ylabel("Cost")
+        plt.savefig(f"{self.data_dir}costs/{graph_title}_costs.png")
+        plt.close()
+        return f"{self.data_dir}costs/{graph_title}_costs.png"
+    
+    async def graph_category(self, graph_title, cost_per_category):
+        bar_container = plt.barh(list(cost_per_category.keys()), cost_per_category.values())
+        plt.title(f"{graph_title} Costs")
+        plt.xlabel("Category")
+        plt.ylabel("Cost")
+        plt.bar_label(bar_container)
+        plt.savefig(f"{self.data_dir}costs/{graph_title}_categories.png")
+        plt.close()
+        return f"{self.data_dir}costs/{graph_title}_categories.png"
+
+    @commands.command(
+        name="costs",
+        brief="Get the costs for a given month and year.",
+        help="Get the costs for a given month and year. If no month or year is given, it will default to the current month and year.",
+        aliases=["cost"],
+        usage="costs [month] [year]",
+    )
+    async def costs(self, ctx, month=time.strftime("%B"), year=time.strftime("%Y")):
+        print('working')
+        total_cost = 0
+        cost_per_day = {}
+        for x in range(1,32):
+            daily_cost = 0
+            if x < 10:
+                x = f"0{x}"
+            filepath = f"{self.data_dir}costs/{month}_{x}_{year}.json"
+            if os.path.exists(filepath):
+                with open(filepath, "r") as f:
+                    costs_dict = json.loads(f.readline())
+                for category, cost in costs_dict.items():
+                    total_cost += cost
+                    daily_cost += cost
+            cost_per_day[x] = daily_cost
+        rounded_total = round(total_cost, 2)
+        if rounded_total == 0:
+            await ctx.send(f"No data for {month} {year}")
+        else:
+            graph_title = f"{month} {year}"
+            await ctx.send(f"Total cost for {month} {year}: ${rounded_total}", file=discord.File(await self.graph_cost(graph_title, cost_per_day)))
+
+    @commands.command(
+        name="category_costs",
+        brief="Get the costs per category for a given month and year.",
+        help="Get the costs per category for a given month and year. If no month or year is given, it will default to the current month and year.",
+        aliases=["category_cost"],
+        usage="category_costs [month] [year] [day]",
+    )
+    async def category_costs(self, ctx, month=time.strftime("%B"), year=time.strftime("%Y"), day=None):
+        total_cost = 0
+        cost_per_category = {}
+        if day == None:
+            day_range = range(1,32)
+        else:
+            day_range = [int(day)]
+        for x in day_range:
+            daily_cost = 0
+            if x < 10:
+                x = f"0{x}"
+            filepath = f"{self.data_dir}costs/{month}_{x}_{year}.json"
+            if os.path.exists(filepath):
+                with open(filepath, "r") as f:
+                    costs_dict = json.loads(f.readline())
+                for category, cost in costs_dict.items():
+                    if category not in cost_per_category:
+                        cost_per_category[category] = cost
+                    else:
+                        cost_per_category[category] += cost
+                    total_cost += cost
+        graph_title = f"{month} {year}"
+        rounded_total = round(total_cost, 2)
+        if rounded_total == 0:
+            await ctx.send(f"No data for {month} {year}")
+        else:
+            await ctx.send(f"Total cost for {month} {year}: ${rounded_total}", file=discord.File(await self.graph_category(graph_title, cost_per_category)))
 
     def create_channel_config(self, filepath):
         config_dict = {
@@ -102,6 +213,10 @@ class ChatGPT(commands.Cog):
             async with self.http_session.post(url, json=data, headers=self.headers) as resp:
                 response_data = await resp.json()
                 response = response_data['choices'][0]['message']['content']
+                input_tokens = response_data['usage']['prompt_tokens']
+                output_tokens = response_data['usage']['completion_tokens']
+                cost = self.text_cost_calc(model, input_tokens, output_tokens)
+                self.add_cost(model, cost)
                 return response
 
         except Exception as error:
@@ -190,15 +305,12 @@ class ChatGPT(commands.Cog):
         brief="Get an answer"
         )         
     async def question_gpt4(self, ctx):
-        if ctx.author.get_role(self.premium_role):
-            await ctx.send("One moment, let me think...")
-            question = ctx.message.content.split(" ", maxsplit=1)[1]
-            answer = await self.answer_question(question, "gpt-4-turbo-preview")
-            chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
-            for chunk in chunks:
-                await ctx.send(chunk)
-        else:
-            await ctx.send("Sorry you must be a premium member to use this command. (!donate)")
+        await ctx.send("One moment, let me think...")
+        question = ctx.message.content.split(" ", maxsplit=1)[1]
+        answer = await self.answer_question(question, "gpt-4-turbo-preview")
+        chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
+        for chunk in chunks:
+            await ctx.send(chunk)
     
     async def dalle_api_call(self, prompt: str, model: str="dall-e-2", quality: str="standard", size: str="1024x1024") -> tuple:
         data = {
@@ -228,25 +340,22 @@ class ChatGPT(commands.Cog):
 
 
     async def generate_dalle_image(self, ctx, model, quality="standard", size="1024x1024") -> None:
-        if ctx.author.get_role(self.premium_role):
-            prompt = ctx.message.content.split(" ", maxsplit=1)[1]
-            await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.")
-            resp_status, resp = await self.dalle_api_call(prompt, model=model, quality=quality, size=size)
-            if resp_status != 200:
-                await ctx.send(f"Error generating image: {resp_status}: {resp}")
-                return
-            my_filename = str(time.time_ns()) + ".png"
-            image_filepath = f"{self.data_dir}dalle/{my_filename}"
-            await self.download_image(resp, image_filepath)
-            with open(image_filepath, "rb") as fh:
-                f = discord.File(fh, filename=image_filepath)
-            prompt = prompt.replace('\n',' ')
-            log_data = f'Author: {ctx.author.name}, Prompt: {prompt}, Filename: {my_filename}\n'
-            with open(f"{self.data_dir}logs/dalle3.log", 'a') as log_filepath:
-                log_filepath.writelines(log_data)
-            await ctx.send(f'Generated by: {ctx.author.name}\nPrompt: {prompt}', file=f)
-        else:
-            await ctx.send("Sorry you must be a premium member to use this command. (!donate)")
+        prompt = ctx.message.content.split(" ", maxsplit=1)[1]
+        await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.")
+        resp_status, resp = await self.dalle_api_call(prompt, model=model, quality=quality, size=size)
+        if resp_status != 200:
+            await ctx.send(f"Error generating image: {resp_status}: {resp}")
+            return
+        my_filename = str(time.time_ns()) + ".png"
+        image_filepath = f"{self.data_dir}dalle/{my_filename}"
+        await self.download_image(resp, image_filepath)
+        with open(image_filepath, "rb") as fh:
+            f = discord.File(fh, filename=image_filepath)
+        prompt = prompt.replace('\n',' ')
+        log_data = f'Author: {ctx.author.name}, Prompt: {prompt}, Filename: {my_filename}\n'
+        with open(f"{self.data_dir}logs/dalle3.log", 'a') as log_filepath:
+            log_filepath.writelines(log_data)
+        await ctx.send(f'Generated by: {ctx.author.name}\nPrompt: {prompt}', file=f)
 
 
     @commands.command(
@@ -255,6 +364,7 @@ class ChatGPT(commands.Cog):
         brief="Generate Image"
         )         
     async def dalle2(self, ctx):
+        self.add_cost("dalle2", 0.02)
         await self.generate_dalle_image(ctx, model="dall-e-2")
 
 
@@ -265,6 +375,7 @@ class ChatGPT(commands.Cog):
         aliases = ['dalle']
         )           
     async def dalle3(self, ctx):
+        self.add_cost("dalle3", 0.04)
         await self.generate_dalle_image(ctx, model="dall-e-3")
 
 
@@ -274,6 +385,7 @@ class ChatGPT(commands.Cog):
         brief="Generate HD Image",
         )           
     async def dalle3hd(self, ctx):
+        self.add_cost("dalle3hd", 0.08)
         await self.generate_dalle_image(ctx, model="dall-e-3", quality="hd", size="1792x1024")
 
     @commands.command(
@@ -415,30 +527,17 @@ class ChatGPT(commands.Cog):
         async with ctx.channel.typing(): 
             await asyncio.sleep(1)
             prompt = f"You are a {channel_vars['personality']} chat bot named Sparkytron 3000 created by @phixxy.com. Your personality should be {channel_vars['personality']}. You are currently in a {channel_vars['channel_topic']} chatroom. The message history is: {chat_history_string}"
-            
-            data = { 
-                "model": "gpt-3.5-turbo", 
-                "messages": [{"role": "user", "content": prompt}]
-            }
+            response = await self.answer_question(prompt)
+            if "Sparkytron 3000:" in response[0:17]:
+                response = response.replace("Sparkytron 3000:", "")
+            max_len = 1999
+            if len(response) > max_len:
+                messages=[response[y-max_len:y] for y in range(max_len, len(response)+max_len,max_len)]
+            else:
+                messages=[response]
+            for message in messages:
+                await ctx.channel.send(message)
 
-            url = "https://api.openai.com/v1/chat/completions"
-
-            try: 
-                async with self.http_session.post(url, json=data, headers=self.headers) as resp:
-                    response_data = await resp.json() 
-                    response = response_data['choices'][0]['message']['content']
-                    if "Sparkytron 3000:" in response[0:17]:
-                        response = response.replace("Sparkytron 3000:", "")
-                    max_len = 1999
-                    if len(response) > max_len:
-                        messages=[response[y-max_len:y] for y in range(max_len, len(response)+max_len,max_len)]
-                    else:
-                        messages=[response]
-                    for message in messages:
-                        await ctx.channel.send(message)
-
-            except Exception as error: 
-                self.logger.exception("Problem with chat_response in chatgpt")
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):

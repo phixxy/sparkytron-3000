@@ -10,7 +10,7 @@ class Donate(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.donation_link = "https://patreon.com/soullesssurvival"
+        self.donation_link = "https://patreon.com/phixxy"
         self.data_dir = "data/donate/"
         self.donor_file = "data/donate/supporters.txt"
         self.folder_setup()
