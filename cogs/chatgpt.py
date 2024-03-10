@@ -64,7 +64,7 @@ class ChatGPT(commands.Cog):
             json.dump(costs_dict,f)
 
     @commands.command()
-    async def display_costs(self, ctx):
+    async def costs(self, ctx):
         day = time.strftime("%d")
         month = time.strftime("%B")
         year = time.strftime("%Y")
