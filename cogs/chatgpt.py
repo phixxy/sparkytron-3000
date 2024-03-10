@@ -35,7 +35,8 @@ class ChatGPT(commands.Cog):
                 self.data_dir,
                 self.data_dir + "config",
                 self.data_dir + "logs",
-                self.data_dir + "dalle"
+                self.data_dir + "dalle",
+                self.data_dir + "costs"
             ]
             
             for folder in folders:
@@ -45,6 +46,42 @@ class ChatGPT(commands.Cog):
         except Exception as e:
             self.logger.exception(f"ChatGPT failed to make directories: {e}")
 
+    def add_cost(self, category, cost):
+        day = time.strftime("%d")
+        month = time.strftime("%B")
+        year = time.strftime("%Y")
+        filepath = f"{self.data_dir}costs/{month}_{day}_{year}.json"
+        if not os.path.exists(filepath):
+            with open(filepath, "w") as f:
+                json.dump({},f)
+        with open(filepath, "r") as f:
+            costs_dict = json.loads(f.readline())
+        if category not in costs_dict:
+            costs_dict[category] = cost
+        else:
+            costs_dict[category] += cost
+        with open(filepath, "w") as f:
+            json.dump(costs_dict,f)
+
+    @commands.command()
+    async def display_costs(self, ctx):
+        day = time.strftime("%d")
+        month = time.strftime("%B")
+        year = time.strftime("%Y")
+        filepath = f"{self.data_dir}costs/{month}_{day}_{year}.json"
+        if not os.path.exists(filepath):
+            with open(filepath, "w") as f:
+                json.dump({},f)
+        with open(filepath, "r") as f:
+            costs_dict = json.loads(f.readline())
+        message = ""
+        total_cost = 0
+        for category, cost in costs_dict.items():
+            message += f"{category}: ${cost}\n"
+            total_cost += cost
+        rounded_total = round(total_cost, 2)
+        message += f"Total: ${rounded_total}\n"
+        await ctx.send(message)
 
     def create_channel_config(self, filepath):
         config_dict = {
@@ -248,6 +285,7 @@ class ChatGPT(commands.Cog):
         brief="Generate Image"
         )         
     async def dalle2(self, ctx):
+        self.add_cost("dalle2", 0.02)
         await self.generate_dalle_image(ctx, model="dall-e-2")
 
 
@@ -258,6 +296,7 @@ class ChatGPT(commands.Cog):
         aliases = ['dalle']
         )           
     async def dalle3(self, ctx):
+        self.add_cost("dalle3", 0.04)
         await self.generate_dalle_image(ctx, model="dall-e-3")
 
 
@@ -267,6 +306,7 @@ class ChatGPT(commands.Cog):
         brief="Generate HD Image",
         )           
     async def dalle3hd(self, ctx):
+        self.add_cost("dalle3hd", 0.08)
         await self.generate_dalle_image(ctx, model="dall-e-3", quality="hd", size="1792x1024")
 
     @commands.command(
