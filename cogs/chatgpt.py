@@ -101,7 +101,6 @@ class ChatGPT(commands.Cog):
         usage="costs [month] [year]",
     )
     async def costs(self, ctx, month=time.strftime("%B"), year=time.strftime("%Y")):
-        print('working')
         total_cost = 0
         cost_per_day = {}
         for x in range(1,32):
