@@ -14,7 +14,9 @@ class ChatGPT(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.admin_id = 242018983241318410
         self.API_KEY = os.getenv("openai.api_key")
+        self.dalle_budget = 20
         self.working_dir = "tmp/chatgpt/"
         self.data_dir = "data/chatgpt/"
         self.folder_setup()
@@ -92,6 +94,35 @@ class ChatGPT(commands.Cog):
         plt.savefig(f"{self.data_dir}costs/{graph_title}_categories.png")
         plt.close()
         return f"{self.data_dir}costs/{graph_title}_categories.png"
+    
+    async def get_monthly_cost(self, month=time.strftime("%B"), year=time.strftime("%Y")):
+        total_cost = 0
+        for x in range(1,32):
+            if x < 10:
+                x = f"0{x}"
+            filepath = f"{self.data_dir}costs/{month}_{x}_{year}.json"
+            if os.path.exists(filepath):
+                with open(filepath, "r") as f:
+                    costs_dict = json.loads(f.readline())
+                for category, cost in costs_dict.items():
+                    total_cost += cost
+        return total_cost
+    
+    async def moderation_check(self, prompt):
+        data = {
+            "input": prompt
+        }
+
+        url = "https://api.openai.com/v1/moderations"
+
+
+        async with self.http_session.post(url, json=data, headers=self.headers) as resp:
+            response_data = await resp.json()
+            flagged = response_data['results'][0]['flagged']
+            categories = response_data['results'][0]['categories']
+            category_scores = response_data['results'][0]['category_scores']
+            return (flagged, categories, category_scores)
+
 
     @commands.command(
         name="costs",
@@ -253,7 +284,7 @@ class ChatGPT(commands.Cog):
             channel_config = await self.get_channel_config(ctx.channel.id)
             current_topic = channel_config["channel_topic"]
             await ctx.send(f"Current topic is {current_topic}")
-
+            
 
     @commands.command(
         description="Chat", 
@@ -312,6 +343,9 @@ class ChatGPT(commands.Cog):
             await ctx.send(chunk)
     
     async def dalle_api_call(self, prompt: str, model: str="dall-e-2", quality: str="standard", size: str="1024x1024") -> tuple:
+        if self.dalle_budget <= await self.get_monthly_cost():
+            self.logger.info("DALL-E API call failed due to budget")
+            return (1337, "DALL-E API call failed due to budget. Consider using !donate to fund the bot.")
         data = {
             "model": model,
             "prompt": prompt,
@@ -336,11 +370,24 @@ class ChatGPT(commands.Cog):
                 await f.write(await resp.read())
                 await f.close()
             return resp.status
-
+        
+    async def send_moderation_message(self, command, user_id, username, prompt, categories, category_scores):
+        categories = [k for k, v in categories.items() if v]
+        category_scores = {k: v for k, v in category_scores.items() if v > 0.5}
+        embed = discord.Embed(title="Moderation", description=f"Command: {command}\nUsername: {username}\nUser ID: {user_id}\nPrompt: {prompt}\nCategories: {categories}\nCategory Scores: {category_scores}", color=0x00ff00)
+        embed.set_footer(text="Moderation")
+        user = self.bot.get_user(self.admin_id)
+        await user.send(embed=embed)
 
     async def generate_dalle_image(self, ctx, model, quality="standard", size="1024x1024") -> None:
         prompt = ctx.message.content.split(" ", maxsplit=1)[1]
         await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.")
+        flagged, categories, category_scores = await self.moderation_check(prompt)
+        if flagged:
+            self.logger.info(f"Prompt {prompt} was flagged for inappropriate content.")
+            await ctx.send(f"This prompt {prompt} was flagged for inappropriate content. This has been reported.")
+            await self.send_moderation_message("dalle", ctx.author.id, ctx.author.name, prompt, categories, category_scores)
+            return
         resp_status, resp = await self.dalle_api_call(prompt, model=model, quality=quality, size=size)
         if resp_status != 200:
             await ctx.send(f"Error generating image: {resp_status}: {resp}")
