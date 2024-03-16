@@ -16,12 +16,13 @@ class ChatGPT(commands.Cog):
         self.bot = bot
         self.admin_id = 242018983241318410
         self.API_KEY = os.getenv("openai.api_key")
-        self.dalle_budget = 20
+        self.default_budget = 20
         self.working_dir = "tmp/chatgpt/"
         self.data_dir = "data/chatgpt/"
         self.folder_setup()
         self.remind_me_loop.start()
         self.http_session = self.create_aiohttp_session()
+        self.dalle_budget = self.get_budget()
         self.logger = logging.getLogger("bot")
         self.headers = {
             'Content-Type': 'application/json',
@@ -58,6 +59,36 @@ class ChatGPT(commands.Cog):
         output_cost = cost_table[model]["output_tokens"] * output_tokens
         cost = input_cost + output_cost
         return cost
+    
+    def get_budget(self):
+        month = time.strftime("%B")
+        year = time.strftime("%Y")
+        key = f"{month}_{year}"
+        budget_file = f"{self.data_dir}budget.json"
+        if not os.path.exists(budget_file):
+            with open(budget_file, "w") as f:
+                json.dump({key:self.default_budget},f)
+        with open(budget_file, "r") as f:
+            budget_dict = json.loads(f.readline())
+        if key not in budget_dict:
+            budget_dict[key] = self.default_budget
+            with open(budget_file, "w") as f:
+                json.dump(budget_dict,f)
+            return self.default_budget
+        else:
+            return budget_dict[key]
+        
+    def budget_add(self, amount):
+        month = time.strftime("%B")
+        year = time.strftime("%Y")
+        key = f"{month}_{year}"
+        budget_file = f"{self.data_dir}budget.json"
+        with open(budget_file, "r") as f:
+            budget_dict = json.loads(f.readline())
+        budget_dict[key] += amount
+        with open(budget_file, "w") as f:
+            json.dump(budget_dict,f)
+            self.dalle_budget += amount
 
     def add_cost(self, category: str, cost: float):
         day = time.strftime("%d")
@@ -128,13 +159,13 @@ class ChatGPT(commands.Cog):
         try:
             if ctx.author.id == self.admin_id:
                 if command == "add" and budget!= None:
-                    self.dalle_budget += float(budget)
+                    self.budget_add(float(budget))
                     await ctx.send(f"Budget increased by {budget}")
                 elif command == "remove" and budget!= None:
-                    self.dalle_budget -= float(budget)
+                    self.budget_add(-float(budget))
                     await ctx.send(f"Budget decreased by {budget}")
                 elif command == "set" and budget!= None:
-                    self.dalle_budget = float(budget)
+                    self.budget_add(float(budget) - self.dalle_budget)
                     await ctx.send(f"Budget set to {budget}")
                 else:
                     await ctx.send(f"The current budget is {self.dalle_budget}")
