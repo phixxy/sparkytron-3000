@@ -124,16 +124,16 @@ class ChatGPT(commands.Cog):
             return (flagged, categories, category_scores)
         
     @commands.command()
-    async def budget(self, ctx, command: str, budget: float):
+    async def budget(self, ctx, command=None, budget=None):
         try:
             if ctx.author.id == self.admin_id:
-                if command == "add":
+                if command == "add" and budget!= None:
                     self.dalle_budget += budget
                     await ctx.send(f"Budget increased by {budget}")
-                elif command == "remove":
+                elif command == "remove" and budget!= None:
                     self.dalle_budget -= budget
                     await ctx.send(f"Budget decreased by {budget}")
-                elif command == "set":
+                elif command == "set" and budget!= None:
                     self.dalle_budget = budget
                     await ctx.send(f"Budget set to {budget}")
                 else:
