@@ -124,19 +124,25 @@ class ChatGPT(commands.Cog):
             return (flagged, categories, category_scores)
         
     @commands.command()
-    async def budget(self, ctx, command: str, budget: int):
-        if ctx.author.id == self.admin_id:
-            if command == "add":
-                self.dalle_budget += budget
-                await ctx.send(f"Budget increased by {budget}")
-            elif command == "remove":
-                self.dalle_budget -= budget
-                await ctx.send(f"Budget decreased by {budget}")
-            elif command == "set":
-                self.dalle_budget = budget
-                await ctx.send(f"Budget set to {budget}")
-        else:
-            await ctx.send(f"The current budget is {self.dalle_budget}")
+    async def budget(self, ctx, command: str, budget: float):
+        try:
+            if ctx.author.id == self.admin_id:
+                if command == "add":
+                    self.dalle_budget += budget
+                    await ctx.send(f"Budget increased by {budget}")
+                elif command == "remove":
+                    self.dalle_budget -= budget
+                    await ctx.send(f"Budget decreased by {budget}")
+                elif command == "set":
+                    self.dalle_budget = budget
+                    await ctx.send(f"Budget set to {budget}")
+                else:
+                    await ctx.send(f"The current budget is {self.dalle_budget}")
+            else:
+                await ctx.send(f"The current budget is {self.dalle_budget}")
+        except Exception as e:
+            self.logger.exception(f"Budget command failed: {e}")
+            await ctx.send(f"Budget command failed")
 
 
     @commands.command(
