@@ -128,13 +128,13 @@ class ChatGPT(commands.Cog):
         try:
             if ctx.author.id == self.admin_id:
                 if command == "add" and budget!= None:
-                    self.dalle_budget += budget
+                    self.dalle_budget += float(budget)
                     await ctx.send(f"Budget increased by {budget}")
                 elif command == "remove" and budget!= None:
-                    self.dalle_budget -= budget
+                    self.dalle_budget -= float(budget)
                     await ctx.send(f"Budget decreased by {budget}")
                 elif command == "set" and budget!= None:
-                    self.dalle_budget = budget
+                    self.dalle_budget = float(budget)
                     await ctx.send(f"Budget set to {budget}")
                 else:
                     await ctx.send(f"The current budget is {self.dalle_budget}")
