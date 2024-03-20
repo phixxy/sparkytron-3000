@@ -393,12 +393,16 @@ class ChatGPT(commands.Cog):
 
     @commands.command(
         description="Image GPT4", 
-        help="Ask GPT4 a question about an image. Usage: !question_gpt4 (link) (question)", 
+        help="Ask GPT4 a question about an image. Usage: !looker (link) (question)", 
         brief="Get an answer"
         )         
     async def looker(self, ctx):
-        image_link = ctx.message.content.split(" ", maxsplit=2)[1]
-        question = ctx.message.content.split(" ", maxsplit=2)[2]
+        if len(ctx.message.attachments) > 0:
+           image_link = ctx.message.attachments[0].url
+           question = ctx.message.content
+        else:
+            image_link = ctx.message.content.split(" ", maxsplit=2)[1]
+            question = ctx.message.content.split(" ", maxsplit=2)[2]
 
         data = {
             "model": "gpt-4-vision-preview",
