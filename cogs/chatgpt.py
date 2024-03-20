@@ -212,6 +212,9 @@ class ChatGPT(commands.Cog):
         try:
             async with self.http_session.post(url, json=data, headers=self.headers) as resp:
                 response_data = await resp.json()
+                if resp.status != 200:
+                    self.logger.error(f"Error occurred in answer_question: {response_data}")
+                    return "Error occurred in answer_question"
                 response = response_data['choices'][0]['message']['content']
                 input_tokens = response_data['usage']['prompt_tokens']
                 output_tokens = response_data['usage']['completion_tokens']
@@ -526,7 +529,7 @@ class ChatGPT(commands.Cog):
     async def chat_response(self, ctx, channel_vars, chat_history_string): 
         async with ctx.channel.typing(): 
             await asyncio.sleep(1)
-            prompt = f"You are a {channel_vars['personality']} chat bot named Sparkytron 3000 created by @phixxy.com. Your personality should be {channel_vars['personality']}. You are currently in a {channel_vars['channel_topic']} chatroom. The message history is: {chat_history_string}"
+            prompt = f"You are a {channel_vars['personality']} chat bot named Sparkytron 3000 created by @phixxy.com. Your personality should be {channel_vars['personality']}. You are currently in a {channel_vars['channel_topic']} chatroom. The message history is: {chat_history_string}\nSparkytron 3000: "
             response = await self.answer_question(prompt)
             if "Sparkytron 3000:" in response[0:17]:
                 response = response.replace("Sparkytron 3000:", "")
