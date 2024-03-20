@@ -392,7 +392,7 @@ class ChatGPT(commands.Cog):
         await self.generate_dalle_image(ctx, model="dall-e-3", quality="hd", size="1792x1024")
 
     @commands.command(
-        description="Image GPT4", 
+        description="Looker", 
         help="Ask GPT4 a question about an image. Usage: !looker (link) (question)", 
         brief="Get an answer"
         )         
@@ -483,11 +483,16 @@ class ChatGPT(commands.Cog):
 
         self.save_to_db(reminders_path,data)
     
-    async def log_chat_and_get_history(self, ctx, logfile, channel_vars):
-        #todo: ctx is actually a message, make this obv
-        log_line = ''           
-        log_line += ctx.content
-        log_line =  ctx.author.name + ": " + log_line  +"\n"
+    async def log_chat_and_get_history(self, message, logfile, channel_vars):
+        log_line = ''
+        if message.attachments and False:#channel_vars["log_image"]:
+            #log_image MUST BE ADDED TO THE JSON FILES
+            for attachment in message.attachments:
+                image_description = await self.view_image(attachment.url)
+                image_description = image_description.replace("\n"," ")
+                log_line += attachment.url + " <image description>" + image_description + "</image description> "
+        log_line += message.content
+        log_line =  message.author.name + ": " + log_line  +"\n"
         chat_history = ""
         self.logger.debug("Logging: " + log_line, end="")
         with open(logfile, "a", encoding="utf-8") as f:
@@ -530,8 +535,28 @@ class ChatGPT(commands.Cog):
                 except Exception as error:
                     self.logger.exception("Some error happened while trying to react to a message")
 
-    async def chat_response(self, ctx, channel_vars, chat_history_string): 
-        async with ctx.channel.typing(): 
+    async def view_image(self, image_link):
+        data = {
+            "model": "gpt-4-vision-preview",
+            "messages": [{"role": "user", "content": [{"type": "text", "text": "Describe this"},{"type": "image_url","image_url": {"url": image_link}}]}],
+            "max_tokens": 500
+        }
+
+        url = "https://api.openai.com/v1/chat/completions"
+
+        try:
+            async with self.http_session.post(url, json=data, headers=self.headers) as resp:
+                response_data = await resp.json()
+                self.logger.debug(response_data)
+                answer = response_data['choices'][0]['message']['content']
+            
+        except Exception as error:
+            self.logger.exception("error occurred in view_image")
+        
+        return answer
+
+    async def chat_response(self, message, channel_vars, chat_history_string):
+        async with message.channel.typing(): 
             await asyncio.sleep(1)
             prompt = f"You are a {channel_vars['personality']} chat bot named Sparkytron 3000 created by @phixxy.com. Your personality should be {channel_vars['personality']}. You are currently in a {channel_vars['channel_topic']} chatroom. The message history is: {chat_history_string}\nSparkytron 3000: "
             response = await self.answer_question(prompt)
@@ -542,8 +567,8 @@ class ChatGPT(commands.Cog):
                 messages=[response[y-max_len:y] for y in range(max_len, len(response)+max_len,max_len)]
             else:
                 messages=[response]
-            for message in messages:
-                await ctx.channel.send(message)
+            for response_message in messages:
+                await message.channel.send(response_message)
 
 
     @commands.Cog.listener()
