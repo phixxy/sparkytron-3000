@@ -293,7 +293,7 @@ class PhixxyCom(commands.Cog):
         await self.upload_sftp(filename, (os.getenv('ftp_public_html') + 'ai-blog/'), "index.html")
         run_time = time.time() - start_time
         self.logger.debug("It took " + str(run_time) + " seconds to generate the blog post!")
-        output = "Blog Updated! (" + str(run_time) + " seconds) https://ai.phixxy.com/ai-blog"
+        output = f"Blog Updated! ({run_time} seconds) {title} https://ai.phixxy.com/ai-blog"
         return output
     
     @commands.command()
