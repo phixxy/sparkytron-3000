@@ -14,12 +14,15 @@ class ChatGPT(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.admin_id = 242018983241318410
         self.API_KEY = os.getenv("openai.api_key")
+        self.default_budget = 20
         self.working_dir = "tmp/chatgpt/"
         self.data_dir = "data/chatgpt/"
         self.folder_setup()
         self.remind_me_loop.start()
         self.http_session = self.create_aiohttp_session()
+        self.dalle_budget = self.get_budget()
         self.logger = logging.getLogger("bot")
         self.headers = {
             'Content-Type': 'application/json',
@@ -56,6 +59,36 @@ class ChatGPT(commands.Cog):
         output_cost = cost_table[model]["output_tokens"] * output_tokens
         cost = input_cost + output_cost
         return cost
+    
+    def get_budget(self):
+        month = time.strftime("%B")
+        year = time.strftime("%Y")
+        key = f"{month}_{year}"
+        budget_file = f"{self.data_dir}budget.json"
+        if not os.path.exists(budget_file):
+            with open(budget_file, "w") as f:
+                json.dump({key:self.default_budget},f)
+        with open(budget_file, "r") as f:
+            budget_dict = json.loads(f.readline())
+        if key not in budget_dict:
+            budget_dict[key] = self.default_budget
+            with open(budget_file, "w") as f:
+                json.dump(budget_dict,f)
+            return self.default_budget
+        else:
+            return budget_dict[key]
+        
+    def budget_add(self, amount):
+        month = time.strftime("%B")
+        year = time.strftime("%Y")
+        key = f"{month}_{year}"
+        budget_file = f"{self.data_dir}budget.json"
+        with open(budget_file, "r") as f:
+            budget_dict = json.loads(f.readline())
+        budget_dict[key] += amount
+        with open(budget_file, "w") as f:
+            json.dump(budget_dict,f)
+            self.dalle_budget += amount
 
     def add_cost(self, category: str, cost: float):
         day = time.strftime("%d")
@@ -92,6 +125,56 @@ class ChatGPT(commands.Cog):
         plt.savefig(f"{self.data_dir}costs/{graph_title}_categories.png")
         plt.close()
         return f"{self.data_dir}costs/{graph_title}_categories.png"
+    
+    async def get_monthly_cost(self, month=time.strftime("%B"), year=time.strftime("%Y")):
+        total_cost = 0
+        for x in range(1,32):
+            if x < 10:
+                x = f"0{x}"
+            filepath = f"{self.data_dir}costs/{month}_{x}_{year}.json"
+            if os.path.exists(filepath):
+                with open(filepath, "r") as f:
+                    costs_dict = json.loads(f.readline())
+                for category, cost in costs_dict.items():
+                    total_cost += cost
+        return total_cost
+    
+    async def moderation_check(self, prompt):
+        data = {
+            "input": prompt
+        }
+
+        url = "https://api.openai.com/v1/moderations"
+
+
+        async with self.http_session.post(url, json=data, headers=self.headers) as resp:
+            response_data = await resp.json()
+            flagged = response_data['results'][0]['flagged']
+            categories = response_data['results'][0]['categories']
+            category_scores = response_data['results'][0]['category_scores']
+            return (flagged, categories, category_scores)
+        
+    @commands.command()
+    async def budget(self, ctx, command=None, budget=None):
+        try:
+            if ctx.author.id == self.admin_id:
+                if command == "add" and budget!= None:
+                    self.budget_add(float(budget))
+                    await ctx.send(f"Budget increased by {budget}")
+                elif command == "remove" and budget!= None:
+                    self.budget_add(-float(budget))
+                    await ctx.send(f"Budget decreased by {budget}")
+                elif command == "set" and budget!= None:
+                    self.budget_add(float(budget) - self.dalle_budget)
+                    await ctx.send(f"Budget set to {budget}")
+                else:
+                    await ctx.send(f"The current budget is {self.dalle_budget}")
+            else:
+                await ctx.send(f"The current budget is {self.dalle_budget}")
+        except Exception as e:
+            self.logger.exception(f"Budget command failed: {e}")
+            await ctx.send(f"Budget command failed")
+
 
     @commands.command(
         name="costs",
@@ -101,7 +184,6 @@ class ChatGPT(commands.Cog):
         usage="costs [month] [year]",
     )
     async def costs(self, ctx, month=time.strftime("%B"), year=time.strftime("%Y")):
-        print('working')
         total_cost = 0
         cost_per_day = {}
         for x in range(1,32):
@@ -332,6 +414,9 @@ class ChatGPT(commands.Cog):
             await ctx.send(chunk)
     
     async def dalle_api_call(self, prompt: str, model: str="dall-e-2", quality: str="standard", size: str="1024x1024") -> tuple:
+        if self.dalle_budget <= await self.get_monthly_cost():
+            self.logger.info("DALL-E API call failed due to budget")
+            return (1337, "DALL-E API call failed due to budget. Consider using !donate to fund the bot.")
         data = {
             "model": model,
             "prompt": prompt,
@@ -356,11 +441,24 @@ class ChatGPT(commands.Cog):
                 await f.write(await resp.read())
                 await f.close()
             return resp.status
-
+        
+    async def send_moderation_message(self, command, user_id, username, prompt, categories, category_scores):
+        categories = [k for k, v in categories.items() if v]
+        category_scores = {k: v for k, v in category_scores.items() if v > 0.5}
+        embed = discord.Embed(title="Moderation", description=f"Command: {command}\nUsername: {username}\nUser ID: {user_id}\nPrompt: {prompt}\nCategories: {categories}\nCategory Scores: {category_scores}", color=0x00ff00)
+        embed.set_footer(text="Moderation")
+        user = self.bot.get_user(self.admin_id)
+        await user.send(embed=embed)
 
     async def generate_dalle_image(self, ctx, model, quality="standard", size="1024x1024") -> None:
         prompt = ctx.message.content.split(" ", maxsplit=1)[1]
         await ctx.send(f"Please be patient this may take some time! Generating: {prompt}.")
+        flagged, categories, category_scores = await self.moderation_check(prompt)
+        if flagged:
+            self.logger.info(f"Prompt {prompt} was flagged for inappropriate content.")
+            await ctx.send(f"This prompt {prompt} was flagged for inappropriate content. This has been reported.")
+            await self.send_moderation_message("dalle", ctx.author.id, ctx.author.name, prompt, categories, category_scores)
+            return
         resp_status, resp = await self.dalle_api_call(prompt, model=model, quality=quality, size=size)
         if resp_status != 200:
             await ctx.send(f"Error generating image: {resp_status}: {resp}")
@@ -375,6 +473,53 @@ class ChatGPT(commands.Cog):
         with open(f"{self.data_dir}logs/dalle3.log", 'a') as log_filepath:
             log_filepath.writelines(log_data)
         await ctx.send(f'Generated by: {ctx.author.name}\nPrompt: {prompt}', file=f)
+
+    @commands.command(
+        description="Big Spenders",
+        help="Generate a list of the biggest spenders. Usage: !bigspenders",
+        brief="Generate list of big spenders"
+        )
+    async def bigspenders(self, ctx):
+        filenames = os.listdir(self.data_dir + "logs/")
+        user_cost_dict = {}
+        for filename in filenames:
+            if ".log" in filename:
+                with open(f"{self.data_dir}logs/{filename}", 'r', encoding="utf-8") as f:
+                    for line in f:
+                        try:
+                            if "!dalle3hd" in line:
+                                cost = 0.08
+                                username = line[0:line.index(':')]
+                                if " " in username:
+                                    break
+                                if username not in user_cost_dict:
+                                    user_cost_dict[username] = 0
+                                user_cost_dict[username] += cost
+                            elif "!dalle2" in line:
+                                cost = 0.02
+                                username = line[0:line.index(':')]
+                                if " " in username:
+                                    break
+                                if username not in user_cost_dict:
+                                    user_cost_dict[username] = 0
+                                user_cost_dict[username] += cost
+                            if "!dalle" in line or "!dalle3" in line:
+                                cost = 0.04
+                                username = line[0:line.index(':')]
+                                if " " in username:
+                                    break
+                                if username not in user_cost_dict:
+                                    user_cost_dict[username] = 0
+                                user_cost_dict[username] += cost
+                            else:
+                                pass
+                        except:
+                            pass
+        message = "Big Spenders:\n"
+        sorted_dictionary = sorted(user_cost_dict.items(), key=lambda x: x[1], reverse=True)
+        for user in sorted_dictionary:
+            message += f"{user[0]}: ${user[1]:.2f}\n"
+        await ctx.send(message)
 
 
     @commands.command(

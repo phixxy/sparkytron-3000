@@ -300,7 +300,7 @@ class StableDiffusion(commands.Cog):
         key_value_pairs = self.get_kv_from_ctx(ctx)
         negative_prompt = self.get_negative_prompt()
         if negative_prompt != self.default_neg_prompt:
-            ctx.send(f"Using non-default negative prompt: {negative_prompt}")
+            await ctx.send(f"Using non-default negative prompt: {negative_prompt}")
         headers = {'Content-Type': 'application/json'}  
         payload = {
             "prompt": prompt,
