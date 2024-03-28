@@ -165,6 +165,7 @@ class ChatGPT(commands.Cog):
             "chat_enabled":False,
             "chat_history_len":5,
             "react_to_msgs":False,
+            "log_images":False,
         }
 
         with open(filepath,"w") as f:
@@ -273,6 +274,21 @@ class ChatGPT(commands.Cog):
             await ctx.send("Chat Disabled")
         else:
             await ctx.send("Usage: !chat (enable|disable)")
+
+    @commands.command(
+        description="Log Images", 
+        help="Enable or disable logging images in this channel. Usage !log_images (enable|disable)", 
+        brief="Enable or disable bot logging images"
+        )         
+    async def log_images(self, ctx, message):
+        if "enable" in message:
+            self.edit_channel_config(ctx.channel.id, "chat_enabled", True)
+            await ctx.send("Chat Enabled")
+        elif "disable" in message:
+            self.edit_channel_config(ctx.channel.id, "chat_enabled", False)
+            await ctx.send("Chat Disabled")
+        else:
+            await ctx.send("Usage: !log_images (enable|disable)")
             
     @commands.command(
         description="Reactions", 
@@ -485,7 +501,7 @@ class ChatGPT(commands.Cog):
     
     async def log_chat_and_get_history(self, message, logfile, channel_vars):
         log_line = ''
-        if message.attachments and False:#channel_vars["log_image"]:
+        if message.attachments and channel_vars.get("log_images", False):
             #log_image MUST BE ADDED TO THE JSON FILES
             for attachment in message.attachments:
                 image_description = await self.view_image(attachment.url)
