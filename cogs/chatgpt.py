@@ -364,11 +364,11 @@ class ChatGPT(commands.Cog):
         )         
     async def log_images(self, ctx, message):
         if "enable" in message:
-            self.edit_channel_config(ctx.channel.id, "chat_enabled", True)
-            await ctx.send("Chat Enabled")
+            self.edit_channel_config(ctx.channel.id, "log_images", True)
+            await ctx.send("Image Viewing Enabled")
         elif "disable" in message:
-            self.edit_channel_config(ctx.channel.id, "chat_enabled", False)
-            await ctx.send("Chat Disabled")
+            self.edit_channel_config(ctx.channel.id, "log_images", False)
+            await ctx.send("Image Viewing Disabled")
         else:
             await ctx.send("Usage: !log_images (enable|disable)")
             
