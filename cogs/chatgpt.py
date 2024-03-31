@@ -646,7 +646,7 @@ class ChatGPT(commands.Cog):
     
     async def log_chat_and_get_history(self, message, logfile, channel_vars):
         log_line = ''
-        if message.attachments and channel_vars.get("log_images", False):
+        if message.attachments and channel_vars.get("log_images", False) and not message.author.bot:
             #log_image MUST BE ADDED TO THE JSON FILES
             for attachment in message.attachments:
                 image_description = await self.view_image(attachment.url)
