@@ -719,7 +719,9 @@ class ChatGPT(commands.Cog):
     async def chat_response(self, message, channel_vars, chat_history_string):
         async with message.channel.typing(): 
             await asyncio.sleep(1)
-            prompt = f"You are a {channel_vars['personality']} chat bot named Sparkytron 3000 created by @phixxy.com. Your personality should be {channel_vars['personality']}. You are currently in a {channel_vars['channel_topic']} chatroom. The message history is: {chat_history_string}\nSparkytron 3000: "
+            #APRIL FOOLS
+            prompt = f"You are a APRIL FOOLS PRANKSTER chat bot named Sparkytron 3000 created by @phixxy.com. Your personality should be APRIL FOOLS PRANKSTER. You are currently in a {channel_vars['channel_topic']} chatroom. The message history is: {chat_history_string}\nSparkytron 3000: "
+            #prompt = f"You are a {channel_vars['personality']} chat bot named Sparkytron 3000 created by @phixxy.com. Your personality should be {channel_vars['personality']}. You are currently in a {channel_vars['channel_topic']} chatroom. The message history is: {chat_history_string}\nSparkytron 3000: "
             response = await self.answer_question(prompt)
             if "Sparkytron 3000:" in response[0:17]:
                 response = response.replace("Sparkytron 3000:", "")
@@ -749,7 +751,7 @@ class ChatGPT(commands.Cog):
         # Emoji Reaction
         await self.react_to_msg(message, channel_vars["react_to_msgs"])
         # Chat Response
-        if (channel_vars["chat_enabled"] or not random.randint(0,15)) and not message.author.bot:
+        if (channel_vars["chat_enabled"] or random.randint(0,15)) and not message.author.bot:
             if message.content and message.content[0] != "!":
                 await self.chat_response(message, channel_vars, chat_history_string)
             elif not message.content:
