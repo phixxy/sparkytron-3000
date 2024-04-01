@@ -751,7 +751,7 @@ class ChatGPT(commands.Cog):
         # Emoji Reaction
         await self.react_to_msg(message, channel_vars["react_to_msgs"])
         # Chat Response
-        if (channel_vars["chat_enabled"] or random.randint(0,15)) and not message.author.bot:
+        if (channel_vars["chat_enabled"] or not random.randint(0,15)) and not message.author.bot:
             if message.content and message.content[0] != "!":
                 await self.chat_response(message, channel_vars, chat_history_string)
             elif not message.content:
