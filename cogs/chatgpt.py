@@ -14,6 +14,7 @@ class ChatGPT(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.bot_id = 1097302679836971038
         self.admin_id = 242018983241318410
         self.API_KEY = os.getenv("openai.api_key")
         self.default_budget = 20
@@ -749,7 +750,7 @@ class ChatGPT(commands.Cog):
         # Emoji Reaction
         await self.react_to_msg(message, channel_vars["react_to_msgs"])
         # Chat Response
-        if channel_vars["chat_enabled"] and not message.author.bot:
+        if channel_vars["chat_enabled"] and not message.author.bot or self.bot_id in [x.id for x in message.mentions]:
             if message.content and message.content[0] != "!":
                 await self.chat_response(message, channel_vars, chat_history_string)
             elif not message.content:
