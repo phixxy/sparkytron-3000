@@ -37,18 +37,19 @@ class WakeOnLan(commands.Cog):
     async def sleep(self, ctx, amount=5):
         if ctx.author.id == self.admin_id:
             #use ssh to login and shutdown
-            ssh_client = asyncssh.connect(
+            async with asyncssh.connect(
                 self.stable_diffusion_ip,
                 username=self.stable_diffusion_login,
                 password=self.stable_diffusion_password,
                 timeout=10,
-            )
-            try:
-                await ssh_client.run("shutdown /s")
-                #await ssh_client.run("sudo shutdown -h now")
-            except:
-                self.logger.exception("WakeOnLan: Sleeping failed")
-                await ctx.send("Sleeping failed")
+            ) as ssh_client:
+                try:
+                    result = await ssh_client.run("shutdown /s")
+                    await ctx.send(result.stdout)
+                    #await ssh_client.run("sudo shutdown -h now")
+                except:
+                    self.logger.exception("WakeOnLan: Sleeping failed")
+                    await ctx.send("Sleeping failed")
 
 
 async def setup(bot):
