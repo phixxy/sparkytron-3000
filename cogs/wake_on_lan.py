@@ -1,5 +1,6 @@
 import logging
 import os
+import asyncssh
 import discord
 from discord.ext import commands
 import wakeonlan
@@ -12,14 +13,13 @@ class WakeOnLan(commands.Cog):
         self.admin_id = 242018983241318410
         self.logger = logging.getLogger("bot")
         self.mac_address = "9C-6B-00-38-08-8D"
+        self.stable_diffusion_ip = os.getenv("stable_diffusion_ip")
+        self.stable_diffusion_login = os.getenv("stable_diffusion_login")
+        self.stable_diffusion_password = os.getenv("stable_diffusion_password")
 
     def wake_on_lan(self, mac_address):
         self.logger.info(f"WakeOnLan: Waking up {mac_address}")
         wakeonlan.send_magic_packet(mac_address)
-
-    def sleep_on_lan(self, mac_address):
-        self.logger.info(f"WakeOnLan: Sleeping {mac_address}")
-        wakeonlan.send_magic_packet(mac_address, magic_packet="000000000000")
 
     @commands.command()
     async def wake(self, ctx):
@@ -27,6 +27,28 @@ class WakeOnLan(commands.Cog):
             return
         self.wake_on_lan(self.mac_address)
         await ctx.send(f"Waking up !imagine server")
+
+    @commands.command(
+        description="shutdown imagine server", 
+        help="shutdown imagine server",
+        brief="shutdown imagine server",
+        hidden=True
+        )           
+    async def sleep(self, ctx, amount=5):
+        if ctx.author.id == self.admin_id:
+            #use ssh to login and shutdown
+            ssh_client = asyncssh.connect(
+                self.stable_diffusion_ip,
+                username=self.stable_diffusion_login,
+                password=self.stable_diffusion_password,
+                timeout=10,
+            )
+            try:
+                await ssh_client.run("shutdown /s")
+                #await ssh_client.run("sudo shutdown -h now")
+            except:
+                self.logger.exception("WakeOnLan: Sleeping failed")
+                await ctx.send("Sleeping failed")
 
 
 async def setup(bot):

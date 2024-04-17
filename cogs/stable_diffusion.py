@@ -15,7 +15,9 @@ class StableDiffusion(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.stable_diffusion_url = os.getenv("stablediffusion_url") # Change this to stable_diffusion_url
+        self.stable_diffusion_ip = os.getenv("stable_diffusion_ip")
+        self.stable_diffusion_port = os.getenv("stable_diffusion_port")
+        self.stable_diffusion_url = f"http://{self.stable_diffusion_ip}:{self.stable_diffusion_port}"
         self.working_dir = "tmp/stable_diffusion/"
         self.data_dir = "data/stable_diffusion/"
         self.default_neg_prompt = "easynegative, badhandv4, verybadimagenegative_v1.3"
