@@ -41,7 +41,6 @@ class WakeOnLan(commands.Cog):
                 self.stable_diffusion_ip,
                 username=self.stable_diffusion_login,
                 password=self.stable_diffusion_password,
-                timeout=10,
             ) as ssh_client:
                 try:
                     result = await ssh_client.run("shutdown /s")
