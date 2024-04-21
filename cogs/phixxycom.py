@@ -247,8 +247,7 @@ class PhixxyCom(commands.Cog):
         filename = f"{self.data_dir}ai-blog/{time.strftime('%Y-%m-%d')}.md"
         if os.path.exists(filename) and not force:
             return
-        current_struct_time = time.time()
-        date = time.strftime("%B %d, %Y", current_struct_time)
+        date = time.strftime("%B %d, %Y")
         blogpost_file = f"{self.data_dir}blog_topics.txt"
         if os.path.isfile(blogpost_file):
             with open(blogpost_file, 'r') as f:
