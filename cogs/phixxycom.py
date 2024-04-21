@@ -272,7 +272,7 @@ class PhixxyCom(commands.Cog):
             content = content.replace(title, '', 1)
         with open(filepath, 'w') as f:
             f.write(f"# {title}\n\n*{date}*\n\n{content}")
-        await self.upload_sftp(filepath, (os.getenv('ftp_public_html') + 'ai-blog/'), filename)
+        await self.upload_sftp(filepath, (os.getenv('ftp_public_html') + 'ai-blog/content/'), filename)
         run_time = time.time() - start_time
         self.logger.debug("It took " + str(run_time) + " seconds to generate the blog post!")
         output = f"Blog Updated! ({run_time} seconds) {title} https://ai.phixxy.com/ai-blog"
