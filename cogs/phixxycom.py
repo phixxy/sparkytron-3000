@@ -239,17 +239,16 @@ class PhixxyCom(commands.Cog):
             last_5_messages += lines[-i]
         return last_5_messages
 
-    async def generate_blog(self):
+    async def generate_blog(self, force=False):
         start_time = time.time()
         topic = ''
-        filename = f"{self.data_dir}ai-blog/index.html"
-        with open(filename, 'r', encoding="utf-8") as f:
-            html_data = f.read()
-        current_time = time.time()
-        current_struct_time = time.localtime(current_time)
-        date = time.strftime("%B %d, %Y", current_struct_time)
-        if date in html_data:
+        #filename = f"{self.data_dir}ai-blog/index.html"
+        #filename format year-month-day ie: 2021-01-01.md
+        filename = f"{self.data_dir}ai-blog/{time.strftime('%Y-%m-%d')}.md"
+        if os.path.exists(filename) and not force:
             return
+        current_struct_time = time.time()
+        date = time.strftime("%B %d, %Y", current_struct_time)
         blogpost_file = f"{self.data_dir}blog_topics.txt"
         if os.path.isfile(blogpost_file):
             with open(blogpost_file, 'r') as f:
@@ -265,32 +264,15 @@ class PhixxyCom(commands.Cog):
             self.logger.info("No topic given for blogpost, generating one.")
             topic = await self.answer_question(question)
         self.logger.info("Writing blogpost")
-        post_div = '''<!--replace this with a post-->
-                <div class="post">
-                    <h2 class="post-title"><!--POST_TITLE--></h2>
-                    <p class="post-date"><!--POST_DATE--></p>
-                    <div class="post-content">
-                        <!--POST_CONTENT-->
-                    </div>
-                </div>'''
         title_prompt = 'generate an absurd essay title about ' + topic
         title = await self.answer_question(title_prompt, model="gpt-3.5-turbo")
         prompt = 'Write a satirical essay with a serious tone titled: "' + title + '". Do not label parts of the essay.'
         content = await self.answer_question(prompt, model="gpt-4-turbo-preview")
         if title in content[:len(title)]:
             content = content.replace(title, '', 1)
-        content = f"<p>{content}</p>"
-        content = content.replace('\n\n', "</p><p>")
-        content = content.replace("<p></p>", '')
-
-        post_div = post_div.replace("<!--POST_TITLE-->", title)
-        post_div = post_div.replace("<!--POST_DATE-->", date)
-        post_div = post_div.replace("<!--POST_CONTENT-->", content)
-        
-        html_data = html_data.replace("<!--replace this with a post-->", post_div)
-        with open(filename, 'w', encoding="utf-8") as f:
-            f.write(html_data)
-        await self.upload_sftp(filename, (os.getenv('ftp_public_html') + 'ai-blog/'), "index.html")
+        with open(filename, 'w') as f:
+            f.write(f"# {title}\n\n*{date}*\n\n{content}")
+        await self.upload_sftp(filename, (os.getenv('ftp_public_html') + 'ai-blog/'), filename)
         run_time = time.time() - start_time
         self.logger.debug("It took " + str(run_time) + " seconds to generate the blog post!")
         output = f"Blog Updated! ({run_time} seconds) {title} https://ai.phixxy.com/ai-blog"
@@ -299,7 +281,7 @@ class PhixxyCom(commands.Cog):
     @commands.command()
     async def force_blog(self, ctx):
         await ctx.send("Forcing blog generation")
-        await self.generate_blog()
+        await self.generate_blog(force=True)
 
     @commands.command(
         description="Website", 
