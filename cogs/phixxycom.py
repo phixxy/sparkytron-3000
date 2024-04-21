@@ -244,8 +244,9 @@ class PhixxyCom(commands.Cog):
         topic = ''
         #filename = f"{self.data_dir}ai-blog/index.html"
         #filename format year-month-day ie: 2021-01-01.md
-        filename = f"{self.data_dir}ai-blog/{time.strftime('%Y-%m-%d')}.md"
-        if os.path.exists(filename) and not force:
+        filename = f"{time.strftime('%Y-%m-%d')}.md"
+        filepath = f"{self.data_dir}ai-blog/{time.strftime('%Y-%m-%d')}.md"
+        if os.path.exists(filepath) and not force:
             return
         date = time.strftime("%B %d, %Y")
         blogpost_file = f"{self.data_dir}blog_topics.txt"
@@ -269,9 +270,9 @@ class PhixxyCom(commands.Cog):
         content = await self.answer_question(prompt, model="gpt-4-turbo-preview")
         if title in content[:len(title)]:
             content = content.replace(title, '', 1)
-        with open(filename, 'w') as f:
+        with open(filepath, 'w') as f:
             f.write(f"# {title}\n\n*{date}*\n\n{content}")
-        await self.upload_sftp(filename, (os.getenv('ftp_public_html') + 'ai-blog/'), filename)
+        await self.upload_sftp(filepath, (os.getenv('ftp_public_html') + 'ai-blog/'), filename)
         run_time = time.time() - start_time
         self.logger.debug("It took " + str(run_time) + " seconds to generate the blog post!")
         output = f"Blog Updated! ({run_time} seconds) {title} https://ai.phixxy.com/ai-blog"
