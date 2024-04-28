@@ -23,8 +23,8 @@ async def load_cogs(bot: commands.Bot, cog_path: str) -> None:
 @bot.event
 async def on_ready():
     try:
-        await utils.delete_all_files("tmp/")
         await utils.folder_setup()
+        await utils.delete_all_files("tmp/")
         await load_cogs(bot, 'cogs/')
         logger.info('We have logged in as {0.user}'.format(bot))
     except:

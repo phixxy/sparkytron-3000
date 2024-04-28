@@ -53,5 +53,5 @@ LOGGING_CONFIG = {
         },
     },
 }
-
+logger_setup()
 dictConfig(LOGGING_CONFIG)
