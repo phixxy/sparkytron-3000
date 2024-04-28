@@ -698,8 +698,12 @@ class ChatGPT(commands.Cog):
                     self.logger.exception("Some error happened while trying to react to a message")
 
     async def view_image(self, image_link):
+        if self.dalle_budget <= await self.get_monthly_cost():
+            self.logger.info("View_image failed due to budget")
+            return (1337, "View_image API call failed due to budget. Consider using !donate to fund the bot.")
+        model = "gpt-4-vision-preview"
         data = {
-            "model": "gpt-4-vision-preview",
+            "model": model,
             "messages": [{"role": "user", "content": [{"type": "text", "text": "Describe this"},{"type": "image_url","image_url": {"url": image_link}}]}],
             "max_tokens": 500
         }
@@ -711,6 +715,10 @@ class ChatGPT(commands.Cog):
                 response_data = await resp.json()
                 self.logger.debug(response_data)
                 answer = response_data['choices'][0]['message']['content']
+                input_tokens = response_data['usage']['prompt_tokens']
+                output_tokens = response_data['usage']['completion_tokens']
+                cost = self.text_cost_calc(model, input_tokens, output_tokens)
+                self.add_cost(model, cost)
             
         except Exception as error:
             self.logger.exception("error occurred in view_image")
