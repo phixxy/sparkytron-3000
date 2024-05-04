@@ -52,7 +52,7 @@ Sparkytron 3000 provides several cogs that can be enabled or disabled based on y
 
 -   Description: Generates AI-generated art using stable diffusion/automatic1111.
 -   Usage: `!imagine <kwargs> <prompt>`
-- Example: `!image seed=1 pizza`
+- Example: `!imagine seed=1 pizza`
 - ![pizza](examples/pizza.png)
 
 ### ChatGPT
