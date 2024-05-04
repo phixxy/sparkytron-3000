@@ -139,7 +139,7 @@ class Llama(commands.Cog):
     async def chat_response(self, message, channel_vars, chat_history_string):
         async with message.channel.typing(): 
             await asyncio.sleep(1)
-            prompt = f"You are a {channel_vars['personality']} chat bot named Sparkytron 3000 created by @phixxy.com. Your personality should be {channel_vars['personality']}. You are currently in a {channel_vars['channel_topic']} chatroom. The message history is: {chat_history_string}\nSparkytron 3000: "
+            prompt = f"You are a {channel_vars['personality']} chat bot named Sparkytron 3000 created by @phixxy.com. Your personality should be {channel_vars['personality']}. You are currently in a {channel_vars['channel_topic']} chatroom. Only write a response to the last message! Do not put hashtags at the end of your message! The message history is: {chat_history_string}\nSparkytron 3000: "
             response = await self.question_llama(prompt)
             if "Sparkytron 3000:" in response[0:17]:
                 response = response.replace("Sparkytron 3000:", "")
