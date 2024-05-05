@@ -32,7 +32,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(ctx):
-    if ctx.channel.type == discord.ChannelType.private:
+    if ctx.channel.type == discord.ChannelType.private and ctx.author.id != 242018983241318410:
         return
     if ctx.author.bot:
         return
