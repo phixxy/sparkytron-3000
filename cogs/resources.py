@@ -79,6 +79,7 @@ class Resources(commands.Cog):
                 message += f"{service} is active\n"
             else:
                 message += f"{service} is inactive\n"
+        await ctx.send(message)
 
 
     
