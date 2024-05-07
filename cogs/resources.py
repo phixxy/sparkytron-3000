@@ -3,6 +3,7 @@ import psutil
 import logging
 import datetime
 import socket
+import subprocess
 from discord.ext import commands, tasks
 
 class Resources(commands.Cog):
@@ -11,6 +12,7 @@ class Resources(commands.Cog):
         self.bot = bot
         self.start_time = time.time()
         self.logger = logging.getLogger("bot")
+        self.services = ['sshd', 'jellyfin']
 
     def get_ip_address(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -66,6 +68,20 @@ class Resources(commands.Cog):
         message_list.append(self.get_cpu_usage())
         message = '\n'.join(message_list)
         await ctx.send(message)
+
+    @commands.command()
+    async def status(self, ctx):
+        #This will check systemctl and see if self.services are running
+        message = ""
+        for service in self.services:
+            status = subprocess.run(["systemctl", "is-active", service], capture_output=True).stdout.decode().strip()
+            if status == "active":
+                message += f"{service} is active\n"
+            else:
+                message += f"{service} is inactive\n"
+
+
+    
     
 async def setup(bot):
     await bot.add_cog(Resources(bot))
