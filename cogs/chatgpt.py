@@ -249,6 +249,7 @@ class ChatGPT(commands.Cog):
             "chat_history_len":5,
             "react_to_msgs":False,
             "log_images":False,
+            "llama_enabled":False
         }
 
         with open(filepath,"w") as f:

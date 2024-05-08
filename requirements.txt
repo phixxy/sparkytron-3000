@@ -8,3 +8,4 @@ asyncssh
 psutil
 aiofiles
 inky
+wakeonlan
