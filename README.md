@@ -46,7 +46,7 @@ To get started with Sparkytron 3000, follow the steps below:
 
 ## Cogs
 
-Sparkytron 3000 provides several cogs that can be enabled or disabled based on your preferences. Each cog adds a unique feature to the bot. Many cogs assume you have variables set in environment variables. Below are some notable cogs:
+Sparkytron 3000 provides several cogs that can be enabled or disabled based on your preferences. Each cog adds a unique feature to the bot. Many cogs assume you have variables set in environment variables and therefore will not work by default. Below are some notable cogs:
 
 ### Stable Diffusion
 
