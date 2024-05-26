@@ -54,7 +54,8 @@ class ChatGPT(commands.Cog):
     def text_cost_calc(self, model, input_tokens, output_tokens):
         cost_table = {"gpt-3.5-turbo":{"input_tokens":0.0000005,"output_tokens":0.0000015},
                       "gpt-4-turbo-preview":{"input_tokens":0.00001,"output_tokens":0.00003},
-                      "gpt-4-vision-preview":{"input_tokens":0.00001,"output_tokens":0.00003}
+                      "gpt-4-vision-preview":{"input_tokens":0.00001,"output_tokens":0.00003},
+                      "gpt-4o":{"input_tokens":0.000005,"output_tokens":0.000015}
         }
         input_cost = cost_table[model]["input_tokens"] * input_tokens
         output_cost = cost_table[model]["output_tokens"] * output_tokens
@@ -410,7 +411,7 @@ class ChatGPT(commands.Cog):
     async def question_gpt4(self, ctx):
         await ctx.send("One moment, let me think...")
         question = ctx.message.content.split(" ", maxsplit=1)[1]
-        answer = await self.answer_question(question, "gpt-4-turbo-preview")
+        answer = await self.answer_question(question, "gpt-4o")
         chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
         for chunk in chunks:
             await ctx.send(chunk)
@@ -568,7 +569,7 @@ class ChatGPT(commands.Cog):
             question = ctx.message.content.split(" ", maxsplit=2)[2]
 
         data = {
-            "model": "gpt-4-vision-preview",
+            "model": "gpt-4o",
             "messages": [{"role": "user", "content": [{"type": "text", "text": question},{"type": "image_url","image_url": {"url": image_link}}]}],
             "max_tokens": 500
         }
@@ -702,7 +703,7 @@ class ChatGPT(commands.Cog):
         if self.dalle_budget <= await self.get_monthly_cost():
             self.logger.info("View_image failed due to budget")
             return (1337, "View_image API call failed due to budget. Consider using !donate to fund the bot.")
-        model = "gpt-4-vision-preview"
+        model = "gpt-4o"
         data = {
             "model": model,
             "messages": [{"role": "user", "content": [{"type": "text", "text": "Describe this"},{"type": "image_url","image_url": {"url": image_link}}]}],
