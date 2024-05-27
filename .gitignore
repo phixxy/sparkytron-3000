@@ -5,3 +5,8 @@ logs/
 src/__pycache__/
 tmp/
 cogs/base_cog/__pycache__/
+extensions/
+.env
+databases/
+channels/
+.gitignore
