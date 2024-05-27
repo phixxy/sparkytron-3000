@@ -9,3 +9,4 @@ psutil
 aiofiles
 inky
 wakeonlan
+beautifulsoup4

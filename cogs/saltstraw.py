@@ -40,7 +40,7 @@ class SaltStraw(BotBaseCog):
                 message = ""
                 for item in flavor_dict:
                     print(f"\n{item}:\n{flavor_dict[item]}\n\n")
-                    message += f"\n{item}:\n{flavor_dict[item]}\n\n"
+                    message += f"\n{item}:\n"
                 return message
                 
 async def setup(bot):
