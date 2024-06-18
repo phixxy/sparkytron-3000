@@ -10,3 +10,4 @@ aiofiles
 inky
 wakeonlan
 beautifulsoup4
+meshtastic
