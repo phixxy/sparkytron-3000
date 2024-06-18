@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<style>
+    body {
+        background-color: #333;
+        color: #fff;
+        font-family: Arial, sans-serif;
+    }
+    h1 {
+        color: #ff6347;
+    }
+    p {
+        font-size: 1.2em;
+    }
+    form {
+        margin: 20px;
+        padding: 20px;
+        background-color: #444;
+        border-radius: 5px;
+    }
+    label {
+        color: #fff;
+    }
+    input {
+        border: 1px solid #555;
+        border-radius: 3px;
+        padding: 5px;
+        margin-bottom: 5px;
+        background-color: #555;
+        color: #fff;
+    }
+    button {
+        background-color: #ff6347;
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #db3b21;
+    }
+</style>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Form</title>
+</head>
+<body>
+    <h1>Warning!</h1>
+    <p>This information is stored in PLAIN TEXT in a .env file!</p>
+    <form method="post">
+        {% for key, value in key_value_pairs.items() %}
+            <label for="{{ key }}">{{ key }}</label>
+            <input type="text" id="{{ key }}" name="{{ key }}" value="{{ value }}">
+            <br>
+        {% endfor %}
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
