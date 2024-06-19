@@ -26,7 +26,7 @@ async def on_ready():
         await utils.delete_all_files("tmp/")
         await load_cogs(bot, 'cogs/')
         logger.info('We have logged in as {0.user}'.format(bot))
-        print("Visit http://localhost:5000 to change config!")
+        print("If using the webui, visit http://localhost:5000 to change config!")
     except:
         logger.warning(f"Error in on_ready")
 

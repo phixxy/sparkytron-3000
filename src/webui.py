@@ -1,8 +1,9 @@
 import logging
 import os
 import subprocess
+import sys
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, flash
 
 logger = logging.getLogger("bot")
 flask_app = Flask(__name__, template_folder='../flask_templates')
@@ -39,7 +40,8 @@ async def index():
                 file.write(f"{key}='{value}'\n")
         print(form_dict)
         flask_app.bot_process.terminate()
-        flask_app.bot_process = subprocess.Popen(["python", "sparkytron3000.py"])
-        return 'Your input has been saved! The bot must be restarted for the changes to take effect.'
+        flask_app.bot_process = subprocess.Popen([sys.executable, "sparkytron3000.py"])
+        message = "Variables Updated!"
+        flash(message)
     return render_template('index.html', key_value_pairs = key_value_pairs)
 
