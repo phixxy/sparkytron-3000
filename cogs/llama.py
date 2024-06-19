@@ -159,11 +159,14 @@ class Llama(commands.Cog):
         channel_vars = await self.get_channel_config(message.channel.id)
         chat_history_string = await self.log_chat_and_get_history(message, logfile, channel_vars)
         # Chat Response
-        if channel_vars["llama_enabled"] and not message.author.bot or self.bot_id in [x.id for x in message.mentions]:
-            if message.content and message.content[0] != "!":
-                await self.chat_response(message, channel_vars, chat_history_string)
-            elif not message.content:
-                await self.chat_response(message, channel_vars, chat_history_string)
+        try:
+            if channel_vars["llama_enabled"] and not message.author.bot or self.bot_id in [x.id for x in message.mentions]:
+                if message.content and message.content[0] != "!":
+                    await self.chat_response(message, channel_vars, chat_history_string)
+                elif not message.content:
+                    await self.chat_response(message, channel_vars, chat_history_string)
+        except:
+            self.edit_channel_config(message.channel.id, "llama_enabled", False)
         
         
 async def setup(bot):
