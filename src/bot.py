@@ -10,7 +10,6 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 logger = src.logger.logger_setup()
 
-
 async def load_cogs(bot: commands.Bot, cog_path: str) -> None:
     for cog_file in os.listdir(cog_path):
         if cog_file[-3:] == '.py':
@@ -27,6 +26,7 @@ async def on_ready():
         await utils.delete_all_files("tmp/")
         await load_cogs(bot, 'cogs/')
         logger.info('We have logged in as {0.user}'.format(bot))
+        print("If using the webui, visit http://localhost:5000 to change config!")
     except:
         logger.warning(f"Error in on_ready")
 

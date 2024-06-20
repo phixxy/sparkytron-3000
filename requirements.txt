@@ -10,3 +10,5 @@ aiofiles
 inky
 wakeonlan
 beautifulsoup4
+Flask[async]
+waitress
