@@ -146,4 +146,6 @@ class InkyScreen(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(InkyScreen(bot))
+    #await bot.add_cog(InkyScreen(bot))
+    #Temporarily disable as this is probably unused for everyone including me
+    pass
