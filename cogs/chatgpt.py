@@ -312,6 +312,25 @@ class ChatGPT(commands.Cog):
             self.logger.exception("Error occurred in answer_question")
             return "Error occurred in answer_question"
         
+    @commands.command()
+    async def translate(self, ctx):
+        if ctx.message.attachments:
+            attachment = ctx.message.attachments[0]  # assuming only one attachment
+            await attachment.save(self.working_dir + '/' + attachment.filename)
+            
+            with open(self.working_dir + '/' + attachment.filename, 'r') as file:
+                text = file.read()
+            question = f"Translate the following text to english: {text}"
+            # Now text contains the content of the downloaded file
+            translated_text = await self.answer_question(question)
+                    # Save the translated text to a new file
+            with open(f'{self.working_dir}/translated_text.txt', 'w') as new_file:
+                new_file.write(translated_text)
+            
+            # Send the text file as an attachment
+            file = discord.File(f'{self.working_dir}/translated_text.txt')
+            await ctx.send(file=file)
+        
         
     @commands.command(
         description="Personality",
