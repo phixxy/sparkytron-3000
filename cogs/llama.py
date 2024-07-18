@@ -170,4 +170,6 @@ class Llama(commands.Cog):
         
         
 async def setup(bot):
-    await bot.add_cog(Llama(bot))
+    #await bot.add_cog(Llama(bot))
+    #Temporarily disable this as it isn't really working properly
+    pass
