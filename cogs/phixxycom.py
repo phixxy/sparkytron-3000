@@ -192,7 +192,7 @@ class PhixxyCom(commands.Cog):
         except:
             self.logger.exception("Something went wrong in upload_ftp_ai_images")
 
-    async def answer_question(self, topic, model="gpt-3.5-turbo"):
+    async def answer_question(self, topic, model="gpt-4o-mini"):
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {os.getenv("openai.api_key")}',
@@ -265,7 +265,7 @@ class PhixxyCom(commands.Cog):
             topic = await self.answer_question(question)
         self.logger.info("Writing blogpost")
         title_prompt = 'generate an absurd essay title about ' + topic
-        title = await self.answer_question(title_prompt, model="gpt-3.5-turbo")
+        title = await self.answer_question(title_prompt, model="gpt-4o-mini")
         prompt = 'Write a satirical essay with a serious tone titled: "' + title + '". Do not label parts of the essay.'
         content = await self.answer_question(prompt, model="gpt-4o")
         if title in content[:len(title)]:
