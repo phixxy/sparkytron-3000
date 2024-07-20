@@ -52,7 +52,7 @@ class ChatGPT(commands.Cog):
             self.logger.exception(f"ChatGPT failed to make directories: {e}")
 
     def text_cost_calc(self, model, input_tokens, output_tokens):
-        cost_table = {"gpt-3.5-turbo":{"input_tokens":0.0000005,"output_tokens":0.0000015},
+        cost_table = {"gpt-4o-mini":{"input_tokens":0.00000015,"output_tokens":0.0000006},
                       "gpt-4-turbo-preview":{"input_tokens":0.00001,"output_tokens":0.00003},
                       "gpt-4-vision-preview":{"input_tokens":0.00001,"output_tokens":0.00003},
                       "gpt-4o":{"input_tokens":0.000005,"output_tokens":0.000015}
@@ -287,7 +287,7 @@ class ChatGPT(commands.Cog):
         user = self.bot.get_user(reminder_dict["user_id"])
         return await user.send(reminder_dict["response"])
 
-    async def answer_question(self, topic, model="gpt-3.5-turbo"):
+    async def answer_question(self, topic, model="gpt-4o-mini"):
         data = {
             "model": model,
             "messages": [{"role": "user", "content": topic}]
@@ -701,7 +701,7 @@ class ChatGPT(commands.Cog):
                 message = ctx.content[0]
                 
                 data = { 
-                    "model": "gpt-3.5-turbo", 
+                    "model": "gpt-4o-mini", 
                     "messages": [{"role": "system", "content": system_msg}, {"role": "user", "content": message}]
                 }
 
