@@ -38,7 +38,6 @@ async def index():
         with open('.env', 'w') as file:
             for key, value in form_dict.items():
                 file.write(f"{key}='{value}'\n")
-        print(form_dict)
         flask_app.bot_process.terminate()
         flask_app.bot_process = subprocess.Popen([sys.executable, "sparkytron3000.py"])
         message = "Variables Updated!"
