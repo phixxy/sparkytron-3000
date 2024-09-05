@@ -18,7 +18,9 @@ class YoutubeDL(BotBaseCog):
             url = ctx.message.content.split(" ")[1]
             url = '"' + url + '"'
             video_or_audio = ctx.message.content.split(" ")[2]
-            process = subprocess.Popen(["python3", "data/ytdl/youtubedl.py", url, video_or_audio])
+            os.chdir("data/ytdl")
+            process = subprocess.Popen(["python3", "youtubedl.py", url, video_or_audio])
+            os.chdir("../../")
             process.wait()
             self.logger.exception(process.stdout)
             self.logger.exception(process.stderr)
