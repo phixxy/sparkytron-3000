@@ -15,13 +15,31 @@ class YoutubeDL(BotBaseCog):
     @commands.command()
     async def youtubedl(self, ctx):
         try:
-            url = ctx.message.content.split(" ")[1]
-            url = '"' + url + '"'
-            video_or_audio = ctx.message.content.split(" ")[2]
-            process = subprocess.Popen(["python3", "youtubedl.py", url, video_or_audio], cwd="data/ytdl", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            process.wait()
-            await ctx.send(f"std out: {process.stdout.read()}, std err: {process.stderr.read()}")
+            # Expecting the command format to be !youtubedl <url> <video|audio>
+            parts = ctx.message.content.split(" ")
+            if len(parts) < 3:
+                await ctx.send("Usage: !youtubedl <url> <video|audio>")
+                return
+
+            url = parts[1]
+            video_or_audio = parts[2]
+            
+            # Run the subprocess
+            process = subprocess.Popen(
+                ["python3", "youtubedl.py", url, video_or_audio],
+                cwd="data/ytdl",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            
+            # Wait for the process to complete and read the output
+            stdout, stderr = process.communicate()
+
+            # Send the output back to the user
+            await ctx.send(f"std out: {stdout.decode('utf-8')}") if stdout else await ctx.send("No stdout output")
+            await ctx.send(f"std err: {stderr.decode('utf-8')}") if stderr else await ctx.send("No stderr output")
             await ctx.send(f"Downloading {video_or_audio} from {url}...", suppress_embeds=True)
+
         except Exception as e:
             await ctx.send(f"Error: {e}")
             await ctx.send("Usage: !youtubedl <url> <video|audio>")
