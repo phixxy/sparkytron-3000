@@ -9,6 +9,7 @@ class YoutubeDL(BotBaseCog):
     def __init__(self, bot):
         super().__init__(bot)
         self.setup(__class__.__name__)
+        self.check_for_downloads.start()
 
     @commands.command()
     async def youtubedl(self, ctx):
