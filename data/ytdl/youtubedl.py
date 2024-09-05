@@ -33,7 +33,7 @@ def upload_to_litterbox(input_file):
     file_types = ["zip", "mp4", "mp3", "webm", "wav", "m4a", "flac", "ogg", "opus", "wma", "aac", "m4p", "m4b", "m4r", "m4v", "mp2", "mp3", "mp4", "mpa", "mpeg", "mpg", "mpv", "mxf", "ogg", "oga", "ogv", "ogx", "spx", "wav", "webm", "wma", "wv", "wvx", "weba", "webm", "webp", "wmv"]
     for file in os.listdir():
         if file.split(".")[-1] in file_types:
-            #os.remove(f"{file}")
+            os.remove(f"{file}")
             pass
     return output_url
 
