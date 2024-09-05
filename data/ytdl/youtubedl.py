@@ -29,13 +29,13 @@ def zip_all_files():
 def upload_to_litterbox(input_file):
     '''    If you want to make curl requests to the API, here is an example. Allowed values for "time" are 1h, 12h, 24h, and 72h.
     curl -F "reqtype=fileupload" -F "time=1h" -F "fileToUpload=@cutie.png" https://litterbox.catbox.moe/resources/internals/api.php'''
-    command = f"curl -F 'reqtype=fileupload' -F 'time=1h' -F 'fileToUpload=@{input_file}' https://litterbox.catbox.moe/resources/internals/api.php"
+    command = f"curl -F 'reqtype=fileupload' -F 'time=1h' -F 'fileToUpload=@data/ytdl/{input_file}' https://litterbox.catbox.moe/resources/internals/api.php"
     output_url = os.popen(command).read()
     #delete all files in current directory except this script
     file_types = ["zip", "mp4", "mp3", "webm", "wav", "m4a", "flac", "ogg", "opus", "wma", "aac", "m4p", "m4b", "m4r", "m4v", "mp2", "mp3", "mp4", "mpa", "mpeg", "mpg", "mpv", "mxf", "ogg", "oga", "ogv", "ogx", "spx", "wav", "webm", "wma", "wv", "wvx", "weba", "webm", "webp", "wmv"]
-    for file in os.listdir():
+    for file in os.listdir("data/ytdl/"):
         if file.split(".")[-1] in file_types:
-            os.remove(file)
+            os.remove(f"data/ytdl/{file}")
     return output_url
 
 def main():
