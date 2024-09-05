@@ -18,13 +18,8 @@ class YoutubeDL(BotBaseCog):
             url = ctx.message.content.split(" ")[1]
             url = '"' + url + '"'
             video_or_audio = ctx.message.content.split(" ")[2]
-            os.chdir("data/ytdl")
-            process = subprocess.Popen(["python3", "youtubedl.py", url, video_or_audio])
-            os.chdir("../../")
+            process = subprocess.Popen(["python3", "youtubedl.py", url, video_or_audio], cwd="data/ytdl")
             process.wait()
-            self.logger.exception(process.stdout)
-            self.logger.exception(process.stderr)
-            self.logger.exception(process.returncode)
             await ctx.send(f"Downloading {video_or_audio} from {url}...", suppress_embeds=True)
         except Exception as e:
             await ctx.send(f"Error: {e}")
