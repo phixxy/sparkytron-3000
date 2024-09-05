@@ -45,7 +45,7 @@ def main():
         zip_file = zip_all_files()
         output_url = upload_to_litterbox(zip_file)
         print(output_url)
-        with open(f"{time.time()}.txt", "w") as output_file:
+        with open(f"data/ytdl/{time.time()}.txt", "w") as output_file:
             output_file.write(output_url)
             output_file.close()
     else:
