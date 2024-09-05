@@ -1,5 +1,6 @@
 import os
 import subprocess
+import logging
 
 from discord.ext import commands, tasks
 from cogs.base_cog.bot_base_cog import BotBaseCog
@@ -19,9 +20,9 @@ class YoutubeDL(BotBaseCog):
             video_or_audio = ctx.message.content.split(" ")[2]
             process = subprocess.Popen(["python3", "data/ytdl/youtubedl.py", url, video_or_audio])
             process.wait()
-            print(process.stdout.read())
-            print(process.stderr.read())
-            print(process.returncode)
+            logging.info(process.stdout.read())
+            logging.info(process.stderr.read())
+            logging.info(process.returncode)
             await ctx.send(f"Downloading {video_or_audio} from {url}...", suppress_embeds=True)
         except:
             await ctx.send("Usage: !youtubedl <url> <video|audio>")
