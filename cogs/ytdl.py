@@ -24,7 +24,8 @@ class YoutubeDL(BotBaseCog):
             logging.error(process.stderr.read())
             logging.error(process.returncode)
             await ctx.send(f"Downloading {video_or_audio} from {url}...", suppress_embeds=True)
-        except:
+        except Exception as e:
+            await ctx.send(f"Error: {e}")
             await ctx.send("Usage: !youtubedl <url> <video|audio>")
             
     #create a task
