@@ -13,7 +13,8 @@ class YoutubeDL(BotBaseCog):
     @commands.command()
     async def youtubedl(self, ctx):
         try:
-            url = f"\"{ctx.message.content.split(" ", 1)[1]}\""
+            url = f"{ctx.message.content.split(" ", 1)[1]}"
+            url = '"' + url + '"'
             video_or_audio = ctx.message.content.split(" ", 2)[2]
             process = subprocess.Popen(["python3", "data/ytdl/youtubedl.py", url, video_or_audio])
             process.wait()
