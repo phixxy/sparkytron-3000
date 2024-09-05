@@ -10,3 +10,5 @@ extensions/
 databases/
 channels/
 .gitignore
+cogs/dailies.py
+cogs/idlegame.py
