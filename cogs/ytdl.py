@@ -36,7 +36,7 @@ class YoutubeDL(BotBaseCog):
                 with open(f"data/ytdl/{file}", "r") as f:
                     url = f.read()
                 await self.bot.get_channel(544408659174883328).send(f"{url}")
-                os.remove(f"data/ytdl/{file}")
+                #os.remove(f"data/ytdl/{file}")
 
 async def setup(bot):
     await bot.add_cog(YoutubeDL(bot))
