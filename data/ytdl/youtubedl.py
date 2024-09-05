@@ -49,6 +49,8 @@ def main():
         print(output_url)
         with open(f"data/ytdl/{time.time()}.txt", "w") as output_file:
             output_file.write(output_url)
+            output_file.write("\n")
+            output_file.write(os.getcwd())
             output_file.close()
     else:
         print("Invalid argument")
