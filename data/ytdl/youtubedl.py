@@ -6,12 +6,12 @@ import subprocess
 
 def download(url, video_or_audio):
     if video_or_audio == "video":
-        process = subprocess.Popen(["yt-dlp", "-o", "data/ytdl/%(playlist|)s/%(playlist_index)s - %(title)s.%(ext)s", "--yes-playlist", f"{url}"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(["yt-dlp", "-o", "%(playlist|)s/%(playlist_index)s - %(title)s.%(ext)s", "--yes-playlist", f"{url}"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(process.stdout.read())
         process.wait()
         return True
     elif video_or_audio == "audio":
-        process = subprocess.Popen(["yt-dlp", "-o", "data/ytdl/%(playlist|)s/%(playlist_index)s - %(title)s.%(ext)s", "-x", "--yes-playlist", f"{url}"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(["yt-dlp", "-o", "%(playlist|)s/%(playlist_index)s - %(title)s.%(ext)s", "-x", "--yes-playlist", f"{url}"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(process.stdout.read())
         process.wait()
         return True
@@ -45,7 +45,7 @@ def main():
         zip_file = zip_all_files()
         output_url = upload_to_litterbox(zip_file)
         print(output_url)
-        with open(f"data/ytdl/{time.time()}.txt", "w") as output_file:
+        with open(f"{time.time()}.txt", "w") as output_file:
             output_file.write(output_url)
             output_file.close()
     else:
