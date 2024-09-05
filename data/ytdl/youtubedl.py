@@ -6,12 +6,12 @@ import subprocess
 
 def download(url, video_or_audio):
     if video_or_audio == "video":
-        process = subprocess.Popen(["yt-dlp", "--yes-playlist", f"{url}"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(["yt-dlp", "-o", "data/ytdl/%(playlist|)s/%(playlist_index)s - %(title)s.%(ext)s", "--yes-playlist", f"{url}"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(process.stdout.read())
         process.wait()
         return True
     elif video_or_audio == "audio":
-        process = subprocess.Popen(["yt-dlp", "-x", "--yes-playlist", f"{url}"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(["yt-dlp", "-o", "data/ytdl/%(playlist|)s/%(playlist_index)s - %(title)s.%(ext)s", "-x", "--yes-playlist", f"{url}"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(process.stdout.read())
         process.wait()
         return True
@@ -23,7 +23,7 @@ def zip_all_files():
     #zip all files
     current_epoch = time.time()
     output_file = f"{current_epoch}.zip"
-    os.system(f"zip -r {output_file} *")
+    os.system(f"zip -r {output_file} data/ytdl/*")
     return output_file
     
 def upload_to_litterbox(input_file):
