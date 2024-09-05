@@ -36,12 +36,12 @@ class YoutubeDL(BotBaseCog):
             stdout, stderr = process.communicate()
 
             # Send the output back to the user
-            await ctx.send(f"std out: {stdout.decode('utf-8')}") if stdout else await ctx.send("No stdout output")
-            await ctx.send(f"std err: {stderr.decode('utf-8')}") if stderr else await ctx.send("No stderr output")
+            #await ctx.send(f"std out: {stdout.decode('utf-8')}") if stdout else await ctx.send("No stdout output")
+            #await ctx.send(f"std err: {stderr.decode('utf-8')}") if stderr else await ctx.send("No stderr output")
             await ctx.send(f"Downloading {video_or_audio} from {url}...", suppress_embeds=True)
 
         except Exception as e:
-            await ctx.send(f"Error: {e}")
+            #await ctx.send(f"Error: {e}")
             await ctx.send("Usage: !youtubedl <url> <video|audio>")
             
     #create a task
@@ -52,7 +52,7 @@ class YoutubeDL(BotBaseCog):
                 with open(f"data/ytdl/{file}", "r") as f:
                     url = f.read()
                 await self.bot.get_channel(544408659174883328).send(f"{url}")
-                #os.remove(f"data/ytdl/{file}")
+                os.remove(f"data/ytdl/{file}")
 
 async def setup(bot):
     await bot.add_cog(YoutubeDL(bot))
