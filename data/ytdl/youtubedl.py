@@ -23,7 +23,7 @@ def zip_all_files():
     #zip all files
     current_epoch = time.time()
     output_file = f"{current_epoch}.zip"
-    os.system(f"zip -r {output_file} data/ytdl/*")
+    os.system(f"zip -r data/ytdl/{output_file} data/ytdl/*")
     return output_file
     
 def upload_to_litterbox(input_file):
