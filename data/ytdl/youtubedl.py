@@ -45,10 +45,11 @@ def main():
         zip_file = zip_all_files()
         output_url = upload_to_litterbox(zip_file)
         print(output_url)
-        return output_url
+        with open(f"data/ytdl/{output_url}.txt", "w") as output_file:
+            output_file.write(output_url)
+            output_file.close()
     else:
         print("Invalid argument")
-        return 1
 
 if __name__ == "__main__":
     main()

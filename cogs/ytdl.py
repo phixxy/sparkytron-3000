@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from discord.ext import commands
+from discord.ext import commands, tasks
 from cogs.base_cog.bot_base_cog import BotBaseCog
 
 class YoutubeDL(BotBaseCog):
@@ -22,6 +22,14 @@ class YoutubeDL(BotBaseCog):
             await ctx.send(f"Downloaded {video_or_audio} from {url}, output: {output}")
         except:
             await ctx.send("Usage: !youtubedl <url> <video|audio>")
+            
+    #create a task
+    @tasks.loop(seconds=10)
+    async def check_for_downloads(self):
+        for file in os.listdir("data/ytdl"):
+            if file.endswith(".txt"):
+                await self.bot.get_channel(544408659174883328).send(f"{file[:-4]}")
+                os.remove(f"data/ytdl/{file}")
 
 async def setup(bot):
     await bot.add_cog(YoutubeDL(bot))
