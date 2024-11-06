@@ -25,6 +25,12 @@ class MessageXP(BotBaseCog):
                 await ctx.send("You have 0 XP")
         except:
             await ctx.send("Error getting XP")
+
+    @commands.command()
+    async def show_json(self, ctx):
+        with open(self.data_dir + "xp.json", "r") as xp_file:
+            xp_data = json.load(xp_file)
+        await ctx.send(xp_data)
             
 
     @commands.Cog.listener()
@@ -57,7 +63,7 @@ def create_xp_file(self):
     try:
         with open(os.path.join(self.data_dir, "xp.json"), "w") as xp_file:
             json.dump(xp_data, xp_file)
-    except:
+    except Exception as e:
         self.logger.error(f"Error creating XP file: {e}")
                 
 
