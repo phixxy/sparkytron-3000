@@ -1,4 +1,5 @@
 from discord.ext import commands
+import discord
 import json
 import os
 from cogs.base_cog.bot_base_cog import BotBaseCog
