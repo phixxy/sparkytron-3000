@@ -53,7 +53,7 @@ class MessageXP(BotBaseCog):
 
 def create_xp_file(self):
     os.makedirs(self.data_dir, exist_ok=True)  # Ensure the directory exists
-    xp_data = {}  # Populate this with the required data
+    xp_data = {}
     try:
         with open(os.path.join(self.data_dir, "xp.json"), "w") as xp_file:
             json.dump(xp_data, xp_file)
