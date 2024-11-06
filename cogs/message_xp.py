@@ -13,12 +13,11 @@ class MessageXP(BotBaseCog):
     @commands.command()
     async def stats(self, ctx):
         author_id = ctx.author.id
-        if not os.path.exists(self.data_dir + "xp.json"):
+        if not os.path.exists(os.path.join(self.data_dir, "xp.json")):
             create_xp_file(self)
         try:
-            with open(self.data_dir + "xp.json", "r") as xp_file:
+            with open(os.path.join(self.data_dir, "xp.json"), "r") as xp_file:
                 xp_data = json.load(xp_file)
-                xp_file.close()
             if author_id in xp_data:
                 await ctx.send(f"You have {xp_data[author_id]} XP")
             else:
@@ -28,7 +27,7 @@ class MessageXP(BotBaseCog):
 
     @commands.command()
     async def show_json(self, ctx):
-        with open(self.data_dir + "xp.json", "r") as xp_file:
+        with open(os.path.join(self.data_dir, "xp.json"), "r") as xp_file:
             xp_data = json.load(xp_file)
         await ctx.send(xp_data)
             
@@ -46,7 +45,6 @@ class MessageXP(BotBaseCog):
 
                 with open(os.path.join(self.data_dir, "xp.json"), "r") as xp_file:
                     xp_data = json.load(xp_file)
-                await message.reply(f"Your author id is: {author_id}")
                 if author_id in xp_data:
                     xp_data[author_id] += 1
                 else:
