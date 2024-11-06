@@ -31,7 +31,7 @@ class MessageXP(BotBaseCog):
     async def on_message(self, message: discord.Message):
         try:
             author_id = message.author.id
-            if author_id == self.bot_id:
+            if message.author.bot:
                 return
             else:
                 #check if file exists
