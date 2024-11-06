@@ -52,7 +52,7 @@ class MessageXP(BotBaseCog):
             self.logger.error(f"Error adding XP: {e}")
 
 def create_xp_file(self):
-    with open(self.data_dir + "xp.json", "w") as xp_file:
+    with open(os.path.join(self.data_dir, "xp.json"), "w") as xp_file:
         xp_data = {}
         json.dump(xp_data, xp_file)
                 
