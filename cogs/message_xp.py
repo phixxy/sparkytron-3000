@@ -13,6 +13,7 @@ class MessageXP(BotBaseCog):
     @commands.command()
     async def stats(self, ctx):
         author_id = ctx.author.id
+        xp_data = {}
         if not os.path.exists(os.path.join(self.data_dir, "xp.json")):
             create_xp_file(self)
         try:
@@ -39,6 +40,7 @@ class MessageXP(BotBaseCog):
             if message.author.bot:
                 return
             else:
+                xp_data = {}
                 #check if file exists
                 if not os.path.exists(os.path.join(self.data_dir, "xp.json")):
                     create_xp_file(self)
