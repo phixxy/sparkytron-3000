@@ -46,7 +46,7 @@ class MessageXP(BotBaseCog):
 
                 with open(os.path.join(self.data_dir, "xp.json"), "r") as xp_file:
                     xp_data = json.load(xp_file)
-
+                await message.reply(f"Your author id is: {author_id}")
                 if author_id in xp_data:
                     xp_data[author_id] += 1
                 else:
