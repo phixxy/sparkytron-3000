@@ -34,24 +34,24 @@ class MessageXP(BotBaseCog):
             return
         else:
             #check if file exists
-            if not os.path.exists(self.data_dir + "xp.json"):
+            if not os.path.exists(os.path.join(self.data_dir, "xp.json")):
                 create_xp_file(self)
-            with open(self.data_dir + "xp.json", "r") as xp_file:
+
+            with open(os.path.join(self.data_dir, "xp.json"), "r") as xp_file:
                 xp_data = json.load(xp_file)
-                xp_file.close()
+
             if author_id in xp_data:
                 xp_data[author_id] += 1
             else:
                 xp_data[author_id] = 1
-            with open(self.data_dir + "xp.json", "w") as xp_file:
-                    json.dump(xp_data, xp_file)
-                    xp_file.close()
+
+            with open(os.path.join(self.data_dir, "xp.json"), "w") as xp_file:
+                json.dump(xp_data, xp_file)
 
 def create_xp_file(self):
     with open(self.data_dir + "xp.json", "w") as xp_file:
         xp_data = {}
         json.dump(xp_data, xp_file)
-        xp_file.close()
                 
 
 async def setup(bot):
