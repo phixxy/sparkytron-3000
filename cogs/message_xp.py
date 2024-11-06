@@ -52,9 +52,13 @@ class MessageXP(BotBaseCog):
             self.logger.error(f"Error adding XP: {e}")
 
 def create_xp_file(self):
-    with open(os.path.join(self.data_dir, "xp.json"), "w") as xp_file:
-        xp_data = {}
-        json.dump(xp_data, xp_file)
+    os.makedirs(self.data_dir, exist_ok=True)  # Ensure the directory exists
+    xp_data = {}  # Populate this with the required data
+    try:
+        with open(os.path.join(self.data_dir, "xp.json"), "w") as xp_file:
+            json.dump(xp_data, xp_file)
+    except:
+        self.logger.error(f"Error creating XP file: {e}")
                 
 
 async def setup(bot):
