@@ -29,24 +29,27 @@ class MessageXP(BotBaseCog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        author_id = message.author.id
-        if author_id == self.bot_id:
-            return
-        else:
-            #check if file exists
-            if not os.path.exists(os.path.join(self.data_dir, "xp.json")):
-                create_xp_file(self)
-
-            with open(os.path.join(self.data_dir, "xp.json"), "r") as xp_file:
-                xp_data = json.load(xp_file)
-
-            if author_id in xp_data:
-                xp_data[author_id] += 1
+        try:
+            author_id = message.author.id
+            if author_id == self.bot_id:
+                return
             else:
-                xp_data[author_id] = 1
+                #check if file exists
+                if not os.path.exists(os.path.join(self.data_dir, "xp.json")):
+                    create_xp_file(self)
 
-            with open(os.path.join(self.data_dir, "xp.json"), "w") as xp_file:
-                json.dump(xp_data, xp_file)
+                with open(os.path.join(self.data_dir, "xp.json"), "r") as xp_file:
+                    xp_data = json.load(xp_file)
+
+                if author_id in xp_data:
+                    xp_data[author_id] += 1
+                else:
+                    xp_data[author_id] = 1
+
+                with open(os.path.join(self.data_dir, "xp.json"), "w") as xp_file:
+                    json.dump(xp_data, xp_file)
+        except Exception as e:
+            self.logger.error(f"Error adding XP: {e}")
 
 def create_xp_file(self):
     with open(self.data_dir + "xp.json", "w") as xp_file:
