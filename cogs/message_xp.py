@@ -12,13 +12,9 @@ class MessageXP(BotBaseCog):
 
     @commands.command()
     async def stats(self, ctx):
-        author_id = ctx.author.id
-        xp_data = {}
-        if not os.path.exists(os.path.join(self.data_dir, "xp.json")):
-            create_xp_file(self)
+        author_id = str(ctx.author.id)
         try:
-            with open(os.path.join(self.data_dir, "xp.json"), "r") as xp_file:
-                xp_data = json.load(xp_file)
+            xp_data = read_xp_file(self)
             if author_id in xp_data:
                 await ctx.send(f"You have {xp_data[author_id]} XP")
             else:
@@ -36,17 +32,11 @@ class MessageXP(BotBaseCog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         try:
-            author_id = message.author.id
+            author_id = str(message.author.id)
             if message.author.bot:
                 return
             else:
-                xp_data = {}
-                #check if file exists
-                if not os.path.exists(os.path.join(self.data_dir, "xp.json")):
-                    create_xp_file(self)
-
-                with open(os.path.join(self.data_dir, "xp.json"), "r") as xp_file:
-                    xp_data = json.load(xp_file)
+                xp_data = read_xp_file(self)
                 if author_id in xp_data:
                     xp_data[author_id] += 1
                 else:
@@ -57,14 +47,14 @@ class MessageXP(BotBaseCog):
         except Exception as e:
             self.logger.error(f"Error adding XP: {e}")
 
-def create_xp_file(self):
-    os.makedirs(self.data_dir, exist_ok=True)  # Ensure the directory exists
-    xp_data = {}
+def read_xp_file(self):
     try:
-        with open(os.path.join(self.data_dir, "xp.json"), "w") as xp_file:
-            json.dump(xp_data, xp_file)
+        with open(os.path.join(self.data_dir, "xp.json"), "r") as xp_file:
+            xp_data = json.load(xp_file)
+        return xp_data
     except Exception as e:
-        self.logger.error(f"Error creating XP file: {e}")
+        self.logger.error(f"No XP file found. Returning empty json object: {e}")
+        return {}
                 
 
 async def setup(bot):
