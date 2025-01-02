@@ -25,7 +25,7 @@ class RSSCog(BotBaseCog):
                 channel = self.bot.get_channel(895388842834673696)
                 await channel.send(f"{name}: {latest_item.description}")
         
-            asyncio.sleep(60)
+            await asyncio.sleep(60)
     
     @check_rss.before_loop
     async def before_check_rss(self):
