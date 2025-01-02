@@ -15,7 +15,7 @@ class RSSCog(BotBaseCog):
     @tasks.loop(minutes=1)
     async def check_rss(self):
         for name in self.usernames:
-            rss_url = self.rss_base_url + name.replace(' ','%A0')
+            rss_url = self.rss_base_url + name.replace(' ','%20')
             feed = feedparser.parse(rss_url)
             latest_item = feed.entries[0] if feed.entries else None
             
