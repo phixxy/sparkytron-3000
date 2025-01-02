@@ -1,6 +1,7 @@
 from discord.ext import commands, tasks
 from cogs.base_cog.bot_base_cog import BotBaseCog
 import feedparser
+import asyncio
 
 class RSSCog(BotBaseCog):
 
@@ -12,7 +13,7 @@ class RSSCog(BotBaseCog):
         self.last_items = {key: None for key in self.usernames}
         self.check_rss.start()
 
-    @tasks.loop(minutes=1)
+    @tasks.loop(minutes=5)
     async def check_rss(self):
         for name in self.usernames:
             rss_url = self.rss_base_url + name.replace(' ','%20')
@@ -23,6 +24,8 @@ class RSSCog(BotBaseCog):
                 self.last_items[name] = latest_item.title
                 channel = self.bot.get_channel(895388842834673696)
                 await channel.send(f"{name}: {latest_item.description}")
+        
+        asyncio.sleep(60)
     
     @check_rss.before_loop
     async def before_check_rss(self):
