@@ -8,7 +8,7 @@ class RSSCog(BotBaseCog):
         super().__init__(bot)
         self.setup(__class__.__name__)
         self.rss_base_url = 'https://secure.runescape.com/m=adventurers-log/rssfeed?searchName='
-        self.usernames = ['Deadifyed', 'Frozener', 'Tsuki no ko', 'blue boomer4']
+        self.usernames = ['Deadifyed', 'Frozener']
         self.last_items = {key: None for key in self.usernames}
         self.check_rss.start()
 
