@@ -12,3 +12,4 @@ wakeonlan
 beautifulsoup4
 Flask[async]
 waitress
+feedparser

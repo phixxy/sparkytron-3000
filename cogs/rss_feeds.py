@@ -22,7 +22,7 @@ class RSSCog(BotBaseCog):
             if latest_item and latest_item.title != self.last_items[name]:
                 self.last_items[name] = latest_item.title
                 channel = self.bot.get_channel(895388842834673696)
-                await channel.send(f"New RSS Item: {latest_item.title} - {latest_item.link}")
+                await channel.send(f"{name}: {latest_item.title} - {latest_item.link}")
     
     @check_rss.before_loop
     async def before_check_rss(self):
