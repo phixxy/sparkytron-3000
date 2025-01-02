@@ -8,8 +8,8 @@ class RSSCog(BotBaseCog):
         super().__init__(bot)
         self.setup(__class__.__name__)
         self.rss_base_url = 'https://secure.runescape.com/m=adventurers-log/rssfeed?searchName='
-        self.usernames = ['Deadifyed', 'Frozener']
-        self.last_items = {'Deadifyed':None, 'Frozener':None}
+        self.usernames = ['Deadifyed', 'Frozener', 'Tsuki no ko', 'blue boomer4']
+        self.last_items = {key: None for key in self.usernames}
         self.check_rss.start()
 
     @tasks.loop(minutes=1)
@@ -22,7 +22,7 @@ class RSSCog(BotBaseCog):
             if latest_item and latest_item.title != self.last_items[name]:
                 self.last_items[name] = latest_item.title
                 channel = self.bot.get_channel(895388842834673696)
-                await channel.send(f"{name}: {latest_item.title} - {latest_item.link}")
+                await channel.send(f"{name}: {latest_item.description}")
     
     @check_rss.before_loop
     async def before_check_rss(self):
