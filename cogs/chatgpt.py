@@ -23,7 +23,6 @@ class ChatGPT(commands.Cog):
         self.folder_setup()
         self.remind_me_loop.start()
         self.http_session = self.create_aiohttp_session()
-        self.dalle_budget = self.get_budget()
         self.logger = logging.getLogger("bot")
         self.headers = {
             'Content-Type': 'application/json',
@@ -61,36 +60,6 @@ class ChatGPT(commands.Cog):
         output_cost = cost_table[model]["output_tokens"] * output_tokens
         cost = input_cost + output_cost
         return cost
-    
-    def get_budget(self):
-        month = time.strftime("%B")
-        year = time.strftime("%Y")
-        key = f"{month}_{year}"
-        budget_file = f"{self.data_dir}budget.json"
-        if not os.path.exists(budget_file):
-            with open(budget_file, "w") as f:
-                json.dump({key:self.default_budget},f)
-        with open(budget_file, "r") as f:
-            budget_dict = json.loads(f.readline())
-        if key not in budget_dict:
-            budget_dict[key] = self.default_budget
-            with open(budget_file, "w") as f:
-                json.dump(budget_dict,f)
-            return self.default_budget
-        else:
-            return budget_dict[key]
-        
-    def budget_add(self, amount):
-        month = time.strftime("%B")
-        year = time.strftime("%Y")
-        key = f"{month}_{year}"
-        budget_file = f"{self.data_dir}budget.json"
-        with open(budget_file, "r") as f:
-            budget_dict = json.loads(f.readline())
-        budget_dict[key] += amount
-        with open(budget_file, "w") as f:
-            json.dump(budget_dict,f)
-            self.dalle_budget += amount
 
     def add_cost(self, category: str, cost: float):
         day = time.strftime("%d")
@@ -155,28 +124,6 @@ class ChatGPT(commands.Cog):
             categories = response_data['results'][0]['categories']
             category_scores = response_data['results'][0]['category_scores']
             return (flagged, categories, category_scores)
-        
-    @commands.command()
-    async def budget(self, ctx, command=None, budget=None):
-        try:
-            if ctx.author.id == self.admin_id:
-                if command == "add" and budget!= None:
-                    self.budget_add(float(budget))
-                    await ctx.send(f"Budget increased by {budget}")
-                elif command == "remove" and budget!= None:
-                    self.budget_add(-float(budget))
-                    await ctx.send(f"Budget decreased by {budget}")
-                elif command == "set" and budget!= None:
-                    self.budget_add(float(budget) - self.dalle_budget)
-                    await ctx.send(f"Budget set to {budget}")
-                else:
-                    await ctx.send(f"The current budget is {self.dalle_budget}")
-            else:
-                await ctx.send(f"The current budget is {self.dalle_budget}")
-        except Exception as e:
-            self.logger.exception(f"Budget command failed: {e}")
-            await ctx.send(f"Budget command failed")
-
 
     @commands.command(
         name="costs",
@@ -418,19 +365,6 @@ class ChatGPT(commands.Cog):
         await ctx.send("One moment, let me think...")
         question = ctx.message.content.split(" ", maxsplit=1)[1]
         answer = await self.answer_question(question)
-        chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
-        for chunk in chunks:
-            await ctx.send(chunk)
-            
-    @commands.command(
-        description="Question GPT4", 
-        help="Ask GPT4 a question. Usage: !question_gpt4 (question)", 
-        brief="Get an answer"
-        )         
-    async def question_gpt4(self, ctx):
-        await ctx.send("One moment, let me think...")
-        question = ctx.message.content.split(" ", maxsplit=1)[1]
-        answer = await self.answer_question(question, "gpt-4o")
         chunks = [answer[i:i+1999] for i in range(0, len(answer), 1999)]
         for chunk in chunks:
             await ctx.send(chunk)
